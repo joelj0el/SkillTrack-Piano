@@ -28,7 +28,7 @@ self.addEventListener('fetch', (event) => {
         const responseClone = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
         return response;
-      }).catch(() => cached as Response);
+      }).catch(() => new Response('Offline', { status: 503, statusText: 'Offline' }));
     })
   );
 });
