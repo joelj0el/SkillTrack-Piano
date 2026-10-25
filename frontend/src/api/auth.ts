@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { User } from '../types';
 
 export interface TokenResponse {
   access_token: string;
@@ -15,15 +16,10 @@ export async function login(email: string, password: string): Promise<TokenRespo
   return data;
 }
 
-export interface RegisterPayload {
-  email: string;
-  password: string;
-  full_name: string;
-  role?: string;
-  institution_id?: string | null;
-}
-
-export async function register(payload: RegisterPayload): Promise<TokenResponse> {
-  const { data } = await apiClient.post<TokenResponse>('/auth/register', payload);
+/** Perfil del usuario dueño del token (se pasa explícito porque aún no está en el store). */
+export async function getMe(token: string): Promise<User> {
+  const { data } = await apiClient.get<User>('/auth/me', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return data;
 }

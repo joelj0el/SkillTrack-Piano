@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, String, Text
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
@@ -15,6 +15,7 @@ class AssignedTask(Base):
     student_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     exercise_id = Column(UUID(as_uuid=True), ForeignKey("exercises.id"), nullable=False)
     due_date = Column(Date, nullable=True)
+    tempo_bpm = Column(Integer, nullable=True)
     notes = Column(Text)
     status = Column(String(20), default="pending")
     created_at = Column(DateTime(timezone=True), server_default=func.now())

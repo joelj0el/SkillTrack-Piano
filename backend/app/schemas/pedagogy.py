@@ -9,6 +9,7 @@ class AssignedTaskCreate(BaseModel):
     student_id: uuid.UUID
     exercise_id: uuid.UUID
     due_date: date | None = None
+    tempo_bpm: int | None = None
     notes: str | None = None
 
 
@@ -16,6 +17,7 @@ class AssignedTaskUpdate(BaseModel):
     status: str | None = None
     notes: str | None = None
     due_date: date | None = None
+    tempo_bpm: int | None = None
 
 
 class AssignedTaskOut(BaseModel):
@@ -24,6 +26,7 @@ class AssignedTaskOut(BaseModel):
     student_id: uuid.UUID
     exercise_id: uuid.UUID
     due_date: date | None
+    tempo_bpm: int | None
     notes: str | None
     status: str
     created_at: datetime

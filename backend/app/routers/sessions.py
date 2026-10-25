@@ -7,7 +7,7 @@ from app.core.dependencies import get_current_user
 from app.database import get_db
 from app.models.user import User
 from app.schemas.session import SessionCreate, SessionMetricOut, SessionOut, SessionResult
-from app.services import session_service
+from app.services import session_service, user_service
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -37,10 +37,6 @@ async def get_student_sessions(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.id != student_id:
-        result = await session_service.get_student_history(db, student_id)
-        is_teacher_of_student = any(s.id == student_id for s in current_user.students)
-        if not is_teacher_of_student:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No autorizado")
-        return result
+    if current_user.id != student_id and not await user_service.is_teacher_of(db, current_user.id, student_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No autorizado")
     return await session_service.get_student_history(db, student_id)

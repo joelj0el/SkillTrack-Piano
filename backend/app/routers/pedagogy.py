@@ -17,8 +17,12 @@ router = APIRouter(tags=["pedagogy"])
 
 
 @router.get("/tasks", response_model=list[AssignedTaskOut])
-async def list_tasks(student_id: uuid.UUID | None = None, db: AsyncSession = Depends(get_db)):
-    return await pedagogy_service.list_tasks(db, student_id)
+async def list_tasks(
+    student_id: uuid.UUID | None = None,
+    teacher_id: uuid.UUID | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    return await pedagogy_service.list_tasks(db, student_id, teacher_id)
 
 
 @router.post("/tasks", response_model=AssignedTaskOut, status_code=status.HTTP_201_CREATED)

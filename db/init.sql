@@ -63,6 +63,21 @@ BEGIN
     FROM roles r WHERE r.name = 'student'
     ON CONFLICT (id) DO NOTHING;
 
+    -- Usuario administrador demo (contraseña: demo1234)
+    INSERT INTO users (id, email, hashed_password, full_name, role_id, institution_id, is_active, created_at, updated_at)
+    SELECT
+        '77777777-7777-7777-7777-777777777777',
+        'demo@admin.com',
+        '$2b$12$oww5pUv/M6L566USAHF1neeGH3BKs9DKb/5jTjFCZ3QMGzzYphYAW',
+        'Administrador Demo',
+        r.id,
+        '11111111-1111-1111-1111-111111111111',
+        true,
+        now(),
+        now()
+    FROM roles r WHERE r.name = 'admin'
+    ON CONFLICT (id) DO NOTHING;
+
     -- Relación docente-estudiante
     INSERT INTO teacher_student (teacher_id, student_id, created_at)
     VALUES ('22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333', now())

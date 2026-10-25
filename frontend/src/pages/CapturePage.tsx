@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import CameraOverlay from '../components/CameraOverlay';
 import GatingIndicator from '../components/GatingIndicator';
+import { PageHeader } from '../components/ui';
 import { startCapture, startRecording, stopRecording, releaseCapture } from '../pipeline/capture';
+import { getExercise } from '../api/catalog';
 import { createSession } from '../api/sessions';
 import { syncSessionResult, buildEmptySessionResult } from '../pipeline/sync';
 import { useAuthStore } from '../store/authStore';
@@ -11,10 +13,11 @@ import { useExerciseStore } from '../store/exerciseStore';
 type FlowStatus = 'idle' | 'ready' | 'recording' | 'analyzing' | 'done' | 'error';
 
 export default function CapturePage() {
-  const { id: exerciseId } = useParams<{ id: string }>();
+  const { id: exerciseId = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const activeExercise = useExerciseStore((state) => state.activeExercise);
+  const { activeExercise, setActiveExercise } = useExerciseStore();
+  const exercise = activeExercise?.id === exerciseId ? activeExercise : null;
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [status, setStatus] = useState<FlowStatus>('idle');
@@ -23,6 +26,13 @@ export default function CapturePage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<string>('');
 
+  // Si se llega directo desde "Mis tareas", el ejercicio aún no está en el store.
+  useEffect(() => {
+    if (!exercise && exerciseId) {
+      getExercise(exerciseId).then(setActiveExercise).catch(() => undefined);
+    }
+  }, [exercise, exerciseId, setActiveExercise]);
+
   useEffect(() => {
     startCapture()
       .then((s) => {
@@ -30,7 +40,7 @@ export default function CapturePage() {
         setStatus('ready');
       })
       .catch(() => {
-        setErrorMsg('No se pudo acceder a la cámara. Verifica los permisos del navegador.');
+        setErrorMsg('No se pudo acceder a la cámara. Revisa los permisos del navegador e inténtalo de nuevo.');
         setStatus('error');
       });
 
@@ -66,38 +76,56 @@ export default function CapturePage() {
         exerciseId,
         studentId: user.id,
         startedAt: startedAtRef.current,
-        referenceThresholdVersion: activeExercise?.referenceThresholds?.[0]?.version ?? 1,
+        referenceThresholdVersion: exercise?.reference_thresholds?.[0]?.version ?? 1,
       });
 
       await syncSessionResult(result);
 
       setStatus('done');
-      navigate('/history');
+      navigate('/historial');
     } catch {
-      setErrorMsg('Ocurrió un error al analizar la sesión. Intenta nuevamente.');
+      setErrorMsg('Ocurrió un error al guardar el intento. Inténtalo nuevamente.');
       setStatus('error');
     }
   }
 
   return (
-    <div>
-      <h2>Práctica: {activeExercise?.title ?? 'Ejercicio'}</h2>
-      <p style={{ fontSize: '0.85rem', color: '#666' }}>
-        En iPhone, usa esta página desde Safari (no desde la app instalada).
+    <>
+      <PageHeader
+        back={{ to: `/catalogo/${exerciseId}`, label: 'Ejercicio' }}
+        title={exercise?.title ?? 'Práctica'}
+        subtitle="Coloca el teléfono de modo que se vean tus manos y el teclado."
+      />
+
+      <p className="small muted" style={{ marginBottom: '0.75rem' }}>
+        En iPhone, usa esta página desde Safari (no desde la app instalada). El video no sale de tu dispositivo.
       </p>
 
-      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
+      {errorMsg && (
+        <div className="alert error" role="alert" style={{ marginBottom: '0.75rem' }}>
+          {errorMsg}
+        </div>
+      )}
 
-      <CameraOverlay stream={stream} />
+      <div className="capture-stage">
+        <CameraOverlay stream={stream} />
+      </div>
       <GatingIndicator lighting="unknown" framing="unknown" stability="unknown" />
 
-      <div style={{ marginTop: '1rem' }}>
-        {status === 'ready' && <button onClick={handleStart}>Iniciar grabación</button>}
-        {status === 'recording' && (
-          <button onClick={handleStop}>Detener ({seconds}s)</button>
+      <div className="row" style={{ marginTop: '1.25rem' }}>
+        {status === 'idle' && <p className="muted">Activando la cámara…</p>}
+        {status === 'ready' && (
+          <button className="btn btn-primary btn-block" onClick={handleStart}>
+            Iniciar grabación
+          </button>
         )}
-        {status === 'analyzing' && <p>Analizando…</p>}
+        {status === 'recording' && (
+          <button className="btn btn-primary btn-block" onClick={handleStop}>
+            <span className="rec-dot" aria-hidden="true" /> Detener · {seconds} s
+          </button>
+        )}
+        {status === 'analyzing' && <p className="muted">Guardando tu intento…</p>}
       </div>
-    </div>
+    </>
   );
 }

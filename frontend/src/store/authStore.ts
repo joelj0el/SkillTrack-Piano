@@ -1,26 +1,23 @@
 import { create } from 'zustand';
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  fullName: string | null;
-  role: string;
-}
+import type { User } from '../types';
 
 interface AuthState {
   token: string | null;
-  user: AuthUser | null;
-  setAuth: (token: string, user: AuthUser) => void;
+  user: User | null;
+  setAuth: (token: string, user: User) => void;
   logout: () => void;
 }
 
 const STORAGE_KEY = 'skilltrack_auth';
 
-function loadInitialState(): { token: string | null; user: AuthUser | null } {
+function loadInitialState(): { token: string | null; user: User | null } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { token: null, user: null };
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    // Sesiones guardadas por versiones anteriores no traían el rol real: se descartan.
+    if (!parsed?.user?.role || !('full_name' in parsed.user)) return { token: null, user: null };
+    return parsed;
   } catch {
     return { token: null, user: null };
   }

@@ -7,10 +7,14 @@ from app.models.pedagogy import AssignedTask, Observation
 from app.schemas.pedagogy import AssignedTaskCreate, AssignedTaskUpdate, ObservationCreate
 
 
-async def list_tasks(db: AsyncSession, student_id: uuid.UUID | None = None) -> list[AssignedTask]:
+async def list_tasks(
+    db: AsyncSession, student_id: uuid.UUID | None = None, teacher_id: uuid.UUID | None = None
+) -> list[AssignedTask]:
     query = select(AssignedTask)
     if student_id:
         query = query.where(AssignedTask.student_id == student_id)
+    if teacher_id:
+        query = query.where(AssignedTask.teacher_id == teacher_id)
     result = await db.execute(query.order_by(AssignedTask.created_at.desc()))
     return list(result.scalars().all())
 

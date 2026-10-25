@@ -1,11 +1,18 @@
 import type { ReactElement } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import type { RoleName } from '../types';
+import { homePathFor } from './Layout';
 
-export default function PrivateRoute({ children }: { children: ReactElement }) {
-  const token = useAuthStore((state) => state.token);
-  if (!token) {
-    return <Navigate to="/login" replace />;
+export default function PrivateRoute({ children, roles }: { children: ReactElement; roles?: RoleName[] }) {
+  const { token, user } = useAuthStore();
+  const location = useLocation();
+
+  if (!token || !user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  if (roles && (!user.role || !roles.includes(user.role))) {
+    return <Navigate to={homePathFor(user.role)} replace />;
   }
   return children;
 }

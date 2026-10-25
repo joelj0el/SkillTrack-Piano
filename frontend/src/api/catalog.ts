@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import type { Exercise, ExerciseDetail } from '../types';
 
-export async function listExercises(limit = 20, offset = 0): Promise<Exercise[]> {
+export async function listExercises(limit = 100, offset = 0): Promise<Exercise[]> {
   const { data } = await apiClient.get<Exercise[]>('/exercises', { params: { limit, offset } });
   return data;
 }
