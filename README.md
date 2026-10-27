@@ -31,6 +31,8 @@ pnpm install                               # dependencias de TypeScript
 uv sync --project apps/api                 # dependencias de la API
 ```
 
+La API lee su configuración de variables de entorno. Para desarrollo local, copia `apps/api/.env.example` como `apps/api/.env` y ajusta `DATABASE_URL`. El archivo `.env` nunca se versiona.
+
 ## Pruebas
 
 ```bash

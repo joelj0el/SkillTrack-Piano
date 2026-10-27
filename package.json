@@ -10,7 +10,9 @@
     "test": "vitest run --passWithNoTests",
     "lint": "eslint .",
     "format": "node tools/formato.mjs --write",
-    "format:check": "node tools/formato.mjs --check"
+    "format:check": "node tools/formato.mjs --check",
+    "typecheck": "pnpm -r typecheck",
+    "contracts:gen": "pnpm --filter @skilltrack/contracts export && uv run --project apps/api datamodel-codegen --input packages/contracts/schemas --input-file-type jsonschema --output apps/api/app/contracts_gen --output-model-type pydantic_v2.BaseModel --target-python-version 3.12 --disable-timestamp --use-double-quotes --formatters builtin"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
