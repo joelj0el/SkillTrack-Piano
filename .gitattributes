@@ -1,0 +1,10 @@
+# Todo el texto con LF en el repositorio y en la copia de trabajo (Docker, CI y scripts lo exigen)
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.docx binary
+*.onnx binary
+*.wasm binary
+*.task binary
