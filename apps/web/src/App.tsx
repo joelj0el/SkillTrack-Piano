@@ -37,14 +37,14 @@ function BotonTema() {
   return (
     <button
       type="button"
-      className="secundario"
+      className="secundario compacto"
       aria-label={`Cambiar a tema ${otro}`}
       onClick={() => {
         aplicarTema(otro);
         setTema(otro);
       }}
     >
-      {tema === "claro" ? "Tema oscuro" : "Tema claro"}
+      {tema === "claro" ? "☾ Oscuro" : "☀ Claro"}
     </button>
   );
 }
@@ -70,7 +70,7 @@ function Barra() {
         {r.has("investigador") && <Link to="/investigacion">Modo investigación</Link>}
         <Link to="/catalogo">Catálogo</Link>
         <BotonTema />
-        <button type="button" className="secundario" onClick={() => void salir()}>
+        <button type="button" className="secundario compacto" onClick={() => void salir()}>
           Salir
         </button>
       </nav>

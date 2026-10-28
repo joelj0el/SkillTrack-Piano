@@ -333,12 +333,16 @@ export function DetalleEstudiante() {
       {([estudiante, tareas, ejercicios, aspectos]) => (
         <section>
           <h1>{estudiante.nombre_visible}</h1>
-          <h2>Asignar tarea</h2>
-          <FormularioTarea
-            estudianteId={estudianteId}
-            ejercicios={ejercicios}
-            alGuardar={() => void recargar()}
-          />
+          <details className="tarjeta" open={tareas.length === 0}>
+            <summary>
+              <strong>Asignar tarea</strong>
+            </summary>
+            <FormularioTarea
+              estudianteId={estudianteId}
+              ejercicios={ejercicios}
+              alGuardar={() => void recargar()}
+            />
+          </details>
           <h2>Tareas</h2>
           {tareas.length === 0 && <p className="suave">Sin tareas todavía.</p>}
           <ul className="lista">

@@ -160,3 +160,14 @@ button:disabled {
     flex: 1 1 100%;
   }
 }
+
+button.compacto {
+  min-height: var(--alto-toque);
+  padding: var(--espacio-1) var(--espacio-3);
+  font-size: var(--texto-sm);
+}
+
+details > summary {
+  cursor: pointer;
+  min-height: var(--alto-toque);
+}
