@@ -21,6 +21,9 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       DATABASE_URL: postgresql+psycopg://skilltrack:${POSTGRES_PASSWORD:-skilltrack}@db:5432/skilltrack
+      # Datos de demostración solo en local; producción no define SEMILLA_DEMO.
+      SEMILLA_DEMO: "1"
+      SEMILLA_CLAVE: ${SEMILLA_CLAVE:-demo-piano-2026}
     depends_on:
       db:
         condition: service_healthy

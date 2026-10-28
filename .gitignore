@@ -8,6 +8,8 @@ research/data/
 # Reportes de pruebas (CI los guarda como artefactos)
 reports/
 coverage/
+test-results/
+playwright-report/
 
 # Node
 node_modules/

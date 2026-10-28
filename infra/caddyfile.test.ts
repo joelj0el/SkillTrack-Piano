@@ -21,6 +21,12 @@ describe("Caddyfile", () => {
     expect(directivaCsp("script-src")).not.toContain("'unsafe-eval'");
   });
 
+  it("PU-infra-03: todas las respuestas llevan HSTS, Permissions-Policy y Referrer-Policy", () => {
+    expect(caddyfile).toMatch(/Strict-Transport-Security "max-age=\d+"/);
+    expect(caddyfile).toContain('Permissions-Policy "camera=(self), microphone=(self)"');
+    expect(caddyfile).toMatch(/Referrer-Policy "no-referrer"/);
+  });
+
   it("PU-infra-02: /api se reenvía a la API y el resto cae en index.html", () => {
     expect(caddyfile).toMatch(/handle \/api\/\*\s*\{\s*reverse_proxy api:8000\s*\}/);
     expect(caddyfile).toMatch(/try_files \{path\} \/index\.html/);
