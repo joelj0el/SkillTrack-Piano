@@ -1,0 +1,45 @@
+name: skilltrack-piano
+
+services:
+  db:
+    image: postgres:17.11
+    environment:
+      POSTGRES_DB: skilltrack
+      POSTGRES_USER: skilltrack
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skilltrack}
+    volumes:
+      - datos-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skilltrack -d skilltrack"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://skilltrack:${POSTGRES_PASSWORD:-skilltrack}@db:5432/skilltrack
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-datos:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+
+volumes:
+  datos-db:
+  caddy-datos:
+  caddy-config:

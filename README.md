@@ -22,12 +22,22 @@ Python se usa **siempre** a través de `uv run`, nunca con el intérprete del si
 docker compose -f infra/docker-compose.yml up
 ```
 
-Abre **<https://localhost>**. Caddy usa un certificado interno: el navegador pedirá aceptarlo la primera vez. La API responde en <https://localhost/api/health>.
+Usa `--build` la primera vez o después de cambiar el código. Abre **<https://localhost>**. La API responde en <https://localhost/api/health> y aplica sus migraciones al arrancar.
+
+Caddy firma el certificado de `localhost` con una autoridad interna, así que el navegador lo marca como no confiable. Para confiar en ella en Windows, exporta su certificado raíz a una carpeta fuera del repositorio e impórtalo en el almacén del usuario:
+
+```bash
+docker compose -f infra/docker-compose.yml cp web:/data/caddy/pki/authorities/local/root.crt "$HOME/caddy-local-root.crt"
+certutil -user -addstore Root "$HOME/caddy-local-root.crt"
+```
+
+La contraseña de la base local es de desarrollo (`skilltrack`). Se puede cambiar con la variable `POSTGRES_PASSWORD` antes de levantar el sistema.
 
 ## Desarrollo
 
 ```bash
 pnpm install                               # dependencias de TypeScript
+pnpm dev                                   # PWA en modo desarrollo (Vite)
 uv sync --project apps/api                 # dependencias de la API
 ```
 
