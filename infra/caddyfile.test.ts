@@ -21,6 +21,10 @@ describe("Caddyfile", () => {
     expect(directivaCsp("script-src")).not.toContain("'unsafe-eval'");
   });
 
+  it("PU-infra-04: script-src autoriza exactamente 'wasm-unsafe-eval' para el detector (ADR-002)", () => {
+    expect(directivaCsp("script-src")).toEqual(["'self'", "'wasm-unsafe-eval'"]);
+  });
+
   it("PU-infra-03: todas las respuestas llevan HSTS, Permissions-Policy y Referrer-Policy", () => {
     expect(caddyfile).toMatch(/Strict-Transport-Security "max-age=\d+"/);
     expect(caddyfile).toContain('Permissions-Policy "camera=(self), microphone=(self)"');
