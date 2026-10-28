@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "client_uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "version_ejercicio_id": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "tarea_id": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "version_nucleo": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32
+    },
+    "version_modelo_mano": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "instrumento": {
+      "type": "string",
+      "enum": [
+        "acustico",
+        "digital",
+        "teclado",
+        "no_declarado"
+      ]
+    },
+    "manos": {
+      "type": "string",
+      "enum": [
+        "MI",
+        "MD",
+        "juntas"
+      ]
+    },
+    "clase_dispositivo": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "modo": {
+      "type": "string",
+      "enum": [
+        "V",
+        "A",
+        "VA"
+      ]
+    },
+    "modo_metronomo": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "con",
+            "sin"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tempo_elegido_bpm": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 40,
+          "maximum": 75
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "evaluado",
+        "no_evaluable"
+      ]
+    },
+    "motivo_no_evaluable": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 120
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "iniciado_en": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "duracion_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "pct_eventos_evaluables": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pct_digitacion_correcta": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "eventos": {
+      "maxItems": 400,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "idx": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "digitacion-correcta",
+              "dedo-incorrecto",
+              "no-evaluable"
+            ]
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mano": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "MI",
+                  "MD"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dedo": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "midi": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 127
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rasgos": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "idx",
+          "estado",
+          "motivo",
+          "mano",
+          "dedo",
+          "midi",
+          "rasgos"
+        ],
+        "additionalProperties": false,
+        "title": "EventoResultado"
+      }
+    }
+  },
+  "required": [
+    "client_uuid",
+    "version_ejercicio_id",
+    "tarea_id",
+    "version_nucleo",
+    "version_modelo_mano",
+    "instrumento",
+    "manos",
+    "clase_dispositivo",
+    "modo",
+    "modo_metronomo",
+    "tempo_elegido_bpm",
+    "estado",
+    "motivo_no_evaluable",
+    "iniciado_en",
+    "duracion_ms",
+    "pct_eventos_evaluables",
+    "pct_digitacion_correcta",
+    "eventos"
+  ],
+  "additionalProperties": false,
+  "title": "ResultadoIntento"
+}

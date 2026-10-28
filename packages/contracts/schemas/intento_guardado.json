@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "client_uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "estudiante_id": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "tarea_id": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "evaluado",
+        "no_evaluable"
+      ]
+    },
+    "motivo_no_evaluable": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "cuenta_para_tarea": {
+      "type": "boolean"
+    },
+    "motivo_no_cuenta": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "version_nucleo": {
+      "type": "string"
+    },
+    "version_modelo_mano": {
+      "type": "string"
+    },
+    "instrumento": {
+      "type": "string"
+    },
+    "manos": {
+      "type": "string",
+      "enum": [
+        "MI",
+        "MD",
+        "juntas"
+      ]
+    },
+    "modo_metronomo": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "con",
+            "sin"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tempo_elegido_bpm": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "iniciado_en": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    }
+  },
+  "required": [
+    "id",
+    "client_uuid",
+    "estudiante_id",
+    "tarea_id",
+    "estado",
+    "motivo_no_evaluable",
+    "cuenta_para_tarea",
+    "motivo_no_cuenta",
+    "version_nucleo",
+    "version_modelo_mano",
+    "instrumento",
+    "manos",
+    "modo_metronomo",
+    "tempo_elegido_bpm",
+    "iniciado_en"
+  ],
+  "additionalProperties": false,
+  "title": "IntentoGuardado"
+}

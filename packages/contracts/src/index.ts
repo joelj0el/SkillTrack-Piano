@@ -1,5 +1,6 @@
 import { ClaseError, Ejercicio } from "./catalogo.ts";
 import { CambioClave, InicioSesion, UsuarioActual } from "./identidad.ts";
+import { IntentoGuardado, ResultadoIntento } from "./intentos.ts";
 import {
   Asignacion,
   AsignacionNueva,
@@ -15,6 +16,7 @@ import { Salud } from "./salud.ts";
 export * from "./catalogo.ts";
 export * from "./identidad.ts";
 export * from "./instituciones.ts";
+export * from "./intentos.ts";
 export * from "./pedagogia.ts";
 export { Salud };
 
@@ -38,4 +40,6 @@ export const esquemas = {
   tarea: Tarea,
   observacion_nueva: ObservacionNueva,
   observacion: Observacion,
+  resultado_intento: ResultadoIntento,
+  intento_guardado: IntentoGuardado,
 };
