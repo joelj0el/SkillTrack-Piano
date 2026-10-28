@@ -21,6 +21,7 @@ body {
 
 .barra {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--espacio-3);
   align-items: center;
   justify-content: space-between;
@@ -144,4 +145,18 @@ button:disabled {
   text-align: center;
   border: var(--borde) dashed var(--color-borde);
   border-radius: var(--radio-md);
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+}
+
+@media (max-width: 30rem) {
+  .barra nav {
+    width: 100%;
+  }
+
+  .fila > label {
+    flex: 1 1 100%;
+  }
 }
