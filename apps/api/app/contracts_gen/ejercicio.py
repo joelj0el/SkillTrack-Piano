@@ -19,7 +19,7 @@ class Mano(StrEnum):
     MD = "MD"
 
 
-class EventosEsperado(BaseModel):
+class EventoEsperado(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -36,7 +36,7 @@ class Transcripcion(StrEnum):
     verificada = "verificada"
 
 
-class VersionVigente(BaseModel):
+class VersionEjercicio(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -47,7 +47,7 @@ class VersionVigente(BaseModel):
     rango_octavas: conint(le=9007199254740991, gt=0)
     nota_min_midi: conint(ge=0, le=127) | None
     nota_max_midi: conint(ge=0, le=127) | None
-    eventos_esperados: list[EventosEsperado]
+    eventos_esperados: list[EventoEsperado]
     partitura_svg: str | None
     transcripcion: Transcripcion
 
@@ -65,4 +65,4 @@ class Ejercicio(BaseModel):
     figura: str
     orden: conint(le=9007199254740991, gt=0)
     variantes_manos: list[VariantesMano]
-    version_vigente: VersionVigente = Field(..., title="VersionEjercicio")
+    version_vigente: VersionEjercicio = Field(..., title="VersionEjercicio")

@@ -9,7 +9,7 @@ from enum import StrEnum
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, conint
 
 
-class Ejercicio(BaseModel):
+class EjercicioDeTarea(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -38,7 +38,7 @@ class Aspecto(BaseModel):
     nombre: str
 
 
-class Observacione(BaseModel):
+class Observacion(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -56,11 +56,11 @@ class Tarea(BaseModel):
     id: conint(le=9007199254740991, gt=0)
     estudiante_id: conint(le=9007199254740991, gt=0)
     docente_id: conint(le=9007199254740991, gt=0)
-    ejercicio: Ejercicio = Field(..., title="EjercicioDeTarea")
+    ejercicio: EjercicioDeTarea = Field(..., title="EjercicioDeTarea")
     manos: Manos
     tempo_min_bpm: conint(ge=-9007199254740991, le=9007199254740991)
     tempo_max_bpm: conint(ge=-9007199254740991, le=9007199254740991)
     repeticiones_por_dia: conint(ge=-9007199254740991, le=9007199254740991)
     fecha_limite: date
     estado: Estado
-    observaciones: list[Observacione]
+    observaciones: list[Observacion]

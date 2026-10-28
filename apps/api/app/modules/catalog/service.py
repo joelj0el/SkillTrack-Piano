@@ -2,7 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.contracts_gen.ejercicio import Ejercicio as EjercicioDto
-from app.contracts_gen.ejercicio import VersionVigente
+from app.contracts_gen.ejercicio import VersionEjercicio as VersionDto
 from app.modules.catalog.models import ClaseError, Ejercicio, VersionEjercicio
 
 VERSION_TAXONOMIA = "v0.1"
@@ -64,7 +64,7 @@ def ejercicio_dto(ejercicio: Ejercicio, version: VersionEjercicio) -> EjercicioD
         figura=ejercicio.figura,
         orden=ejercicio.orden,
         variantes_manos=ejercicio.variantes_manos,
-        version_vigente=VersionVigente(
+        version_vigente=VersionDto(
             id=version.id,
             version=version.version,
             tempo_min_permitido_bpm=version.tempo_min_permitido_bpm,

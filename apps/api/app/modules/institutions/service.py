@@ -24,6 +24,19 @@ def asignacion_vigente(db: Session, docente_id: int, estudiante_id: int, hoy: da
     return db.scalar(consulta.limit(1)) is not None
 
 
+def institucion_de_asignacion(
+    db: Session, docente_id: int, estudiante_id: int, hoy: date
+) -> int | None:
+    """Institución de la asignación vigente, o None si el docente no acompaña al estudiante."""
+    consulta = select(AsignacionDocente.institucion_id).where(
+        AsignacionDocente.docente_id == docente_id,
+        AsignacionDocente.estudiante_id == estudiante_id,
+        AsignacionDocente.desde <= hoy,
+        _vigente(hoy),
+    )
+    return db.scalar(consulta.limit(1))
+
+
 def estudiantes_de(db: Session, docente_id: int, hoy: date) -> list[int]:
     """IDs de los estudiantes con asignación vigente; los datos del usuario los da identity."""
     consulta = (
