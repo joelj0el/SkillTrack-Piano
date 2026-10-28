@@ -45,17 +45,16 @@
   --color-texto-sobre-video: #ffffff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-fondo: #121316;
-    --color-superficie: #1c1e22;
-    --color-texto: #eceef2;
-    --color-texto-suave: #a9adb6;
-    --color-borde: #34373e;
-    --color-acento: #9db2ff;
-    --color-sobre-acento: #121316;
-    --color-peligro: #ff9b9b;
-    --color-aviso-fondo: #3a2f12;
-    --color-aviso-texto: #ffd98a;
-  }
+/* Tema oscuro: lo elige el usuario con el botón de la barra; el claro es el predeterminado. */
+:root[data-tema="oscuro"] {
+  --color-fondo: #121316;
+  --color-superficie: #1c1e22;
+  --color-texto: #eceef2;
+  --color-texto-suave: #a9adb6;
+  --color-borde: #34373e;
+  --color-acento: #9db2ff;
+  --color-sobre-acento: #121316;
+  --color-peligro: #ff9b9b;
+  --color-aviso-fondo: #3a2f12;
+  --color-aviso-texto: #ffd98a;
 }
