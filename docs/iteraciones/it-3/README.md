@@ -1,36 +1,36 @@
 # Versión de avance — Iteración 3 (rama `entrega/it-3`)
 
-Incluye la It-1 y la It-2 (ver sus README) más el **núcleo de audio**: detección de ataques, tempo y regularidad, clase de altura, metrónomo, puerta acústica y dedo atribuido por ataque. No se fusiona a `main`.
+Incluye la It-1 y la It-2 (ver sus README) más el audio en el teléfono: prueba de micrófono, metrónomo con conteo audible, detección de ataques, tempo y regularidad, clase de altura de cada nota y dedo atribuido por la visión a cada ataque. Es la rama recomendada para la demostración. No se fusiona a `main`.
 
 ## Levantar el sistema
-
-Igual que en la It-1 y la It-2:
 
 ```bash
 docker compose -f infra/docker-compose.yml down -v
 docker compose -f infra/docker-compose.yml up --build
 ```
 
-En esta versión el audio todavía no se captura en el navegador: la aplicación se ve igual que en la It-2.
+Abre <https://localhost>. Usuarios de demostración (contraseña `demo-piano-2026`, solo local): `admin.demo`, `docente.demo`, `docente2.demo`, `estudiante.demo`, `estudiante2.demo`, `estudiante3.demo`, `investigador.demo`.
 
 ## Qué mostrar
 
-El núcleo de audio se demuestra con sus pruebas sobre señales sintéticas:
+1. **Prueba de micrófono** (`estudiante.demo` → "Micrófono"): el medidor se mueve con el sonido; "Probar el micrófono" pide silencio y luego unas notas, y el semáforo dice si hay ruido o saturación.
+2. **Práctica completa** (una tarea → "Practicar"): encuadre con las manos → micrófono → calibración → tempo y modo de metrónomo → 4 clics → tocar la escala → el análisis empieza solo.
+3. **Resultado provisional**: ritmo (tempo inicial y final, estable o cambio, notas irregulares) y, nota por nota, ✓ / ✗ / dudosa / faltante, con la mano y el dedo vistos por la cámara; las notas extra al pie.
+4. **Sin micrófono**: negando el permiso, la app ofrece continuar en modo solo visión.
+
+## Pruebas
 
 ```bash
-pnpm vitest run packages/core/src/audio packages/core/src/calidad packages/core/src/alineacion
+pnpm test
+uv run --project apps/api pytest
+pnpm e2e        # Chromium con cámara y micrófono simulados
 ```
-
-1. **Ataques** (PU-audio-05 y 09): escalas sintéticas a ♩ = 60 y 75, cada ataque recuperado con error ≤ 10 ms, también en el registro grave.
-2. **Tempo** (PU-audio-10 a 15): estable, aceleraste o frenaste; solo la nota retrasada se marca como tropiezo; la referencia cambia con el modo de metrónomo.
-3. **Notas** (PU-audio-17 a 20): las cuatro escalas del repertorio se verifican; la nota equivocada se marca y la débil queda "dudosa".
-4. **Metrónomo y micrófono** (PU-tempo, PU-quality-06 a 09).
 
 ## Estado de esta versión
 
-| Elemento                                             | Estado       | Motivo                                         |
-| ---------------------------------------------------- | ------------ | ---------------------------------------------- |
-| Núcleo de audio y fusión simple                      | Implementado | Con señales sintéticas                         |
-| Captura de audio, pantallas de micrófono y metrónomo | Pendiente    | Recortado por tiempo                           |
-| Alineamiento con la partitura, desfase entre manos   | Pendiente    | Requiere la partitura transcrita y el detector |
-| Avance de la tarea (HU-37)                           | No incluido  | —                                              |
+| Elemento                                                      | Estado       | Motivo                                                                              |
+| ------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------- |
+| Núcleo de audio y alineamiento de notas                       | Implementado | Con señales sintéticas                                                              |
+| Audio en el teléfono (micrófono, metrónomo, resultado)        | Prototipo    | Funciona de punta a punta; la exactitud no se midió (requiere grabaciones anotadas) |
+| Registro de `audio_sin_procesar` y tempo medido en el intento | Pendiente    | Requiere el contrato `ResultadoIntento` v2                                          |
+| Avance de la tarea (HU-37)                                    | No incluido  | —                                                                                   |

@@ -2,6 +2,24 @@
 
 En esta versión ningún criterio de aceptación de la It-3 se ejecuta de punta a punta: todos dependen de la captura de audio en el navegador o de fixtures del autor. La lógica que los sostiene está en el núcleo con pruebas unitarias sobre señales sintéticas ("Prototipo").
 
+## Actualización: versión de demostración
+
+La captura de audio quedó integrada en el teléfono: AudioWorklet sin procesamiento del navegador, prueba de micrófono (P-37, también como pantalla propia `/microfono`), preparación con tempo y dos modos de metrónomo (P-34), conteo de 4 clics audibles con pulso visual, grabación sincronizada con la imagen y resultado provisional con cada nota como ✓ / ✗ / dudosa / faltante / extra, tempo inicial frente a final, notas irregulares y la mano y el dedo atribuidos por la visión a cada ataque. Todo el audio se procesa en el teléfono.
+
+Cambios de estado respecto de las tablas siguientes:
+
+| PA                 | Estado ahora | Motivo                                                                                                                                  |
+| ------------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU20-03         | Implementado | E2E: sin permiso de micrófono se ofrece el modo solo visión                                                                             |
+| PA-HU20-01         | Prototipo    | Semáforo con los textos del criterio en P-37; faltan los fixtures de micrófono                                                          |
+| PA-HU20-02         | Prototipo    | Se pide el audio sin procesamiento y se avisa si el navegador no lo respetó; aún no se registra en el intento (requiere el contrato v2) |
+| PA-HU19-01, 02, 03 | Prototipo    | Selector de tempo con práctica lenta, conteo audible con pulso visual y pulso visual mudo con metrónomo; el modo queda en el intento    |
+| PA-HU10-02 a 05    | Prototipo    | Calculados en el teléfono sobre los ataques reales; sin fixtures del autor                                                              |
+| PA-HU21-02, 03, 04 | Prototipo    | Incorrecta, dudosa, faltante y extra con alineamiento de secuencias (PU-align-04 a 07)                                                  |
+| PA-HU11-02         | Prototipo    | Mano y dedo atribuidos a cada ataque con la modalidad (VA o A)                                                                          |
+
+Pruebas nuevas: PU-web-12 (micrófono simulado: nivel, prueba completa y ningún audio por la red), PA-HU20-03 (E2E), PU-align-04 a 07 y PU-capture-13.
+
 ## HU-19 · Tempo, modo de metrónomo y conteo previo
 
 | PA         | Estado    | Motivo / prueba del núcleo                                                                                              |
