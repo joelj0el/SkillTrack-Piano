@@ -58,6 +58,19 @@ describe("homografía por DLT", () => {
     expect(() => homografia(alineados, CUADRADO)).toThrow(/degenerad/);
   });
 
+  it("PU-geometry-13: funciona aunque la línea de fuga pase por el origen de la imagen", () => {
+    // Contraejemplo encontrado por PP-geometry-01: las rectas del frente y de las negras
+    // se cortan en x = 0, así que h33 = 0 en coordenadas crudas.
+    const imagen = [
+      { x: 400, y: 256 },
+      { x: 600, y: 276 },
+      { x: 400, y: 216 },
+      { x: 600, y: 216 },
+    ];
+    const h = homografia(imagen, CUADRADO);
+    imagen.forEach((p, i) => cerca(aplicar(h, p), CUADRADO[i] as Punto));
+  });
+
   it("PP-geometry-01: la homografía lleva exactamente cada punto de origen a su destino", () => {
     fc.assert(
       fc.property(cuadrilatero, (imagen) => {

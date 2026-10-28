@@ -56,7 +56,30 @@ function hayTresAlineados(p: readonly Punto[]): boolean {
   ].some(([u, v, w]) => Math.abs(areaFirmada(u!, v!, w!)) < 1e-9);
 }
 
-/** Homografía que lleva cada punto de `origen` al de `destino` (DLT con 4 correspondencias). */
+function multiplicar(p: Homografia, q: Homografia): Homografia {
+  const r: number[] = [];
+  for (let f = 0; f < 3; f++) {
+    for (let c = 0; c < 3; c++) {
+      r.push(p[f * 3]! * q[c]! + p[f * 3 + 1]! * q[3 + c]! + p[f * 3 + 2]! * q[6 + c]!);
+    }
+  }
+  return r as unknown as Homografia;
+}
+
+/** Normalización de Hartley: centroide en el origen y distancia media √2. */
+function normalizacion(puntos: readonly Punto[]): Homografia {
+  const cx = puntos.reduce((s, p) => s + p.x, 0) / puntos.length;
+  const cy = puntos.reduce((s, p) => s + p.y, 0) / puntos.length;
+  const media = puntos.reduce((s, p) => s + Math.hypot(p.x - cx, p.y - cy), 0) / puntos.length;
+  const k = Math.SQRT2 / media;
+  return [k, 0, -k * cx, 0, k, -k * cy, 0, 0, 1];
+}
+
+/**
+ * Homografía que lleva cada punto de `origen` al de `destino` (DLT con 4 correspondencias).
+ * Se resuelve sobre coordenadas normalizadas: fijar h33 = 1 en coordenadas crudas falla cuando
+ * la línea de fuga de la perspectiva pasa por el origen de la imagen (h33 real = 0).
+ */
 export function homografia(origen: readonly Punto[], destino: readonly Punto[]): Homografia {
   if (origen.length !== 4 || destino.length !== 4) {
     throw new Error("La homografía necesita exactamente 4 correspondencias");
@@ -64,17 +87,28 @@ export function homografia(origen: readonly Punto[], destino: readonly Punto[]):
   if (hayTresAlineados(origen) || hayTresAlineados(destino)) {
     throw new Error("Configuración degenerada: hay tres puntos alineados");
   }
+  const to = normalizacion(origen);
+  const td = normalizacion(destino);
   const a: number[][] = [];
   const b: number[] = [];
-  origen.forEach(({ x, y }, i) => {
-    const { x: u, y: v } = destino[i]!;
+  origen.forEach((p, i) => {
+    const { x, y } = aplicar(to, p);
+    const { x: u, y: v } = aplicar(td, destino[i]!);
     a.push([x, y, 1, 0, 0, 0, -u * x, -u * y]);
     b.push(u);
     a.push([0, 0, 0, x, y, 1, -v * x, -v * y]);
     b.push(v);
   });
   const h = resolver(a, b);
-  return [h[0]!, h[1]!, h[2]!, h[3]!, h[4]!, h[5]!, h[6]!, h[7]!, 1];
+  const normalizada: Homografia = [h[0]!, h[1]!, h[2]!, h[3]!, h[4]!, h[5]!, h[6]!, h[7]!, 1];
+  const resultado = multiplicar(invertir(td), multiplicar(normalizada, to));
+  return escalar(resultado);
+}
+
+/** Cualquier múltiplo representa la misma homografía: se fija la norma de Frobenius en 1. */
+function escalar(h: Homografia): Homografia {
+  const norma = Math.hypot(...h);
+  return h.map((v) => v / norma) as unknown as Homografia;
 }
 
 export function aplicar(h: Homografia, p: Punto): Punto {
@@ -97,6 +131,5 @@ export function invertir(h: Homografia): Homografia {
     b * g - a * i,
     a * e - b * d,
   ].map((v) => v / det);
-  const escala = inv[8]!;
-  return inv.map((v) => v / escala) as unknown as Homografia;
+  return escalar(inv as unknown as Homografia);
 }
