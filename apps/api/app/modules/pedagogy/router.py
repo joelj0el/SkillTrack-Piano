@@ -142,3 +142,39 @@ def crear_observacion(
     db.add(observacion)
     db.commit()
     return ObservacionDto.model_validate(service.observacion_dto(db, observacion).model_dump())
+
+
+def _ver_tarea(db: Session, tarea: Tarea | None, usuario: Usuario, instante: datetime) -> Tarea:
+    """El estudiante ve lo suyo; el docente, lo de sus asignados. A otro estudiante: 404."""
+    if tarea is not None:
+        if tarea.estudiante_id == usuario.id:
+            return tarea
+        if instituciones.asignacion_vigente(
+            db, usuario.id, tarea.estudiante_id, hoy_local(instante)
+        ):
+            return tarea
+        if instituciones.instituciones_de(db, usuario.id, "docente"):
+            raise _denegar(db, usuario, "tarea", tarea.id, instante)
+    raise HTTPException(status.HTTP_404_NOT_FOUND, "Tarea no encontrada")
+
+
+@router.get("/mis-tareas", response_model=list[TareaDto])
+def mis_tareas(usuario: UsuarioEnSesion, db: Db, instante: Ahora) -> list[TareaDto]:
+    tareas = service.tareas_de_estudiante(db, usuario.id)
+    return service.tareas_dto(db, tareas, hoy_local(instante))
+
+
+@router.get("/tareas/{tarea_id}", response_model=TareaDto)
+def ver_tarea(tarea_id: int, usuario: UsuarioEnSesion, db: Db, instante: Ahora) -> TareaDto:
+    tarea = _ver_tarea(db, db.get(Tarea, tarea_id), usuario, instante)
+    return service.tareas_dto(db, [tarea], hoy_local(instante))[0]
+
+
+@router.get("/observaciones/{observacion_id}", response_model=ObservacionDto)
+def ver_observacion(
+    observacion_id: int, usuario: UsuarioEnSesion, db: Db, instante: Ahora
+) -> ObservacionDto:
+    observacion = db.get(Observacion, observacion_id)
+    tarea = db.get(Tarea, observacion.tarea_id) if observacion and observacion.tarea_id else None
+    _ver_tarea(db, tarea, usuario, instante)
+    return ObservacionDto.model_validate(service.observacion_dto(db, observacion).model_dump())
