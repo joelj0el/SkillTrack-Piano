@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "codigo": {
+      "type": "string",
+      "pattern": "^EJ-\\d{2}$"
+    },
+    "nombre": {
+      "type": "string"
+    },
+    "fuente": {
+      "type": "string"
+    },
+    "tonalidad": {
+      "type": "string"
+    },
+    "compas": {
+      "type": "string"
+    },
+    "figura": {
+      "type": "string"
+    },
+    "orden": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "variantes_manos": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "MI",
+          "MD",
+          "juntas"
+        ]
+      }
+    },
+    "version_vigente": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "version": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tempo_min_permitido_bpm": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tempo_max_permitido_bpm": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "rango_octavas": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "nota_min_midi": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 127
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nota_max_midi": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 127
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventos_esperados": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "idx": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "tiempo_beats": {
+                "type": "number",
+                "minimum": 0
+              },
+              "mano": {
+                "type": "string",
+                "enum": [
+                  "MI",
+                  "MD"
+                ]
+              },
+              "dedo": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "clase_altura": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 11
+              },
+              "midi": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 127
+              }
+            },
+            "required": [
+              "idx",
+              "tiempo_beats",
+              "mano",
+              "dedo",
+              "clase_altura",
+              "midi"
+            ],
+            "additionalProperties": false,
+            "title": "EventoEsperado"
+          }
+        },
+        "partitura_svg": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transcripcion": {
+          "type": "string",
+          "enum": [
+            "pendiente",
+            "verificada"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "tempo_min_permitido_bpm",
+        "tempo_max_permitido_bpm",
+        "rango_octavas",
+        "nota_min_midi",
+        "nota_max_midi",
+        "eventos_esperados",
+        "partitura_svg",
+        "transcripcion"
+      ],
+      "additionalProperties": false,
+      "title": "VersionEjercicio"
+    }
+  },
+  "required": [
+    "id",
+    "codigo",
+    "nombre",
+    "fuente",
+    "tonalidad",
+    "compas",
+    "figura",
+    "orden",
+    "variantes_manos",
+    "version_vigente"
+  ],
+  "additionalProperties": false,
+  "title": "Ejercicio"
+}
