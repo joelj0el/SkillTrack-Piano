@@ -52,3 +52,7 @@ name = "app.contracts_gen no importa el resto de app"
 type = "forbidden"
 source_modules = ["app.contracts_gen"]
 forbidden_modules = ["app.core", "app.modules", "app.main"]
+
+[tool.ruff.lint.per-file-ignores]
+# Textos de demostración: se mantienen en una línea para leerlos completos.
+"app/semilla.py" = ["E501"]

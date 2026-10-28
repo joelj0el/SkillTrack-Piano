@@ -1,5 +1,5 @@
 import type { Rol } from "@skilltrack/contracts";
-import { Suspense, lazy, type ReactNode } from "react";
+import { Suspense, lazy, useState, type ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router";
 import { SinConexion } from "./componentes.tsx";
 import { Usuarios } from "./paginas/admin.tsx";
@@ -9,6 +9,7 @@ import { CambiarClave, Entrar } from "./paginas/entrada.tsx";
 import { DetalleTarea, MisTareas } from "./paginas/estudiante.tsx";
 import { ModoInvestigacion } from "./paginas/investigacion.tsx";
 import { roles, rutaInicial, useSesion } from "./sesion.tsx";
+import { aplicarTema, temaGuardado, type Tema } from "./tema.ts";
 
 const PaginaMicrofono = lazy(() =>
   import("./captura/PaginaPractica.tsx").then((m) => ({ default: m.PaginaMicrofono })),
@@ -38,12 +39,31 @@ function Inicio() {
   return <p className="suave">Cargando…</p>;
 }
 
+function BotonTema() {
+  const [tema, setTema] = useState<Tema>(temaGuardado);
+  const otro: Tema = tema === "claro" ? "oscuro" : "claro";
+  return (
+    <button
+      type="button"
+      className="secundario compacto"
+      aria-label={`Cambiar a tema ${otro}`}
+      onClick={() => {
+        aplicarTema(otro);
+        setTema(otro);
+      }}
+    >
+      {tema === "claro" ? "☾ Oscuro" : "☀ Claro"}
+    </button>
+  );
+}
+
 function Barra() {
   const { estado, salir } = useSesion();
   if (estado.tipo !== "activo" || estado.usuario.clave_temporal) {
     return (
       <header className="barra">
         <strong>SkillTrack-Piano</strong>
+        <BotonTema />
       </header>
     );
   }
@@ -58,7 +78,8 @@ function Barra() {
         {r.has("admin_inst") && <Link to="/usuarios">Usuarios</Link>}
         {r.has("investigador") && <Link to="/investigacion">Modo investigación</Link>}
         <Link to="/catalogo">Catálogo</Link>
-        <button type="button" className="secundario" onClick={() => void salir()}>
+        <BotonTema />
+        <button type="button" className="secundario compacto" onClick={() => void salir()}>
           Salir
         </button>
       </nav>
