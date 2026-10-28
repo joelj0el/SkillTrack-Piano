@@ -9,11 +9,13 @@ import {
   UsuarioListado,
   UsuarioNuevo,
 } from "./instituciones.ts";
+import { ObservacionNueva, Observacion, Tarea, TareaCambio, TareaNueva } from "./pedagogia.ts";
 import { Salud } from "./salud.ts";
 
 export * from "./catalogo.ts";
 export * from "./identidad.ts";
 export * from "./instituciones.ts";
+export * from "./pedagogia.ts";
 export { Salud };
 
 // Cada entrada se exporta como schemas/<clave>.json y genera apps/api/app/contracts_gen/<clave>.py.
@@ -31,4 +33,9 @@ export const esquemas = {
   clave_restablecida: ClaveRestablecida,
   ejercicio: Ejercicio,
   clase_error: ClaseError,
+  tarea_nueva: TareaNueva,
+  tarea_cambio: TareaCambio,
+  tarea: Tarea,
+  observacion_nueva: ObservacionNueva,
+  observacion: Observacion,
 };
