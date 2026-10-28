@@ -1,4 +1,4 @@
-import { homografia, type Homografia, type Punto } from "./homografia.ts";
+import { aplicar, homografia, type Homografia, type Punto } from "./homografia.ts";
 
 /**
  * Plano del teclado: x en anchos de tecla blanca desde la primera blanca del tramo; y = 0 en el
@@ -109,5 +109,26 @@ export function coberturaDelRango(
   const faltan: Cobertura["faltan"] = [];
   if (notaMin < calibrado.primeraBlanca) faltan.push("graves");
   if (notaMax > calibrado.ultimaBlanca) faltan.push("agudas");
+  return { cubre: faltan.length === 0, faltan };
+}
+
+/**
+ * ¿Se ven en la imagen los extremos del tramo calibrado? `aImagen` lleva el plano del teclado a
+ * píxeles (inversa de la calibración). Se revisan las esquinas del frente y del fondo de las teclas.
+ */
+export function rangoEnCuadro(
+  aImagen: Homografia,
+  modelo: ModeloTeclado,
+  ancho: number,
+  alto: number,
+): Cobertura {
+  const dentro = (x: number) =>
+    [0, 3].every((y) => {
+      const p = aplicar(aImagen, { x, y });
+      return p.x >= 0 && p.x <= ancho && p.y >= 0 && p.y <= alto;
+    });
+  const faltan: Cobertura["faltan"] = [];
+  if (!dentro(0)) faltan.push("graves");
+  if (!dentro(modelo.blancas)) faltan.push("agudas");
   return { cubre: faltan.length === 0, faltan };
 }
