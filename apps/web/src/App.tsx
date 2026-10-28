@@ -1,6 +1,7 @@
 import type { Rol } from "@skilltrack/contracts";
 import type { ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router";
+import { Encuadre } from "./captura/Encuadre.tsx";
 import { SinConexion } from "./componentes.tsx";
 import { Usuarios } from "./paginas/admin.tsx";
 import { DetalleEjercicio, Catalogo } from "./paginas/catalogo.tsx";
@@ -87,6 +88,14 @@ export function App() {
             element={
               <Protegida>
                 <Catalogo />
+              </Protegida>
+            }
+          />
+          <Route
+            path="/practicar"
+            element={
+              <Protegida rol="estudiante">
+                <Encuadre manosEsperadas={2} />
               </Protegida>
             }
           />

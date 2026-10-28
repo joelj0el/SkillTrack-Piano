@@ -108,7 +108,9 @@ export function DetalleTarea() {
         <section>
           <h1>{tarea.ejercicio.nombre}</h1>
           <ResumenTarea tarea={tarea} />
-          <Link to={`/catalogo/${tarea.ejercicio.codigo}`}>Ver el ejercicio y su partitura</Link>
+          <Link to={`/catalogo/${tarea.ejercicio.codigo}`}>
+            Ver el ejercicio y su partitura
+          </Link> · <Link to="/practicar">Practicar</Link>
           <h2>Observaciones de tu docente</h2>
           <Observaciones tarea={tarea} />
         </section>

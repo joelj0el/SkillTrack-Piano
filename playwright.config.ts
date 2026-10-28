@@ -15,7 +15,11 @@ export default defineConfig({
     trace: "retain-on-failure",
     // El certificado local lo firma la CA interna de Caddy: sin esta opción Chromium no registra
     // el service worker (ignoreHTTPSErrors no alcanza a la descarga del script del worker).
-    launchOptions: { args: ["--ignore-certificate-errors"] },
+    // Cámara simulada de Chromium: patrón de prueba en lugar de una cámara real.
+    launchOptions: {
+      args: ["--ignore-certificate-errors", "--use-fake-device-for-media-stream"],
+    },
   },
-  projects: [{ name: "chromium", use: { ...devices["Pixel 7"] } }],
+  // Chromium completo (no headless-shell): el modo shell no implementa la captura de cámara.
+  projects: [{ name: "chromium", use: { ...devices["Pixel 7"], channel: "chromium" } }],
 });

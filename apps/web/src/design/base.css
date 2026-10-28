@@ -145,3 +145,9 @@ button:disabled {
   border: var(--borde) dashed var(--color-borde);
   border-radius: var(--radio-md);
 }
+
+.vista-camara {
+  width: 100%;
+  border-radius: var(--radio-md);
+  background: var(--color-texto);
+}
