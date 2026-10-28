@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "usuario": {
+      "type": "string",
+      "pattern": "^[a-z0-9._-]{3,64}$"
+    },
+    "nombre_visible": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "email": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 254,
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "es_menor": {
+      "type": "boolean"
+    },
+    "rol": {
+      "type": "string",
+      "enum": [
+        "admin_inst",
+        "docente",
+        "estudiante",
+        "investigador"
+      ]
+    }
+  },
+  "required": [
+    "usuario",
+    "nombre_visible",
+    "es_menor",
+    "rol"
+  ],
+  "additionalProperties": false,
+  "title": "UsuarioNuevo"
+}
