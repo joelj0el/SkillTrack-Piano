@@ -16,6 +16,7 @@ dependencies = [
 dev = [
     "datamodel-code-generator==0.86.0",
     "httpx==0.28.1",
+    "import-linter==2.15",
     "pytest==9.1.1",
     "ruff==0.17.3",
     "testcontainers[postgres]==4.15.0",
@@ -35,3 +36,18 @@ extend-exclude = ["app/contracts_gen"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.importlinter]
+root_package = "app"
+
+[[tool.importlinter.contracts]]
+name = "app.core no importa app.modules"
+type = "forbidden"
+source_modules = ["app.core"]
+forbidden_modules = ["app.modules"]
+
+[[tool.importlinter.contracts]]
+name = "app.contracts_gen no importa el resto de app"
+type = "forbidden"
+source_modules = ["app.contracts_gen"]
+forbidden_modules = ["app.core", "app.modules", "app.main"]
