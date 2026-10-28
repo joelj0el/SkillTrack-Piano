@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.contracts_gen.asignacion import Asignacion
 from app.contracts_gen.asignacion_nueva import AsignacionNueva
+from app.contracts_gen.clave_restablecida import ClaveRestablecida
 from app.contracts_gen.estudiante_resumen import EstudianteResumen
 from app.contracts_gen.usuario_creado import UsuarioCreado
 from app.contracts_gen.usuario_listado import UsuarioListado
@@ -136,6 +137,23 @@ def cerrar_asignacion(
 def mis_estudiantes(usuario: UsuarioEnSesion, db: Db, instante: Ahora) -> list[EstudianteResumen]:
     ids = service.estudiantes_de(db, usuario.id, hoy_local(instante))
     return [_resumen(u) for u in identidad.usuarios_por_id(db, ids)]
+
+
+@router.post("/estudiantes/{estudiante_id}/restablecer-clave", response_model=ClaveRestablecida)
+def restablecer_clave(
+    estudiante_id: EstudianteAccesible, actor: UsuarioEnSesion, db: Db, instante: Ahora
+) -> ClaveRestablecida:
+    clave = identidad.restablecer_clave(db, estudiante_id)
+    auditoria.registrar(
+        db,
+        actor_id=actor.id,
+        accion="restablecer_clave",
+        recurso="estudiante",
+        recurso_id=estudiante_id,
+        fecha=instante,
+    )
+    db.commit()
+    return ClaveRestablecida(clave_temporal=clave)
 
 
 @router.get("/estudiantes/{estudiante_id}", response_model=EstudianteResumen)
