@@ -239,6 +239,15 @@ importers:
 
   packages/core: {}
 
+  research/node:
+    dependencies:
+      '@skilltrack/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@skilltrack/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+
 packages:
 
   '@apideck/better-ajv-errors@0.3.7':

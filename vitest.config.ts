@@ -6,7 +6,12 @@ export default defineConfig({
       {
         test: {
           name: "node",
-          include: ["tools/**/*.test.ts", "packages/*/src/**/*.test.ts", "infra/**/*.test.ts"],
+          include: [
+            "tools/**/*.test.ts",
+            "packages/*/src/**/*.test.ts",
+            "research/node/src/**/*.test.ts",
+            "infra/**/*.test.ts",
+          ],
           exclude: [...configDefaults.exclude, "tools/ci/fixtures/**"],
         },
       },

@@ -35,6 +35,13 @@ module.exports = {
       to: { path: "^research/" },
     },
     {
+      name: "research-sin-apps",
+      comment: "La investigación usa el núcleo y los contratos, nunca las aplicaciones.",
+      severity: "error",
+      from: { path: "^research/" },
+      to: { path: "^apps/" },
+    },
+    {
       name: "sin-ciclos",
       severity: "error",
       from: {},

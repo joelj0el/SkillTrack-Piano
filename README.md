@@ -39,6 +39,7 @@ La contraseña de la base local es de desarrollo (`skilltrack`). Se puede cambia
 pnpm install                               # dependencias de TypeScript
 pnpm dev                                   # PWA en modo desarrollo (Vite)
 uv sync --project apps/api                 # dependencias de la API
+uv sync --project research/python          # dependencias de la investigación (proyecto uv aparte)
 ```
 
 La API lee su configuración de variables de entorno. Para desarrollo local, copia `apps/api/.env.example` como `apps/api/.env` y ajusta `DATABASE_URL`. El archivo `.env` nunca se versiona.
@@ -46,11 +47,26 @@ La API lee su configuración de variables de entorno. Para desarrollo local, cop
 ## Pruebas
 
 ```bash
-pnpm test                                  # Vitest (núcleo, contratos, web, herramientas)
+pnpm test                                  # Vitest (núcleo, contratos, web, investigación, herramientas)
 uv run --project apps/api pytest           # API (pytest + testcontainers; requiere Docker)
+uv run --project research/python pytest    # investigación (Python)
 pnpm lint                                  # ESLint
+pnpm typecheck                             # TypeScript en todos los paquetes
+pnpm deps:check                            # reglas de dependencias (dependency-cruiser)
 pnpm contracts:gen                         # Zod → JSON Schema → Pydantic (apps/api/app/contracts_gen/)
 ```
+
+## Documentación generada
+
+| Comando                | Genera                                                   | Estado    |
+| ---------------------- | -------------------------------------------------------- | --------- |
+| `pnpm docs:diagrams`   | PNG de los diagramas PlantUML de `docs/`                 | pendiente |
+| `pnpm docs:er`         | Diagrama ER y diccionario de datos desde la base migrada | pendiente |
+| `pnpm docs:tests it-N` | Resultados de pruebas de la iteración N                  | pendiente |
+| `pnpm docs:trace it-N` | Matriz de trazabilidad de la iteración N                 | pendiente |
+| `pnpm docs:build`      | `build/SECCION_II.docx` con pandoc                       | pendiente |
+
+Mientras un comando está pendiente, solo imprime `pendiente: …` y no genera archivos.
 
 ## Estructura
 

@@ -18,7 +18,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ["**/*.mjs", "**/*.cjs"],
-    languageOptions: { globals: { process: "readonly", module: "writable" } },
+    languageOptions: { globals: { process: "readonly", module: "writable", console: "readonly" } },
   },
   {
     // Núcleo puro: el reloj, los temporizadores y el azar se inyectan, nunca se leen del entorno.

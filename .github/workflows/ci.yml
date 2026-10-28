@@ -23,6 +23,8 @@ jobs:
         with:
           node-version-file: package.json
           cache: pnpm
+      # Las pruebas de los esqueletos docs:* ejecutan scripts de Python con uv.
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm format:check
@@ -55,6 +57,27 @@ jobs:
         if: always()
         with:
           name: junit-python
+          path: reports/
+          retention-days: 14
+
+  research-python:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: research/python
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run pytest --junitxml=../../reports/pytest-research.xml
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: junit-research-python
           path: reports/
           retention-days: 14
 

@@ -59,6 +59,14 @@ describe("dependency-cruiser", () => {
   });
 });
 
+describe("dependency-cruiser en investigación", () => {
+  it("PU-research-02: la investigación no puede importar las aplicaciones", async () => {
+    const resultado = await violaciones(["research/node/src/usa-apps.ts"]);
+
+    expect(resultado).toContain("research-sin-apps research/node/src/usa-apps.ts");
+  });
+});
+
 describe("ESLint en el núcleo", () => {
   const codigo = [
     "export const a = Date.now();",
