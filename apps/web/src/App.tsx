@@ -10,6 +10,9 @@ import { DetalleTarea, MisTareas } from "./paginas/estudiante.tsx";
 import { ModoInvestigacion } from "./paginas/investigacion.tsx";
 import { roles, rutaInicial, useSesion } from "./sesion.tsx";
 
+const PaginaMicrofono = lazy(() =>
+  import("./captura/PaginaPractica.tsx").then((m) => ({ default: m.PaginaMicrofono })),
+);
 // El detector de la mano (MediaPipe) solo se descarga al abrir la práctica.
 const PaginaPractica = lazy(() =>
   import("./captura/PaginaPractica.tsx").then((m) => ({ default: m.PaginaPractica })),
@@ -50,6 +53,7 @@ function Barra() {
       <strong>SkillTrack-Piano</strong>
       <nav aria-label="Principal">
         {r.has("estudiante") && <Link to="/tareas">Mis tareas</Link>}
+        {r.has("estudiante") && <Link to="/microfono">Micrófono</Link>}
         {r.has("docente") && <Link to="/estudiantes">Mis estudiantes</Link>}
         {r.has("admin_inst") && <Link to="/usuarios">Usuarios</Link>}
         {r.has("investigador") && <Link to="/investigacion">Modo investigación</Link>}
@@ -92,6 +96,16 @@ export function App() {
             element={
               <Protegida>
                 <Catalogo />
+              </Protegida>
+            }
+          />
+          <Route
+            path="/microfono"
+            element={
+              <Protegida rol="estudiante">
+                <Suspense fallback={<p className="suave">Cargando…</p>}>
+                  <PaginaMicrofono />
+                </Suspense>
               </Protegida>
             }
           />

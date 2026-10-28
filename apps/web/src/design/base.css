@@ -220,3 +220,18 @@ button:disabled {
   font-weight: var(--peso-fuerte);
   text-decoration: none;
 }
+
+.pulso-visual {
+  font-size: var(--texto-xl);
+  text-align: center;
+  color: var(--color-borde);
+  transition: color var(--duracion);
+}
+
+.pulso-visual.activo {
+  color: var(--color-acento);
+}
+
+meter {
+  width: 100%;
+}

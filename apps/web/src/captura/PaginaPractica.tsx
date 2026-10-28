@@ -2,6 +2,13 @@ import { Ejercicio, ResultadoIntento, Tarea, type EventoResultado } from "@skill
 import {
   DEDOS,
   PUNTA,
+  detectarAtaques,
+  etiquetaTempo,
+  evaluarAudio,
+  medirAudio,
+  opcionesTempo,
+  programa,
+  type SemaforoAudio,
   VERSION_NUCLEO,
   aplicar,
   calibracion,
@@ -21,9 +28,15 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { pedir } from "../api.ts";
+import { programarClic, unir, useMicrofono, type Microfono } from "../audio/microfono.ts";
 import { almacenIndexedDb, encolar, vaciar } from "../bandeja/bandeja.ts";
 import { Cargado, NOMBRE_MANOS, useCarga } from "../componentes.tsx";
-import type { MuestraMano, PedidoAnalisis, RespuestaAnalisis } from "./analisis.ts";
+import {
+  reducirTasa,
+  type MuestraMano,
+  type PedidoAnalisis,
+  type RespuestaAnalisis,
+} from "./analisis.ts";
 import { claveCalibracion, guardarCalibracion, leerCalibracion } from "./calibracion.ts";
 import { colorDeToken } from "./camara.ts";
 import { duracionEsperada, transicion, type Estado, type Plan } from "./estado.ts";
@@ -125,7 +138,11 @@ function Practica({ contexto }: { contexto: Contexto }) {
   const esperadas = useMemo(() => secuenciaEscala(ejercicio.tonalidad, manos), [ejercicio, manos]);
   const rango = useMemo(() => rangoDe(esperadas), [esperadas]);
   const modelo = useMemo(() => modeloTeclado(rango.min, rango.max), [rango]);
-  const [paso, setPaso] = useState<"encuadre" | "calibracion" | "ejecucion">("encuadre");
+  const [paso, setPaso] = useState<"encuadre" | "microfono" | "calibracion" | "ejecucion">(
+    "encuadre",
+  );
+  const microfono = useMicrofono();
+  const [soloVision, setSoloVision] = useState(false);
   const [toques, setToques] = useState<{ x: number; y: number }[]>([]);
   const [aPlano, setAPlano] = useState<Homografia | null>(null);
   const [confirmada, setConfirmada] = useState(false);
@@ -178,7 +195,15 @@ function Practica({ contexto }: { contexto: Contexto }) {
       >
         {(vista) =>
           paso === "encuadre" ? (
-            <PasoEncuadre vista={vista} continuar={() => setPaso("calibracion")} />
+            <PasoEncuadre vista={vista} continuar={() => setPaso("microfono")} />
+          ) : paso === "microfono" ? (
+            <PasoMicrofono
+              microfono={microfono}
+              continuar={(sinAudio) => {
+                setSoloVision(sinAudio);
+                setPaso("calibracion");
+              }}
+            />
           ) : paso === "calibracion" ? (
             <PasoCalibracion
               vista={vista}
@@ -208,6 +233,8 @@ function Practica({ contexto }: { contexto: Contexto }) {
               esperadas={esperadas}
               rango={rango}
               aPlano={aPlano!}
+              microfono={microfono}
+              soloVision={soloVision}
             />
           )
         }
@@ -363,58 +390,207 @@ function muestrasDe(f: Fotograma, t: number): Partial<Record<"MI" | "MD", Muestr
   return salida;
 }
 
+/** P-37: prueba de micrófono en dos tramos (silencio y tocando) con medidor en vivo. */
+export function PasoMicrofono({
+  microfono,
+  continuar,
+}: {
+  microfono: Microfono;
+  continuar: (soloVision: boolean) => void;
+}) {
+  const [fase, setFase] = useState<"listo" | "silencio" | "tocando" | "hecho">("listo");
+  const [semaforo, setSemaforo] = useState<SemaforoAudio | null>(null);
+  const { estado } = microfono;
+
+  async function probar() {
+    const espera = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
+    setFase("silencio");
+    microfono.grabar();
+    await espera(2000);
+    const silencio = unir(microfono.detener());
+    setFase("tocando");
+    microfono.grabar();
+    await espera(3000);
+    const tocando = unir(microfono.detener());
+    const tasa = estado.tipo === "activo" ? estado.tasa : 48000;
+    setSemaforo(
+      evaluarAudio(
+        medirAudio(
+          reducirTasa(silencio.muestras, tasa).muestras,
+          reducirTasa(tocando.muestras, tasa).muestras,
+        ),
+      ),
+    );
+    setFase("hecho");
+  }
+
+  if (estado.tipo === "denegado" || estado.tipo === "error") {
+    return (
+      <section aria-labelledby="titulo-sin-micro">
+        <h2 id="titulo-sin-micro">No podemos usar el micrófono</h2>
+        <p>
+          {estado.tipo === "denegado"
+            ? "Para analizar notas y ritmo, permite el micrófono en los ajustes del sitio (Permisos → Micrófono)."
+            : "El micrófono no está disponible en este dispositivo."}
+        </p>
+        <p className="aviso">
+          Puedes continuar en <strong>modo solo visión</strong>: se analizan las manos y los dedos,
+          pero las notas y el ritmo no se evalúan.
+        </p>
+        <div className="fila">
+          <button type="button" onClick={() => continuar(true)}>
+            Continuar en modo solo visión
+          </button>
+          <button type="button" className="secundario" onClick={microfono.reintentar}>
+            Reintentar
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  const nivel = Math.max(0, Math.min(100, ((microfono.nivelDb + 80) / 80) * 100));
+  const ocupado = fase === "silencio" || fase === "tocando";
+  return (
+    <>
+      <h2>2. Prueba de micrófono</h2>
+      {estado.tipo === "activo" && !estado.audioSinProcesar && (
+        <p className="aviso">
+          Tu navegador no desactivó todo el procesamiento del micrófono; el resultado lo indicará.
+        </p>
+      )}
+      <label>
+        Nivel del micrófono ({Math.round(microfono.nivelDb)} dBFS)
+        <meter min={0} max={100} value={nivel} data-nivel={Math.round(microfono.nivelDb)} />
+      </label>
+      {fase === "silencio" && <p className="aviso">Quédate en silencio unos segundos…</p>}
+      {fase === "tocando" && <p className="aviso">Ahora toca unas notas del ejercicio…</p>}
+      {semaforo && (
+        <div
+          className={`tarjeta semaforo semaforo-${semaforo.nivel}`}
+          role="status"
+          data-semaforo-audio={semaforo.nivel}
+        >
+          <strong>
+            {
+              {
+                verde: "El sonido está bien",
+                ambar: "Se puede mejorar",
+                rojo: "Corrige el sonido",
+              }[semaforo.nivel]
+            }
+          </strong>
+          <ul className="lista">
+            {semaforo.mensajes.map((m) => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className="fila">
+        <button
+          type="button"
+          disabled={estado.tipo !== "activo" || ocupado}
+          onClick={() => void probar()}
+        >
+          {fase === "hecho" ? "Probar de nuevo" : "Probar el micrófono"}
+        </button>
+        <button
+          type="button"
+          className="secundario"
+          disabled={semaforo?.nivel === "rojo" || fase !== "hecho"}
+          onClick={() => continuar(false)}
+        >
+          Continuar
+        </button>
+      </div>
+    </>
+  );
+}
+
 function PasoEjecucion(props: {
   vista: Vista;
   contexto: Contexto;
   esperadas: NotaEsperada[];
   rango: { min: number; max: number };
   aPlano: Homografia;
+  microfono: Microfono;
+  soloVision: boolean;
 }) {
-  const { vista, contexto, esperadas, rango, aPlano } = props;
-  // Con tarea: de 40 (práctica lenta) al máximo de la tarea; sin tarea: 40–75 (PRM-02).
-  const opciones = {
-    min: 40,
-    max: contexto.tarea?.tempo_max_bpm ?? 75,
-    minimoQueCuenta: contexto.tarea?.tempo_min_bpm ?? null,
-  };
+  const { vista, contexto, esperadas, rango, aPlano, microfono, soloVision } = props;
+  const opciones = opcionesTempo(
+    contexto.tarea
+      ? {
+          tempoMin: contexto.tarea.tempo_min_bpm,
+          tempoMax: contexto.tarea.tempo_max_bpm,
+        }
+      : null,
+  );
   const [tempo, setTempo] = useState(contexto.tarea?.tempo_min_bpm ?? 60);
-  const lenta =
-    opciones.minimoQueCuenta !== null && tempo < opciones.minimoQueCuenta
-      ? "Práctica lenta: no cuenta para la tarea"
-      : null;
+  const [metronomo, setMetronomo] = useState<"con" | "sin">("sin");
   const [instrumento, setInstrumento] = useState<
     "acustico" | "digital" | "teclado" | "no_declarado"
   >("no_declarado");
   const [estado, setEstado] = useState<Estado | null>(null);
   const [pulso, setPulso] = useState(0);
+  const [latido, setLatido] = useState(false);
   const [respuesta, setRespuesta] = useState<RespuestaAnalisis | null>(null);
   const [guardado, setGuardado] = useState<string | null>(null);
   const series = useRef<Partial<Record<"MI" | "MD", MuestraMano[]>>>({});
   const inicio = useRef(0);
+  const relojAudio = useRef<{ ctx: number; rel: number } | null>(null);
+  const temporizadores = useRef<number[]>([]);
+  const conAudio = !soloVision && microfono.estado.tipo === "activo";
 
   const porMano = contexto.manos === "juntas" ? esperadas.length / 2 : esperadas.length;
   const plan: Plan = {
-    eventosEsperados: esperadas.length,
+    // Con audio, un evento por instante esperado (las dos manos en octava suenan juntas).
+    eventosEsperados: conAudio ? porMano : esperadas.length,
     duracionEsperada: duracionEsperada(porMano, tempo),
   };
+
+  function despues(ms: number, f: () => void) {
+    temporizadores.current.push(window.setTimeout(f, ms));
+  }
 
   function empezar() {
     series.current = {};
     setRespuesta(null);
     setGuardado(null);
+    temporizadores.current.forEach(clearTimeout);
+    temporizadores.current = [];
     inicio.current = performance.now();
     setEstado({ fase: "conteo", desde: 0 });
-    // Conteo visual de 4 pulsos (2 compases de 2/4); la medición empieza en el pulso siguiente.
-    const pulsoS = 60 / tempo;
-    const p = { conteo: [0, 1, 2, 3].map((i) => i * pulsoS), inicioMedicion: 4 * pulsoS };
-    p.conteo.forEach((t, i) => setTimeout(() => setPulso(i + 1), t * 1000));
-    setTimeout(() => {
+    const p = programa(tempo, metronomo, plan.duracionEsperada * 1.5);
+    const ctx = microfono.contexto.current;
+    if (ctx && conAudio) {
+      const base = ctx.currentTime + 0.05;
+      p.conteo.forEach((t, i) => programarClic(ctx, base + t, i === 0));
+    }
+    p.conteo.forEach((t, i) => despues(t * 1000 + 50, () => setPulso(i + 1)));
+    // Con metrónomo: pulso visual mudo durante la ejecución.
+    p.pulsosVisuales.forEach((t) =>
+      despues(t * 1000 + 50, () => {
+        setLatido(true);
+        despues(120, () => setLatido(false));
+      }),
+    );
+    despues(p.inicioMedicion * 1000 + 50, () => {
       setPulso(0);
+      if (conAudio) {
+        const ctxT = microfono.grabar();
+        relojAudio.current = {
+          ctx: ctxT,
+          rel: (performance.now() - inicio.current) / 1000,
+        };
+      }
       setEstado((e) => (e ? transicion(e, { tipo: "fin-conteo", t: p.inicioMedicion }, plan) : e));
-    }, p.inicioMedicion * 1000);
+    });
   }
 
-  // Durante "Tocando": registrar series y avanzar la máquina de estados (fin automático).
+  useEffect(() => () => temporizadores.current.forEach(clearTimeout), []);
+
+  // "Tocando": series visuales, ataques oídos y fin automático (PRM-15).
   useEffect(() => {
     if (estado?.fase !== "tocando") return;
     let cuadro = 0;
@@ -430,20 +606,35 @@ function PasoEjecucion(props: {
         }
       }
       let ev: Parameters<typeof transicion>[1] = { tipo: "tick", t };
-      if (t - ultimoConteo > 0.3) {
+      if (t - ultimoConteo > 1) {
         ultimoConteo = t;
-        const total = (["MI", "MD"] as const).reduce(
-          (s, id) =>
-            s +
-            detectarDescensos(
-              (series.current[id] ?? []).map((m) => ({ t: m.t, alturas: m.alturas })),
-              DEDOS,
-            ).length,
-          0,
-        );
+        let total: number;
+        let ultimo: number;
+        if (conAudio) {
+          const { muestras } = unir(microfono.grabado());
+          const tasa = microfono.estado.tipo === "activo" ? microfono.estado.tasa : 48000;
+          const reducida = reducirTasa(muestras, tasa);
+          const ataques = detectarAtaques(reducida.muestras, reducida.tasa);
+          total = ataques.length;
+          ultimo = (relojAudio.current?.rel ?? 0) + (ataques.at(-1) ?? 0);
+        } else {
+          total = (["MI", "MD"] as const).reduce(
+            (s, id) =>
+              s +
+              detectarDescensos(
+                (series.current[id] ?? []).map((m) => ({
+                  t: m.t,
+                  alturas: m.alturas,
+                })),
+                DEDOS,
+              ).length,
+            0,
+          );
+          ultimo = t;
+        }
         if (total > eventos) {
           eventos = total;
-          ev = { tipo: "actividad", t, eventos: total };
+          ev = { tipo: "actividad", t: ultimo, eventos: total };
         }
       }
       setEstado((e) => (e ? transicion(e, ev, plan) : e));
@@ -452,9 +643,20 @@ function PasoEjecucion(props: {
     return () => cancelAnimationFrame(cuadro);
   }, [estado?.fase]);
 
-  // "Analizando": el núcleo corre en un Web Worker.
+  // "Analizando": el núcleo corre en un Web Worker con la imagen y el sonido ya convertidos en
+  // números dentro del teléfono.
   useEffect(() => {
     if (estado?.fase !== "analizando") return;
+    let audio: PedidoAnalisis["audio"];
+    if (conAudio && relojAudio.current) {
+      const { muestras, t0 } = unir(microfono.detener());
+      const tasa = microfono.estado.tipo === "activo" ? microfono.estado.tasa : 48000;
+      audio = {
+        muestras,
+        tasa,
+        t0: relojAudio.current.rel + (t0 - relojAudio.current.ctx),
+      };
+    }
     const trabajador = new Worker(new URL("./analisis.worker.ts", import.meta.url), {
       type: "module",
     });
@@ -467,16 +669,25 @@ function PasoEjecucion(props: {
       calibracion: aPlano,
       rango,
       esperadas,
+      metronomo,
+      tempoElegido: tempo,
+      ...(audio ? { audio } : {}),
     };
-    trabajador.postMessage(pedido);
+    trabajador.postMessage(pedido, audio ? [audio.muestras.buffer] : []);
     return () => trabajador.terminate();
-  }, [estado?.fase, aPlano, rango, esperadas]);
+  }, [estado?.fase]);
 
   // Resultado listo: guardar el intento (solo números) por la bandeja de salida.
   useEffect(() => {
     if (!respuesta || estado?.fase !== "analizando" || !vista.detector) return;
-    const detectadas = respuesta.notas.filter((n) => n.resultado.estado === "detectada").length;
-    const pct = (100 * detectadas) / Math.max(1, respuesta.notas.length);
+    const acustico = respuesta.acustico;
+    const evaluables = acustico
+      ? acustico.notas.esperadas.filter((n) => n.estado !== "dudosa" && n.estado !== "faltante")
+          .length / Math.max(1, acustico.notas.esperadas.length)
+      : respuesta.notas.filter((n) => n.resultado.estado === "detectada").length /
+        Math.max(1, respuesta.notas.length);
+    const pct = Math.round(evaluables * 1000) / 10;
+    const ok = pct >= 70 && !estado.incompleta;
     const eventos: EventoResultado[] = respuesta.notas.map((n) => ({
       idx: n.idx,
       estado: "no-evaluable",
@@ -498,19 +709,18 @@ function PasoEjecucion(props: {
       instrumento,
       manos: contexto.manos,
       clase_dispositivo: claseDispositivo(),
-      modo: "V",
-      modo_metronomo: null,
+      modo: acustico ? "VA" : "V",
+      modo_metronomo: acustico ? metronomo : null,
       tempo_elegido_bpm: tempo,
-      estado: pct >= 70 && !estado.incompleta ? "evaluado" : "no_evaluable",
-      motivo_no_evaluable:
-        pct >= 70 && !estado.incompleta
-          ? null
-          : estado.incompleta
-            ? "Ejecución incompleta"
-            : "Menos del 70 % de las notas con evento visual",
+      estado: ok ? "evaluado" : "no_evaluable",
+      motivo_no_evaluable: ok
+        ? null
+        : estado.incompleta
+          ? "Ejecución incompleta"
+          : "Menos del 70 % de las notas evaluables",
       iniciado_en: new Date(Date.now() - (performance.now() - inicio.current)).toISOString(),
       duracion_ms: Math.round(performance.now() - inicio.current),
-      pct_eventos_evaluables: Math.round(pct * 10) / 10,
+      pct_eventos_evaluables: pct,
       pct_digitacion_correcta: null,
       eventos,
     });
@@ -524,11 +734,15 @@ function PasoEjecucion(props: {
       });
   }, [respuesta]);
 
+  const lenta = etiquetaTempo(tempo, opciones);
   if (!estado || estado.fase === "cancelado") {
     return (
       <>
-        <h2>3. Prepárate</h2>
+        <h2>4. Prepárate</h2>
         {estado?.fase === "cancelado" && <p className="aviso">Intento cancelado: no se guardó.</p>}
+        {soloVision && (
+          <p className="aviso">Modo solo visión: las notas y el ritmo no se evalúan.</p>
+        )}
         <div className="fila">
           <label>
             Tempo (♩ =)
@@ -536,12 +750,25 @@ function PasoEjecucion(props: {
               type="number"
               min={opciones.min}
               max={opciones.max}
+              step={1}
               value={tempo}
               onChange={(e) =>
                 setTempo(Math.min(opciones.max, Math.max(opciones.min, Number(e.target.value))))
               }
             />
           </label>
+          {!soloVision && (
+            <label>
+              Metrónomo
+              <select
+                value={metronomo}
+                onChange={(e) => setMetronomo(e.target.value as "con" | "sin")}
+              >
+                <option value="sin">Sin metrónomo (solo conteo)</option>
+                <option value="con">Con metrónomo (pulso visual)</option>
+              </select>
+            </label>
+          )}
           <label>
             Instrumento
             <select
@@ -567,18 +794,29 @@ function PasoEjecucion(props: {
       <>
         <h2 data-fase={estado.fase}>{estado.fase === "conteo" ? "Prepárate…" : "Tocando"}</h2>
         {estado.fase === "conteo" ? (
-          <p className="conteo" aria-live="assertive">
+          <p className="conteo" aria-live="assertive" data-pulso={pulso}>
             {pulso || "…"}
           </p>
         ) : (
-          <p className="suave">
-            Toca el ejercicio. Al terminar, quédate quieto: el análisis empieza solo.
-          </p>
+          <>
+            {metronomo === "con" && !soloVision && (
+              <p className={latido ? "pulso-visual activo" : "pulso-visual"} aria-hidden="true">
+                ●
+              </p>
+            )}
+            <p className="suave">
+              Toca el ejercicio. Al terminar, quédate quieto: el análisis empieza solo.
+            </p>
+          </>
         )}
         <button
           type="button"
           className="secundario boton-grande"
-          onClick={() => setEstado(transicion(estado, { tipo: "cancelar" }, plan))}
+          onClick={() => {
+            temporizadores.current.forEach(clearTimeout);
+            microfono.detener();
+            setEstado(transicion(estado, { tipo: "cancelar" }, plan));
+          }}
         >
           Cancelar
         </button>
@@ -597,51 +835,183 @@ function PasoEjecucion(props: {
     );
   }
   return (
+    <Resultado
+      estado={estado}
+      respuesta={respuesta}
+      guardado={guardado}
+      contexto={contexto}
+      esperadas={esperadas}
+      otro={() => setEstado(null)}
+    />
+  );
+}
+
+const SIMBOLO = {
+  correcta: "✓",
+  incorrecta: "✗",
+  dudosa: "dudosa",
+  faltante: "faltante",
+} as const;
+const ESTADO_TEMPO = {
+  estable: "Tempo estable",
+  aceleraste: "Cambio de tempo: aceleraste",
+  frenaste: "Cambio de tempo: frenaste",
+} as const;
+
+function Resultado(props: {
+  estado: Estado;
+  respuesta: RespuestaAnalisis | null;
+  guardado: string | null;
+  contexto: Contexto;
+  esperadas: NotaEsperada[];
+  otro: () => void;
+}) {
+  const { estado, respuesta, guardado, contexto, esperadas } = props;
+  if (!respuesta) return <h2 data-fase="analizando">Analizando…</h2>;
+  const acustico = respuesta.acustico;
+  const mano = esperadas.some((n) => n.mano === "MD") ? "MD" : "MI";
+  const porInstante = esperadas.filter((n) => n.mano === mano);
+  const tempo = acustico?.tempo ?? null;
+  const tarea = contexto.tarea;
+  const medido = tempo ? Math.round(tempo.tempoInicial) : null;
+  const fueraDeRango =
+    tarea && medido !== null && (medido < tarea.tempo_min_bpm || medido > tarea.tempo_max_bpm)
+      ? `Tocaste a ♩≈${medido}; tu tarea pide ${tarea.tempo_min_bpm}–${tarea.tempo_max_bpm}`
+      : null;
+  return (
     <section aria-label="Resultado provisional">
-      <h2 data-fase="analizando">{respuesta ? "Resultado provisional" : "Analizando…"}</h2>
-      {respuesta && (
+      <h2 data-fase="resultado">Resultado provisional</h2>
+      <p className="suave">
+        {estado.fase === "analizando" && estado.incompleta && "Ejecución incompleta. "}
+        Análisis en {Math.round(respuesta.duracionAnalisisMs)} ms ·{" "}
+        <span data-guardado={guardado ?? "guardando"}>{guardado ?? "Guardando…"}</span>
+        {tarea && (
+          <>
+            {" "}
+            · <Link to={`/tareas/${tarea.id}`}>Volver a la tarea</Link>
+          </>
+        )}
+      </p>
+      {acustico ? (
         <>
-          <p className="suave">
-            {estado.fase === "analizando" && estado.incompleta && "Ejecución incompleta. "}
-            Análisis en {Math.round(respuesta.duracionAnalisisMs)} ms ·{" "}
-            <span data-guardado={guardado ?? "guardando"}>{guardado ?? "Guardando…"}</span>
-            {contexto.tarea && (
+          <div className="tarjeta" data-tempo={tempo?.estado ?? "sin-datos"}>
+            <h3>Ritmo</h3>
+            {tempo ? (
               <>
-                {" "}
-                · <Link to={`/tareas/${contexto.tarea.id}`}>Volver a la tarea</Link>
+                <p>
+                  Tempo inicial ♩≈{Math.round(tempo.tempoInicial)} · final ♩≈
+                  {Math.round(tempo.tempoFinal)} ({tempo.cambioPct > 0 ? "+" : ""}
+                  {tempo.cambioPct.toFixed(1)} %): <strong>{ESTADO_TEMPO[tempo.estado]}</strong>
+                </p>
+                <p className="suave">
+                  Referencia:{" "}
+                  {tempo.referencia === "tempo_elegido"
+                    ? `tempo elegido (♩ = ${Math.round(tempo.tempoReferencia)})`
+                    : "tempo de los primeros 4 pulsos"}
+                  {" · "}Notas irregulares (tropiezo o pausa): {tempo.tropiezos.length}
+                </p>
+                {fueraDeRango && (
+                  <p className="aviso">{fueraDeRango}. Este intento no cuenta para la tarea.</p>
+                )}
               </>
+            ) : (
+              <p>Muy pocas notas oídas para estimar el tempo.</p>
             )}
-          </p>
+          </div>
           <table className="tabla" aria-label="Notas">
             <thead>
               <tr>
                 <th>#</th>
-                <th>Mano</th>
                 <th>Nota esperada</th>
-                <th>Tecla y dedo detectados</th>
-                <th>Digitación</th>
+                <th>Oída</th>
+                <th>Mano y dedo (visión)</th>
               </tr>
             </thead>
             <tbody>
-              {respuesta.notas.map((n) => (
-                <tr key={n.idx} data-nota={n.resultado.estado}>
-                  <td>{n.idx + 1}</td>
-                  <td>{n.mano === "MI" ? "Izquierda" : "Derecha"}</td>
-                  <td>{nombreNota(n.midiEsperado)}</td>
-                  <td>
-                    {n.resultado.estado === "detectada"
-                      ? `${nombreNota(n.midiEsperado)} · ${n.resultado.dedo}`
-                      : `No evaluable: ${n.resultado.motivo}`}
-                  </td>
-                  <td className="suave">No evaluable: pendiente de transcripción</td>
-                </tr>
-              ))}
+              {acustico.notas.esperadas.map((n, i) => {
+                const indiceAtaque =
+                  "t" in n ? acustico.ataques.findIndex((t) => Math.abs(t - n.t) < 1e-6) : -1;
+                const fusion = indiceAtaque >= 0 ? acustico.fusion[indiceAtaque] : undefined;
+                const irregular = tempo?.tropiezos.includes(indiceAtaque) ?? false;
+                return (
+                  <tr key={i} data-nota-audio={n.estado}>
+                    <td>{i + 1}</td>
+                    <td>{nombreNota(porInstante[i]!.midi)}</td>
+                    <td>
+                      {SIMBOLO[n.estado]}
+                      {n.estado === "incorrecta" &&
+                        ` (oída: ${nombreNota(60 + n.claseOida).slice(0, -1)})`}
+                      {irregular && " · tropiezo o pausa"}
+                    </td>
+                    <td>
+                      {fusion?.modalidad === "VA"
+                        ? `${fusion.mano === "MI" ? "Izquierda" : "Derecha"} · ${fusion.dedo}`
+                        : n.estado === "faltante"
+                          ? "—"
+                          : "sin evento visual"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-          <button type="button" onClick={() => setEstado(null)}>
-            Otro intento
-          </button>
+          <p className="suave" data-extras={acustico.notas.extras.length}>
+            Notas extra: {acustico.notas.extras.length} · Digitación: no evaluable (pendiente de
+            transcripción).
+          </p>
         </>
+      ) : (
+        <p className="aviso">Modo solo visión: las notas y el ritmo no fueron evaluados.</p>
+      )}
+      <details>
+        <summary>Detalle visual por mano (tecla y dedo detectados)</summary>
+        <table className="tabla" aria-label="Notas por mano">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Mano</th>
+              <th>Nota esperada</th>
+              <th>Tecla y dedo detectados</th>
+            </tr>
+          </thead>
+          <tbody>
+            {respuesta.notas.map((n) => (
+              <tr key={n.idx} data-nota={n.resultado.estado}>
+                <td>{n.idx + 1}</td>
+                <td>{n.mano === "MI" ? "Izquierda" : "Derecha"}</td>
+                <td>{nombreNota(n.midiEsperado)}</td>
+                <td>
+                  {n.resultado.estado === "detectada"
+                    ? `${nombreNota(n.midiEsperado)} · ${n.resultado.dedo}`
+                    : `No evaluable: ${n.resultado.motivo}`}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+      <button type="button" onClick={props.otro}>
+        Otro intento
+      </button>
+    </section>
+  );
+}
+
+/** P-37 como pantalla propia: probar el micrófono antes de practicar. */
+export function PaginaMicrofono() {
+  const microfono = useMicrofono();
+  const [listo, setListo] = useState<"audio" | "vision" | null>(null);
+  return (
+    <section>
+      <h1>Prueba de micrófono</h1>
+      {listo ? (
+        <p className="aviso" data-continuar={listo}>
+          {listo === "audio"
+            ? "Micrófono listo. Abre una tarea y toca Practicar."
+            : "Seguirás en modo solo visión: las notas y el ritmo no se evaluarán."}
+        </p>
+      ) : (
+        <PasoMicrofono microfono={microfono} continuar={(v) => setListo(v ? "vision" : "audio")} />
       )}
     </section>
   );
