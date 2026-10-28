@@ -1,4 +1,9 @@
 # Origen único: la PWA en / y la API en /api. En local, Caddy emite un certificado interno para localhost.
+{
+	# Con una IP (prueba desde un teléfono) el cliente no envía SNI: Caddy usa este nombre.
+	default_sni {$DOMINIO:localhost}
+}
+
 {$DOMINIO:localhost} {
 	encode zstd gzip
 

@@ -32,6 +32,9 @@ services:
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
+    environment:
+      # Nombre o IP con el que se abre la app; para probar desde un teléfono, la IP de la laptop.
+      DOMINIO: ${DOMINIO:-localhost}
     ports:
       - "80:80"
       - "443:443"
