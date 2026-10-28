@@ -1,3 +1,4 @@
+export * from "./audio/ataques.ts";
 export * from "./audio/fft.ts";
 export * from "./calidad/calidad.ts";
 export * from "./geometria/homografia.ts";
