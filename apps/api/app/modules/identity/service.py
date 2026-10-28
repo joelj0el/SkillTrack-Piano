@@ -138,6 +138,49 @@ def revocar_sesiones_de(db: Session, usuario_id: int) -> None:
     db.execute(delete(SesionAuth).where(SesionAuth.usuario_id == usuario_id))
 
 
+class UsuarioDuplicado(Exception):
+    pass
+
+
+def crear_usuario(
+    db: Session, *, username: str, nombre_visible: str, email: str | None, es_menor: bool
+) -> tuple[Usuario, str]:
+    """Crea la cuenta con una clave temporal; devuelve la clave en claro una sola vez."""
+    if db.scalar(select(Usuario.id).where(Usuario.username == username)) is not None:
+        raise UsuarioDuplicado
+    clave = generar_clave_temporal()
+    usuario = Usuario(
+        username=username,
+        nombre_visible=nombre_visible,
+        email=email,
+        es_menor=es_menor,
+        hash_clave=hash_clave(clave),
+        clave_temporal=True,
+    )
+    db.add(usuario)
+    db.flush()
+    return usuario, clave
+
+
+def usuarios_por_id(db: Session, ids: list[int]) -> list[Usuario]:
+    if not ids:
+        return []
+    consulta = select(Usuario).where(Usuario.id.in_(ids)).order_by(Usuario.nombre_visible)
+    return list(db.scalars(consulta))
+
+
+def restablecer_clave(db: Session, usuario_id: int) -> str:
+    """Nueva clave temporal y cierre de todas las sesiones del usuario."""
+    usuario = db.get(Usuario, usuario_id)
+    if usuario is None:
+        raise LookupError(usuario_id)
+    clave = generar_clave_temporal()
+    usuario.hash_clave = hash_clave(clave)
+    usuario.clave_temporal = True
+    revocar_sesiones_de(db, usuario_id)
+    return clave
+
+
 def cambiar_clave(db: Session, usuario: Usuario, clave_actual: str, clave_nueva: str) -> None:
     if not verificar_clave(usuario.hash_clave, clave_actual):
         raise CredencialesInvalidas

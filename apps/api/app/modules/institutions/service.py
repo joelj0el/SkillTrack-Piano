@@ -38,6 +38,47 @@ def estudiantes_de(db: Session, docente_id: int, hoy: date) -> list[int]:
     return list(db.scalars(consulta))
 
 
+def agregar_membresia(db: Session, usuario_id: int, institucion_id: int, rol: str) -> None:
+    db.add(Membresia(usuario_id=usuario_id, institucion_id=institucion_id, rol=rol))
+
+
+def miembros(db: Session, institucion_id: int) -> dict[int, list[str]]:
+    """Roles de cada usuario de la institución."""
+    filas = db.execute(
+        select(Membresia.usuario_id, Membresia.rol).where(
+            Membresia.institucion_id == institucion_id
+        )
+    )
+    roles: dict[int, list[str]] = {}
+    for usuario_id, rol in filas:
+        roles.setdefault(usuario_id, []).append(rol)
+    return roles
+
+
+def tiene_rol(db: Session, usuario_id: int, institucion_id: int, rol: str) -> bool:
+    return rol in miembros(db, institucion_id).get(usuario_id, [])
+
+
+def crear_asignacion(
+    db: Session, institucion_id: int, docente_id: int, estudiante_id: int, hoy: date
+) -> AsignacionDocente:
+    asignacion = AsignacionDocente(
+        institucion_id=institucion_id, docente_id=docente_id, estudiante_id=estudiante_id, desde=hoy
+    )
+    db.add(asignacion)
+    db.flush()
+    return asignacion
+
+
+def asignaciones(db: Session, institucion_id: int) -> list[AsignacionDocente]:
+    consulta = (
+        select(AsignacionDocente)
+        .where(AsignacionDocente.institucion_id == institucion_id)
+        .order_by(AsignacionDocente.id)
+    )
+    return list(db.scalars(consulta))
+
+
 def es_admin_de(db: Session, usuario_id: int, institucion_id: int) -> bool:
     consulta = select(Membresia.usuario_id).where(
         Membresia.usuario_id == usuario_id,
