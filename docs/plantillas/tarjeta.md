@@ -19,7 +19,7 @@ criterios:
   - id: PA-HU14-03
     tipo: manual
     texto: "Dado un docente del panel en su teléfono, cuando registra una observación, entonces el estudiante la encuentra en menos de 3 toques."
-tareas:   # copiadas de docs/PLAN_DE_TAREAS.md; el estado se actualiza al terminar cada tarea
+tareas:   # lista de tareas de la historia; el estado se actualiza al terminar cada tarea
   - id: TI-HU14-01
     texto: "Modelos tarea y observacion + migración + contratos"
     estado: pendiente   # pendiente | en-curso | hecha
