@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="sintetico" tests="2">
+    <testcase classname="core" name="versión &gt; PU-core-00: el núcleo expone su versión"/>
+    <testcase classname="otros" name="prueba sin-id de ejemplo"/>
+  </testsuite>
+</testsuites>

@@ -1,5 +1,7 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -25,14 +27,29 @@ describe("esqueletos docs:*", () => {
     }
   });
 
-  it("PU-docs-02: docs:tests y docs:trace exigen it-N y dicen claramente que están pendientes", () => {
-    for (const comando of ["docs:tests", "docs:trace"]) {
-      const invalido = ejecutar(comando, "iteracion-1");
-      expect(invalido.status, comando).not.toBe(0);
+  it("PU-docs-02: docs:trace exige it-N y dice claramente que está pendiente", () => {
+    expect(ejecutar("docs:trace", "iteracion-1").status).not.toBe(0);
 
-      const valido = ejecutar(comando, "it-1");
-      expect(valido.status, comando).toBe(0);
-      expect(valido.stdout, comando).toMatch(/pendiente: se implementa en P-06/);
-    }
+    const valido = ejecutar("docs:trace", "it-1");
+    expect(valido.status).toBe(0);
+    expect(valido.stdout).toMatch(/pendiente: se implementa en P-06/);
+  }, 120_000);
+
+  it("PU-docs-03: docs:tests arma la tabla de PA y el resumen de PU desde los reportes JUnit", () => {
+    const carpeta = mkdtempSync(join(tmpdir(), "n6-"));
+    const salida = join(carpeta, "n6.md");
+    const reportes = fileURLToPath(new URL("./fixtures/junit/", import.meta.url));
+
+    const r = ejecutar("docs:tests", "it-1", "--reportes", reportes, "--salida", salida);
+    expect(r.status, r.stderr).toBe(0);
+    const n6 = readFileSync(salida, "utf8");
+
+    // Un PA parametrizado con un caso fallido queda como fallido.
+    expect(n6).toMatch(/\| PA-HU14-02 \| pytest \| 2 \| fallida \|/);
+    expect(n6).toMatch(/\| PA-HU17-01 \| Playwright \| 1 \| aprobada \|/);
+    expect(n6).toMatch(/\| core \| 1 \| 1 \| 0 \|/);
+    expect(n6).toMatch(/\| identity \| 1 \| 1 \| 0 \|/);
+    expect(n6).not.toContain("sin-id");
+    expect(ejecutar("docs:tests", "iteracion-1").status).not.toBe(0);
   }, 120_000);
 });
