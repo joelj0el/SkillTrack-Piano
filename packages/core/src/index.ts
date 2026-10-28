@@ -1,4 +1,5 @@
 export * from "./audio/ataques.ts";
+export * from "./audio/croma.ts";
 export * from "./audio/fft.ts";
 export * from "./audio/tempo.ts";
 export * from "./calidad/calidad.ts";
