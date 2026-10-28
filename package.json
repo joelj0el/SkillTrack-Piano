@@ -20,10 +20,12 @@
     "docs:er": "uv run tools/docs/er.py",
     "docs:tests": "uv run tools/docs/pruebas.py",
     "docs:trace": "uv run tools/docs/traza.py",
-    "docs:build": "node tools/docs/build.mjs"
+    "docs:build": "node tools/docs/build.mjs",
+    "e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
     "@types/node": "26.6.5",
     "dependency-cruiser": "18.7.0",
     "eslint": "10.13.0",
