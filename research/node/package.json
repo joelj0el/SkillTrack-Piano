@@ -1,0 +1,13 @@
+{
+  "name": "@skilltrack/research-node",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@skilltrack/contracts": "workspace:*",
+    "@skilltrack/core": "workspace:*"
+  }
+}

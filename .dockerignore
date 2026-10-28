@@ -1,0 +1,19 @@
+# Las imágenes solo reciben código: nunca datos, secretos ni archivos locales.
+**/node_modules
+**/.venv
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/.env
+**/.env.*
+research/data
+**/PAQ-*
+reports
+coverage
+build
+docs
+.git
+.claude
+CLAUDE.md
+tools/hooks

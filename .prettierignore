@@ -1,0 +1,8 @@
+# Plantillas: se conservan con su formato original
+docs/plantillas/
+# Generados
+apps/api/app/contracts_gen/
+packages/contracts/schemas/
+pnpm-lock.yaml
+reports/
+build/

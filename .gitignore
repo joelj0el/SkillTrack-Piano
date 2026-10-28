@@ -1,0 +1,30 @@
+# Datos de investigación y secretos (nunca en git)
+research/data/
+**/PAQ-*
+.env
+.env.*
+!.env.example
+
+# Reportes de pruebas (CI los guarda como artefactos)
+reports/
+coverage/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Documentación generada
+build/
+
+# Sistema
+.DS_Store
+Thumbs.db
