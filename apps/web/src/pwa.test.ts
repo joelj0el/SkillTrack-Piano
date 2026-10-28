@@ -10,7 +10,9 @@ describe("configuración de la PWA", () => {
     expect(manifiesto.short_name).toBeTruthy();
     expect(manifiesto.start_url).toBe("/");
     expect(manifiesto.display).toBe("standalone");
-    expect(manifiesto.icons?.length).toBeGreaterThan(0);
+    const tamanos = manifiesto.icons?.map((i) => i.sizes) ?? [];
+    expect(tamanos).toContain("192x192");
+    expect(tamanos).toContain("512x512");
   });
 
   it("PU-web-04: el fallback de navegación del service worker no captura /api", () => {

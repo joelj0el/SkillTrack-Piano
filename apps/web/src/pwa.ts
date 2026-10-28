@@ -4,7 +4,7 @@ export const opcionesPwa = {
   registerType: "autoUpdate",
   // Registro como archivo externo: la CSP no admite scripts en línea.
   injectRegister: "script",
-  includeAssets: ["icono.svg"],
+  includeAssets: ["icono.svg", "iconos/*.png"],
   manifest: {
     name: "SkillTrack-Piano",
     short_name: "SkillTrack",
@@ -13,8 +13,13 @@ export const opcionesPwa = {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    // Ícono provisional: los PNG definitivos se generan con el sistema de diseño.
-    icons: [{ src: "/icono.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
+    // Íconos provisionales (node tools/iconos.mjs); los definitivos vienen del sistema de diseño.
+    icons: [
+      { src: "/iconos/icono-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/iconos/icono-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/iconos/icono-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icono.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+    ],
   },
   workbox: {
     navigateFallbackDenylist: [/^\/api\//],
