@@ -23,5 +23,7 @@ export const opcionesPwa = {
   },
   workbox: {
     navigateFallbackDenylist: [/^\/api\//],
+    // El detector (WASM y modelo, decenas de MB) se descarga al usar la cámara, no al instalar.
+    globIgnores: ["**/mediapipe/**"],
   },
 } satisfies Partial<VitePWAOptions>;

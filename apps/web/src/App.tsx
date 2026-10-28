@@ -1,7 +1,6 @@
 import type { Rol } from "@skilltrack/contracts";
-import type { ReactNode } from "react";
+import { Suspense, lazy, type ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router";
-import { Encuadre } from "./captura/Encuadre.tsx";
 import { SinConexion } from "./componentes.tsx";
 import { Usuarios } from "./paginas/admin.tsx";
 import { DetalleEjercicio, Catalogo } from "./paginas/catalogo.tsx";
@@ -10,6 +9,11 @@ import { CambiarClave, Entrar } from "./paginas/entrada.tsx";
 import { DetalleTarea, MisTareas } from "./paginas/estudiante.tsx";
 import { ModoInvestigacion } from "./paginas/investigacion.tsx";
 import { roles, rutaInicial, useSesion } from "./sesion.tsx";
+
+// El detector de la mano (MediaPipe) solo se descarga al abrir la práctica.
+const PaginaPractica = lazy(() =>
+  import("./captura/PaginaPractica.tsx").then((m) => ({ default: m.PaginaPractica })),
+);
 
 function Protegida({ rol, children }: { rol?: Rol; children: ReactNode }) {
   const { estado } = useSesion();
@@ -92,10 +96,22 @@ export function App() {
             }
           />
           <Route
+            path="/practicar/:tareaId"
+            element={
+              <Protegida rol="estudiante">
+                <Suspense fallback={<p className="suave">Cargando…</p>}>
+                  <PaginaPractica />
+                </Suspense>
+              </Protegida>
+            }
+          />
+          <Route
             path="/practicar"
             element={
               <Protegida rol="estudiante">
-                <Encuadre manosEsperadas={2} />
+                <Suspense fallback={<p className="suave">Cargando…</p>}>
+                  <PaginaPractica />
+                </Suspense>
               </Protegida>
             }
           />

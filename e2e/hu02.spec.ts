@@ -11,7 +11,7 @@ test("PU-web-10: el detalle del ejercicio se alcanza en 2 toques desde Mis tarea
 
   await entrar(page, estudiante, CLAVE_NUEVA);
   await page.getByRole("link", { name: /EJ-01/ }).click(); // toque 1
-  await page.getByRole("link", { name: "Ver el ejercicio y su partitura" }).click(); // toque 2
+  await page.getByRole("link", { name: "Ver el ejercicio" }).click(); // toque 2
 
   await expect(page.getByRole("heading", { level: 1, name: "Escala de Do mayor" })).toBeVisible();
   await expect(page.getByText(/♩ = 60 y ♩ = 75/)).toBeVisible();
