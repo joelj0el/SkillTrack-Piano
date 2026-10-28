@@ -36,6 +36,13 @@
   --color-peligro: #a02a2a;
   --color-aviso-fondo: #fff4d6;
   --color-aviso-texto: #6b4b00;
+  --color-verde: #1f7a3a;
+  --color-ambar: #a86a00;
+  --color-rojo: #b42318;
+  --color-mano-izquierda: #00a3c4;
+  --color-mano-derecha: #e0569b;
+  --color-tecla-esperada: rgb(47 79 168 / 0.22);
+  --color-texto-sobre-video: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {

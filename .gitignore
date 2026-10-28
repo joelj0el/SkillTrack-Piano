@@ -24,6 +24,10 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+# Detector de la mano: se prepara con node tools/mediapipe.mjs (version.json sí se versiona)
+apps/web/public/mediapipe/wasm/
+apps/web/public/mediapipe/*.task
+
 # Documentación generada
 build/
 

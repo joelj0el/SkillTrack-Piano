@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "1.1.1",
     "@skilltrack/contracts": "workspace:*",
     "@skilltrack/core": "workspace:*",
     "react": "19.3.1",

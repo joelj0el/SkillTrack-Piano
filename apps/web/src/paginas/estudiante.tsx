@@ -1,4 +1,4 @@
-import { Tarea } from "@skilltrack/contracts";
+import { IntentoGuardado, Tarea } from "@skilltrack/contracts";
 import { Link, useParams } from "react-router";
 import { z } from "zod";
 import { pedir } from "../api.ts";
@@ -99,22 +99,59 @@ export function MisTareas() {
   );
 }
 
+function fechaHora(iso: string): string {
+  const fecha = new Date(iso);
+  const dos = (n: number) => String(n).padStart(2, "0");
+  return `${dos(fecha.getDate())}/${dos(fecha.getMonth() + 1)}/${fecha.getFullYear()} ${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;
+}
+
 export function DetalleTarea() {
   const { id } = useParams();
-  const { carga } = useCarga(() => pedir("GET", `/tareas/${id}`, Tarea), [id]);
+  const { carga } = useCarga(
+    () =>
+      Promise.all([
+        pedir("GET", `/tareas/${id}`, Tarea),
+        pedir("GET", "/mis-intentos", z.array(IntentoGuardado)).catch(() => []),
+      ]),
+    [id],
+  );
   return (
     <Cargado carga={carga}>
-      {(tarea) => (
-        <section>
-          <h1>{tarea.ejercicio.nombre}</h1>
-          <ResumenTarea tarea={tarea} />
-          <Link to={`/catalogo/${tarea.ejercicio.codigo}`}>
-            Ver el ejercicio y su partitura
-          </Link> · <Link to="/practicar">Practicar</Link>
-          <h2>Observaciones de tu docente</h2>
-          <Observaciones tarea={tarea} />
-        </section>
-      )}
+      {([tarea, intentos]) => {
+        const deLaTarea = intentos.filter((i) => i.tarea_id === tarea.id);
+        return (
+          <section>
+            <h1>{tarea.ejercicio.nombre}</h1>
+            <ResumenTarea tarea={tarea} />
+            <p className="fila">
+              <Link to={`/catalogo/${tarea.ejercicio.codigo}`}>Ver el ejercicio</Link>
+              <Link className="boton-enlace" to={`/practicar/${tarea.id}`}>
+                Practicar
+              </Link>
+            </p>
+            <h2>Mis intentos</h2>
+            {deLaTarea.length === 0 ? (
+              <p className="suave">Todavía no registraste intentos de esta tarea.</p>
+            ) : (
+              <ul className="lista" aria-label="Intentos">
+                {deLaTarea.map((i) => (
+                  <li key={i.id} className="tarjeta">
+                    <strong>{fechaHora(i.iniciado_en)}</strong> · ♩ = {i.tempo_elegido_bpm ?? "—"} ·{" "}
+                    {i.estado === "evaluado"
+                      ? "Analizado"
+                      : `No evaluable: ${i.motivo_no_evaluable}`}
+                    {!i.cuenta_para_tarea && i.motivo_no_cuenta && (
+                      <div className="suave">No cuenta para la tarea: {i.motivo_no_cuenta}</div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <h2>Observaciones de tu docente</h2>
+            <Observaciones tarea={tarea} />
+          </section>
+        );
+      }}
     </Cargado>
   );
 }

@@ -5,6 +5,7 @@ import {
   coberturaDelRango,
   esNegra,
   modeloTeclado,
+  rangoEnCuadro,
   teclaBajo,
   type ModeloTeclado,
 } from "./teclado.ts";
@@ -113,5 +114,29 @@ describe("calibración y cobertura del rango", () => {
       cubre: false,
       faltan: ["graves", "agudas"],
     });
+  });
+});
+
+describe("rango dentro del cuadro", () => {
+  it("PU-geometry-14: si un extremo del tramo queda fuera de la imagen se informa cuál", () => {
+    const modelo = modeloTeclado(60, 72);
+    const escala = (dx: number) =>
+      homografia(
+        [
+          { x: 0, y: 0 },
+          { x: 8, y: 0 },
+          { x: 0, y: 1 },
+          { x: 8, y: 1 },
+        ],
+        [
+          { x: 100 + dx, y: 500 },
+          { x: 900 + dx, y: 500 },
+          { x: 100 + dx, y: 440 },
+          { x: 900 + dx, y: 440 },
+        ],
+      );
+    expect(rangoEnCuadro(escala(0), modelo, 1000, 600)).toEqual({ cubre: true, faltan: [] });
+    expect(rangoEnCuadro(escala(-150), modelo, 1000, 600).faltan).toEqual(["graves"]);
+    expect(rangoEnCuadro(escala(150), modelo, 1000, 600).faltan).toEqual(["agudas"]);
   });
 });

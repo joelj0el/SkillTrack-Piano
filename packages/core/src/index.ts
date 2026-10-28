@@ -6,6 +6,8 @@ export * from "./audio/metronomo.ts";
 export * from "./audio/tempo.ts";
 export * from "./calidad/acustica.ts";
 export * from "./calidad/calidad.ts";
+export * from "./ejercicio/escala.ts";
+export * from "./ejercicio/resultado.ts";
 export * from "./geometria/homografia.ts";
 export * from "./geometria/teclado.ts";
 export * from "./rasgos/one-euro.ts";
