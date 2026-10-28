@@ -26,7 +26,9 @@ export function programa(tempo: number, modo: ModoMetronomo, duracion: number): 
   const inicioMedicion = PULSOS_CONTEO * pulso;
   const pulsosVisuales: number[] = [];
   if (modo === "con") {
-    for (let t = inicioMedicion; t < inicioMedicion + duracion; t += pulso) pulsosVisuales.push(t);
+    // Por índice, no acumulando: sumar 0,8 repetidamente pierde precisión y omite el último pulso.
+    const cantidad = Math.ceil(duracion / pulso - 1e-9);
+    for (let i = 0; i < cantidad; i++) pulsosVisuales.push(inicioMedicion + i * pulso);
   }
   return { conteo, inicioMedicion, pulsosVisuales };
 }
