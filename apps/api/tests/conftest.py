@@ -79,3 +79,9 @@ def entrar(cliente: TestClient, usuario: str, clave: str = fabricas.CLAVE) -> Te
     respuesta = cliente.post("/api/auth/login", json={"usuario": usuario, "clave": clave})
     assert respuesta.status_code == 200, respuesta.text
     return cliente
+
+
+def como(cliente: TestClient, usuario) -> TestClient:
+    """Cambia la sesión del cliente al usuario indicado."""
+    cliente.cookies.clear()
+    return entrar(cliente, usuario.username)

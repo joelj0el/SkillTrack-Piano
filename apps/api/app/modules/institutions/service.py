@@ -36,3 +36,19 @@ def estudiantes_de(db: Session, docente_id: int, hoy: date) -> list[int]:
         .distinct()
     )
     return list(db.scalars(consulta))
+
+
+def es_admin_de(db: Session, usuario_id: int, institucion_id: int) -> bool:
+    consulta = select(Membresia.usuario_id).where(
+        Membresia.usuario_id == usuario_id,
+        Membresia.institucion_id == institucion_id,
+        Membresia.rol == "admin_inst",
+    )
+    return db.scalar(consulta.limit(1)) is not None
+
+
+def instituciones_de(db: Session, usuario_id: int, rol: str | None = None) -> list[int]:
+    consulta = select(Membresia.institucion_id).where(Membresia.usuario_id == usuario_id)
+    if rol is not None:
+        consulta = consulta.where(Membresia.rol == rol)
+    return list(db.scalars(consulta.distinct()))
