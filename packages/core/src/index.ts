@@ -1,3 +1,4 @@
+export * from "./alineacion/fusion.ts";
 export * from "./audio/ataques.ts";
 export * from "./audio/croma.ts";
 export * from "./audio/fft.ts";
