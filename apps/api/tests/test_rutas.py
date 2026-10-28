@@ -3,8 +3,8 @@ from fastapi.routing import APIRoute, RouteContext, iter_route_contexts
 from fastapi.testclient import TestClient
 
 from app.core.rutas_publicas import RUTAS_PUBLICAS
-from app.core.sesion import exigir_sesion
 from app.main import create_app
+from app.modules.identity.deps import exigir_sesion
 
 
 def _rutas_api(app: FastAPI) -> list[RouteContext]:
@@ -53,7 +53,7 @@ def test_pu_api_05_se_detecta_una_ruta_privada_sin_sesion():
     assert rutas_sin_sesion(app) == ["/api/sonda"]
 
 
-def test_pu_api_06_una_ruta_privada_sin_sesion_responde_401():
+def test_pu_api_06_una_ruta_privada_sin_sesion_responde_401(db):
     app = create_app(routers_privados=[_router_sonda()])
 
     assert TestClient(app).get("/api/sonda").status_code == 401

@@ -52,36 +52,50 @@ def autenticar(db: Session, usuario: str, clave: str, ahora: datetime) -> Usuari
     if encontrado is None or not encontrado.activo:
         verificar_clave(_HASH_FICTICIO, clave)
         raise CredencialesInvalidas
-    fallos = auditoria.contar(
-        db,
-        accion="login_fallido",
-        recurso="usuario",
-        recurso_id=encontrado.id,
-        desde=ahora - VENTANA_INTENTOS,
-    )
-    if fallos >= INTENTOS_FALLIDOS_MAXIMOS:
-        auditoria.registrar(
-            db,
-            actor_id=encontrado.id,
-            accion="login_bloqueado",
-            recurso="usuario",
-            recurso_id=encontrado.id,
-            fecha=ahora,
-        )
+    if _bloqueado(db, encontrado.id, ahora):
+        _auditar(db, encontrado.id, "login_bloqueado", ahora)
         db.commit()
         raise UsuarioBloqueado
     if not verificar_clave(encontrado.hash_clave, clave):
-        auditoria.registrar(
+        _auditar(db, encontrado.id, "login_fallido", ahora)
+        db.flush()
+        fallos = auditoria.contar(
             db,
-            actor_id=encontrado.id,
             accion="login_fallido",
             recurso="usuario",
             recurso_id=encontrado.id,
-            fecha=ahora,
+            desde=ahora - VENTANA_INTENTOS,
         )
+        if fallos >= INTENTOS_FALLIDOS_MAXIMOS:
+            # El bloqueo dura VENTANA_INTENTOS desde este momento, no desde el primer fallo.
+            _auditar(db, encontrado.id, "login_bloqueo_inicio", ahora)
         db.commit()
         raise CredencialesInvalidas
     return encontrado
+
+
+def _bloqueado(db: Session, usuario_id: int, ahora: datetime) -> bool:
+    return (
+        auditoria.contar(
+            db,
+            accion="login_bloqueo_inicio",
+            recurso="usuario",
+            recurso_id=usuario_id,
+            desde=ahora - VENTANA_INTENTOS,
+        )
+        > 0
+    )
+
+
+def _auditar(db: Session, usuario_id: int, accion: str, ahora: datetime) -> None:
+    auditoria.registrar(
+        db,
+        actor_id=usuario_id,
+        accion=accion,
+        recurso="usuario",
+        recurso_id=usuario_id,
+        fecha=ahora,
+    )
 
 
 def crear_sesion(db: Session, usuario: Usuario, ahora: datetime) -> str:
