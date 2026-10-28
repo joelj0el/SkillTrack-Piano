@@ -99,3 +99,8 @@ def tareas_de_estudiante(db: Session, estudiante_id: int) -> list[Tarea]:
 
 def marcar_actualizada(tarea: Tarea, instante: datetime) -> None:
     tarea.actualizada_en = instante
+
+
+def tarea_es_de(db: Session, tarea_id: int, estudiante_id: int) -> bool:
+    tarea = db.get(Tarea, tarea_id)
+    return tarea is not None and tarea.estudiante_id == estudiante_id

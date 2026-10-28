@@ -77,3 +77,7 @@ def ejercicio_dto(ejercicio: Ejercicio, version: VersionEjercicio) -> EjercicioD
             transcripcion="verificada" if version.eventos_esperados else "pendiente",
         ),
     )
+
+
+def version_existe(db: Session, version_id: int) -> bool:
+    return db.get(VersionEjercicio, version_id) is not None
