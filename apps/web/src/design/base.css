@@ -188,7 +188,11 @@ button:disabled {
   min-height: auto;
 }
 
-.practica-aviso {
+.practica-aviso > summary {
+  min-height: auto;
+}
+
+.practica-aviso[open] {
   flex-basis: 100%;
 }
 
