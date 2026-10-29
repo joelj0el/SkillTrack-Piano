@@ -8,17 +8,17 @@ Con el ADR-002 (`'wasm-unsafe-eval'` solo en `script-src`) se integró el detect
 
 Cambios de estado respecto de las tablas siguientes:
 
-| PA                     | Estado ahora                          | Motivo                                                                                                                                                        |
-| ---------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PA-HU03-01             | Prototipo                             | Con las dos manos visibles y buena luz el semáforo llega a verde y habilita "Continuar"; se verifica a mano con la cámara (la cámara simulada no tiene manos) |
-| PA-HU09-01             | Prototipo                             | Asistente de 4 toques con teclas dibujadas, "Confirmar" y "Repetir", guardado en IndexedDB; sin prueba E2E (requiere un clip con teclado)                     |
-| PA-HU09-04             | Prototipo                             | La calibración verifica que el rango quede dentro de la imagen y dice qué falta                                                                               |
-| PA-HU04-01, 02, 04     | Prototipo                             | Conteo → Tocando → Analizando sin botón "Enviar"; límite y "Cancelar" en pantalla; sin prueba E2E con manos                                                   |
-| PA-HU04-03             | Prototipo                             | El análisis corre en un Web Worker y el resultado muestra su duración; sin medición con el clip más largo                                                     |
-| PA-HU04-05, PA-HU08-03 | Prototipo                             | El intento se guarda por la bandeja de salida (solo números)                                                                                                  |
-| PA-HU05-01             | Pendiente: requiere fixtures anotados | El detector funciona en vivo (GPU con repliegue a CPU); la tasa de detección no se midió                                                                      |
+| PA                     | Estado ahora                          | Motivo                                                                                                                                                                                                                                      |
+| ---------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU03-01             | Prototipo                             | Con las dos manos visibles y buena luz el semáforo llega a verde y, tras 3 s seguidos en verde, el paso avanza solo (sin botón, porque las manos están en el teclado); se verifica a mano con la cámara (la cámara simulada no tiene manos) |
+| PA-HU09-01             | Prototipo                             | Asistente de 4 toques con teclas dibujadas, "Confirmar" y "Repetir", guardado en IndexedDB; sin prueba E2E (requiere un clip con teclado)                                                                                                   |
+| PA-HU09-04             | Prototipo                             | La calibración verifica que el rango quede dentro de la imagen y dice qué falta                                                                                                                                                             |
+| PA-HU04-01, 02, 04     | Prototipo                             | Conteo → Tocando → Analizando sin botón "Enviar"; límite y "Cancelar" en pantalla; sin prueba E2E con manos                                                                                                                                 |
+| PA-HU04-03             | Prototipo                             | El análisis corre en un Web Worker y el resultado muestra su duración; sin medición con el clip más largo                                                                                                                                   |
+| PA-HU04-05, PA-HU08-03 | Prototipo                             | El intento se guarda por la bandeja de salida (solo números)                                                                                                                                                                                |
+| PA-HU05-01             | Pendiente: requiere fixtures anotados | El detector funciona en vivo (GPU con repliegue a CPU); la tasa de detección no se midió                                                                                                                                                    |
 
-Pruebas nuevas: PU-web-11 (el detector autoalojado carga y procesa la cámara simulada, sin manos no habilita "Continuar" y no sale ningún medio por la red), PU-capture-08 a 13, PU-exercise-01 a 04, PU-geometry-14 y PU-infra-04.
+Pruebas nuevas: PU-web-11 (el detector autoalojado carga y procesa la cámara simulada, sin manos no arranca la cuenta atrás ni avanza, y no sale ningún medio por la red), PU-capture-08 a 13, PU-capture-16 a 18 (cuenta atrás de 3 s en verde), PU-exercise-01 a 04, PU-geometry-14 y PU-infra-04.
 
 ## HU-03 · Encuadrar con guía en vivo y puerta de calidad visual
 

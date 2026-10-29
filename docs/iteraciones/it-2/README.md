@@ -15,9 +15,9 @@ Usuarios de demostración: ver el README de la It-1. Para probar en el Android p
 
 ## Qué mostrar
 
-1. **Encuadre** (`estudiante.demo` → una tarea → "Practicar"): los 21 puntos de cada mano sobre el video, la etiqueta Izquierda/Derecha, los fps y el semáforo. Con las dos manos visibles y buena luz llega a verde y habilita "Continuar". Con la webcam frontal de la PC, marca "Cámara frontal".
+1. **Encuadre** (`estudiante.demo` → una tarea → "Practicar"): los 21 puntos de cada mano sobre el video, la etiqueta Izquierda/Derecha, los fps y el semáforo. Con las dos manos visibles y buena luz llega a verde, descuenta 3 s y continúa solo (si sale del verde, la cuenta se reinicia). Con la webcam frontal de la PC, marca "Cámara frontal".
 2. **Calibración**: 4 toques guiados en los extremos del rango del ejercicio; aparecen las teclas dibujadas y, sobre cada dedo, la tecla que está tocando. "Confirmar" la guarda en el teléfono.
-3. **Ejecución**: conteo de 4 pulsos → "Tocando" sin tocar la pantalla → al quedarte quieto pasa sola a "Analizando".
+3. **Ejecución**: eliges tempo e instrumento, pones las manos en el teclado y, con el semáforo 3 s en verde, empieza solo: conteo de 4 pulsos → "Tocando" sin tocar la pantalla → al quedarte quieto pasa sola a "Analizando".
 4. **Resultado provisional**: nota por nota, la tecla y el dedo detectados por mano; la digitación figura como "no evaluable: pendiente de transcripción". El intento queda en "Mis intentos" de la tarea.
 5. **Privacidad**: en la pestaña Red de las herramientas de desarrollo no aparece ninguna petición con imagen o video.
 

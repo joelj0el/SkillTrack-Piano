@@ -5,7 +5,7 @@ const TIPOS_DE_MEDIOS = /^(image|video|audio)\/|multipart\//i;
 
 // La cámara simulada de Chromium muestra un patrón de prueba sin manos: el detector debe cargar,
 // procesar fotogramas y NO dar verde. Que detecte manos reales se verifica con la webcam.
-test("PU-web-11: el detector autoalojado carga, procesa la cámara y sin manos no habilita Continuar", async ({
+test("PU-web-11: el detector autoalojado carga, procesa la cámara y sin manos no avanza solo", async ({
   page,
   context,
 }) => {
@@ -27,7 +27,11 @@ test("PU-web-11: el detector autoalojado carga, procesa la cámara y sin manos n
     .toBeGreaterThan(0);
   await expect(page.locator("[data-secuencia=provisional]")).toContainText("Si♭");
   await expect(page.locator('[data-motivo="sin-manos"]')).toBeVisible();
-  await expect(page.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  // Sin manos no hay verde: no arranca la cuenta atrás y el encuadre no avanza.
+  await expect(page.locator("[data-cuenta-atras]")).toHaveAttribute("data-cuenta-atras", "espera");
+  await page.waitForTimeout(4_000);
+  await expect(page.getByRole("heading", { name: "1. Coloca el teléfono" })).toBeVisible();
+  await expect(page.locator("[data-cuenta-atras]")).toHaveAttribute("data-cuenta-atras", "espera");
 
   const origen = new URL(page.url()).origin;
   for (const r of peticiones) {
