@@ -147,27 +147,130 @@ button:disabled {
   border-radius: var(--radio-md);
 }
 
-.vista-camara {
-  width: 100%;
-  border-radius: var(--radio-md);
-  background: var(--color-texto);
+/* Práctica: pantalla completa fija, sin desplazamiento. */
+.practica {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-fondo);
+}
+
+.practica-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-1) var(--espacio-3);
+  padding: var(--espacio-2) var(--espacio-3);
+  border-bottom: var(--borde) solid var(--color-borde);
+  background: var(--color-superficie);
+  font-size: var(--texto-xs);
+}
+
+.practica-titulo {
+  font-size: var(--texto-sm);
+}
+
+.practica-salir {
+  font-weight: var(--peso-fuerte);
+}
+
+.practica-opcion {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--espacio-1);
+  font-size: var(--texto-xs);
+}
+
+.practica-opcion input {
+  min-height: auto;
+}
+
+.practica-aviso {
+  flex-basis: 100%;
+}
+
+.practica-aviso p {
+  margin: var(--espacio-1) 0;
+}
+
+.practica-cuerpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .capa-video {
   position: relative;
-  margin: var(--espacio-3) 0;
+  flex: 1;
+  min-height: 0;
+  background: var(--color-texto);
 }
 
 .capa-video.tocable {
   cursor: crosshair;
 }
 
+/* Video y dibujo comparten la misma escala sin recorte: los puntos quedan alineados. */
+.vista-camara,
 .capa-dibujo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: contain;
+}
+
+.capa-dibujo {
   pointer-events: none;
+}
+
+.practica-panel {
+  flex: 0 0 auto;
+  max-height: 42%;
+  overflow-y: auto;
+  padding: var(--espacio-2) var(--espacio-3);
+  border-top: var(--borde) solid var(--color-borde);
+  background: var(--color-superficie);
+}
+
+.practica-panel h2 {
+  margin: 0 0 var(--espacio-2);
+  font-size: var(--texto-md);
+}
+
+.practica-panel p {
+  margin: var(--espacio-1) 0;
+}
+
+.practica-panel .tarjeta {
+  margin-bottom: var(--espacio-2);
+  padding: var(--espacio-2) var(--espacio-3);
+}
+
+.practica-panel button {
+  width: 100%;
+}
+
+.practica-panel .fila button {
+  width: auto;
+  flex: 1;
+}
+
+@media (orientation: landscape) {
+  .practica-cuerpo {
+    flex-direction: row;
+  }
+
+  .practica-panel {
+    max-height: none;
+    width: min(24rem, 38%);
+    border-top: none;
+    border-left: var(--borde) solid var(--color-borde);
+  }
 }
 
 .semaforo {

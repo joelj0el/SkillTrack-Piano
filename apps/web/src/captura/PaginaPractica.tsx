@@ -179,16 +179,17 @@ function Practica({ contexto }: { contexto: Contexto }) {
 
   return (
     <>
-      <h1>
-        {ejercicio.nombre} · {NOMBRE_MANOS[manos]}
-      </h1>
-      <p className="aviso" data-secuencia="provisional">
-        Secuencia provisional, sin digitación: la escala de {ejercicio.tonalidad} en 2 octavas
-        (subida y bajada{manos === "juntas" ? ", manos en octava paralela" : ""}), de{" "}
-        {nombreNota(rango.min)} a {nombreNota(rango.max)}. La digitación se evalúa cuando la
-        partitura esté transcrita.
-      </p>
       <VistaCamara
+        titulo={`${ejercicio.nombre} · ${NOMBRE_MANOS[manos]}`}
+        volverA={contexto.tarea ? `/tareas/${contexto.tarea.id}` : "/tareas"}
+        aviso={
+          <p data-secuencia="provisional">
+            Secuencia provisional, sin digitación: la escala de {ejercicio.tonalidad} en 2 octavas
+            (subida y bajada{manos === "juntas" ? ", manos en octava paralela" : ""}), de{" "}
+            {nombreNota(rango.min)} a {nombreNota(rango.max)}. La digitación se evalúa cuando la
+            partitura esté transcrita.
+          </p>
+        }
         manosEsperadas={manosEsperadas}
         dibujar={dibujar}
         onToque={paso === "calibracion" ? tocar : undefined}
