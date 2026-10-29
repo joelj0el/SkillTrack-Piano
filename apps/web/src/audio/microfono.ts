@@ -66,18 +66,13 @@ export function useMicrofono(): Microfono {
       await ctx.audioWorklet.addModule(urlWorklet);
       const fuente = ctx.createMediaStreamSource(flujo);
       const nodo = new AudioWorkletNode(ctx, "captura-pcm");
-      let acumulado = 0;
-      let cuenta = 0;
+      // Medidor de picos: se muestra la ventana más fuerte del último segundo, así no cae a
+      // cero entre nota y nota.
+      const medidor = crearMedidorDePico(ctx.sampleRate);
       nodo.port.onmessage = (e: MessageEvent<Bloque>) => {
         grabando.current?.push(e.data);
-        let suma = 0;
-        for (const v of e.data.muestras) suma += v * v;
-        acumulado += suma / e.data.muestras.length;
-        if (++cuenta >= 20) {
-          setNivelDb(10 * Math.log10(Math.max(acumulado / cuenta, 1e-10)));
-          acumulado = 0;
-          cuenta = 0;
-        }
+        const nivel = medidor(e.data.muestras);
+        if (nivel !== null) setNivelDb(nivel);
       };
       fuente.connect(nodo);
       const ajustes = flujo.getAudioTracks()[0]?.getSettings() ?? {};
@@ -136,4 +131,26 @@ export function programarClic(ctx: AudioContext, t: number, fuerte = false): voi
   osc.connect(ganancia).connect(ctx.destination);
   osc.start(t);
   osc.stop(t + 0.04);
+}
+
+/**
+ * Nivel para el medidor en vivo: dBFS de la ventana de ~50 ms más fuerte dentro del último
+ * segundo. Devuelve un valor nuevo cada ~50 ms (null entre medio).
+ */
+export function crearMedidorDePico(tasa: number) {
+  const muestrasPorVentana = Math.round(tasa * 0.05);
+  const ventanasPorSegundo = 20;
+  const recientes: number[] = [];
+  let suma = 0;
+  let cuenta = 0;
+  return (muestras: Float32Array): number | null => {
+    for (const v of muestras) suma += v * v;
+    cuenta += muestras.length;
+    if (cuenta < muestrasPorVentana) return null;
+    recientes.push(10 * Math.log10(Math.max(suma / cuenta, 1e-10)));
+    if (recientes.length > ventanasPorSegundo) recientes.shift();
+    suma = 0;
+    cuenta = 0;
+    return Math.max(...recientes);
+  };
 }
