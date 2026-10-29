@@ -45,3 +45,22 @@ export function useCamara() {
 export function colorDeToken(nombre: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
 }
+
+/**
+ * Toque en pantalla → píxel del video cuando el video se muestra con `object-fit: contain`
+ * (escalado sin recortar, con franjas). Devuelve null si el toque cae en una franja.
+ */
+export function toqueAVideo(
+  x: number,
+  y: number,
+  caja: { ancho: number; alto: number },
+  video: { ancho: number; alto: number },
+): { x: number; y: number } | null {
+  const escala = Math.min(caja.ancho / video.ancho, caja.alto / video.alto);
+  const izquierda = (caja.ancho - video.ancho * escala) / 2;
+  const arriba = (caja.alto - video.alto * escala) / 2;
+  const vx = (x - izquierda) / escala;
+  const vy = (y - arriba) / escala;
+  if (vx < 0 || vy < 0 || vx > video.ancho || vy > video.alto) return null;
+  return { x: vx, y: vy };
+}

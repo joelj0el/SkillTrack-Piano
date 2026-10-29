@@ -8,7 +8,8 @@ import {
   type Semaforo,
 } from "@skilltrack/core";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { colorDeToken, useCamara, type Camara } from "./camara.ts";
+import { Link } from "react-router";
+import { colorDeToken, toqueAVideo, useCamara, type Camara } from "./camara.ts";
 import { CONEXIONES, crearDetector, type DeteccionManos, type Detector } from "./detector.ts";
 import { NOMBRE_MANO, crearAsignador, crearContadorFps, type ManoVista } from "./manos-en-vivo.ts";
 
@@ -96,11 +97,19 @@ export interface Vista {
  * La imagen solo se procesa en el teléfono: ningún fotograma sale por la red.
  */
 export function VistaCamara({
+  titulo,
+  aviso,
+  volverA,
   manosEsperadas,
   dibujar,
   onToque,
   children,
 }: {
+  titulo: string;
+  /** Texto plegable bajo el título (p. ej., la secuencia provisional). */
+  aviso?: ReactNode;
+  /** Ruta del botón para salir de la práctica. */
+  volverA: string;
   manosEsperadas: 1 | 2;
   dibujar?: Dibujar;
   /** Toque sobre la imagen, en píxeles del video (para calibrar). */
@@ -209,47 +218,64 @@ export function VistaCamara({
 
   if (camara.tipo === "error") return <ErrorCamara camara={camara} reintentar={reintentar} />;
 
+  // Pantalla completa sin desplazamiento: cabecera compacta, video escalado sin recortar y el
+  // panel del paso (abajo en vertical, a la derecha en horizontal).
   return (
-    <section aria-label="Práctica">
-      <div
-        className={onToque ? "capa-video tocable" : "capa-video"}
-        onClick={(e) => {
-          const v = video.current;
-          if (!onToque || !v || v.videoWidth === 0) return;
-          const caja = e.currentTarget.getBoundingClientRect();
-          onToque({
-            x: ((e.clientX - caja.left) / caja.width) * v.videoWidth,
-            y: ((e.clientY - caja.top) / caja.height) * v.videoHeight,
-          });
-        }}
-      >
-        <video
-          ref={video}
-          className="vista-camara"
-          muted
-          playsInline
-          aria-label="Vista de la cámara"
-        />
-        <canvas ref={capa} className="capa-dibujo" aria-hidden="true" />
-      </div>
-      <canvas ref={muestra} width={ANCHO_CALIDAD} height={ALTO_CALIDAD} hidden />
-      <div className="fila suave">
+    <section className="practica" aria-label="Práctica">
+      <header className="practica-cabecera">
+        <Link to={volverA} className="practica-salir">
+          ← Salir
+        </Link>
+        <strong className="practica-titulo">{titulo}</strong>
         <span data-estado-detector={detector ? "listo" : errorDetector ? "error" : "cargando"}>
           {detector
-            ? `Detector de manos listo (${detector.delegado})`
+            ? `Manos: ${detector.delegado}`
             : errorDetector
               ? `El detector no pudo iniciar: ${errorDetector}`
               : camara.tipo === "pidiendo"
-                ? "Pidiendo acceso a la cámara…"
-                : "Cargando el detector de manos…"}
+                ? "Pidiendo la cámara…"
+                : "Cargando el detector…"}
         </span>
         <span data-fps={Math.round(fps)}>{Math.round(fps)} fps</span>
-        <label className="fila">
+        <label className="practica-opcion">
           <input type="checkbox" checked={frontal} onChange={(e) => setFrontal(e.target.checked)} />
-          Cámara frontal (imagen en espejo)
+          Cámara frontal
         </label>
+        {aviso && (
+          <details className="practica-aviso">
+            <summary>Secuencia provisional</summary>
+            {aviso}
+          </details>
+        )}
+      </header>
+      <div className="practica-cuerpo">
+        <div
+          className={onToque ? "capa-video tocable" : "capa-video"}
+          onClick={(e) => {
+            const v = video.current;
+            if (!onToque || !v || v.videoWidth === 0) return;
+            const caja = e.currentTarget.getBoundingClientRect();
+            const p = toqueAVideo(
+              e.clientX - caja.left,
+              e.clientY - caja.top,
+              { ancho: caja.width, alto: caja.height },
+              { ancho: v.videoWidth, alto: v.videoHeight },
+            );
+            if (p) onToque(p);
+          }}
+        >
+          <video
+            ref={video}
+            className="vista-camara"
+            muted
+            playsInline
+            aria-label="Vista de la cámara"
+          />
+          <canvas ref={capa} className="capa-dibujo" aria-hidden="true" />
+        </div>
+        <div className="practica-panel">{children({ fotograma, semaforo, video, detector })}</div>
       </div>
-      {children({ fotograma, semaforo, video, detector })}
+      <canvas ref={muestra} width={ANCHO_CALIDAD} height={ALTO_CALIDAD} hidden />
     </section>
   );
 }
