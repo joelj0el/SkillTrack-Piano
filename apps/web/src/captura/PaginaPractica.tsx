@@ -37,6 +37,7 @@ import {
   type PedidoAnalisis,
   type RespuestaAnalisis,
 } from "./analisis.ts";
+import { useAvanceAutomatico } from "./avance.ts";
 import { claveCalibracion, guardarCalibracion, leerCalibracion } from "./calibracion.ts";
 import { colorDeToken } from "./camara.ts";
 import { duracionEsperada, transicion, type Estado, type Plan } from "./estado.ts";
@@ -245,7 +246,7 @@ function Practica({ contexto }: { contexto: Contexto }) {
 }
 
 function PasoEncuadre({ vista, continuar }: { vista: Vista; continuar: () => void }) {
-  const verde = vista.semaforo?.nivel === "verde";
+  const restante = useAvanceAutomatico(enVerde(vista), continuar);
   return (
     <>
       <h2>1. Coloca el teléfono</h2>
@@ -254,10 +255,25 @@ function PasoEncuadre({ vista, continuar }: { vista: Vista; continuar: () => voi
         sale del teléfono.
       </p>
       <PanelSemaforo semaforo={vista.semaforo} />
-      <button type="button" disabled={!verde || !vista.detector} onClick={continuar}>
-        Continuar
-      </button>
+      <AvisoAvance restante={restante} accion="Continúa" />
     </>
+  );
+}
+
+function enVerde(vista: Vista): boolean {
+  return vista.semaforo?.nivel === "verde" && vista.detector !== null;
+}
+
+/** Sin botón: con las manos en el teclado el paso avanza solo tras 3 s en verde. */
+function AvisoAvance({ restante, accion }: { restante: number | null; accion: string }) {
+  return restante === null ? (
+    <p className="suave" data-cuenta-atras="espera">
+      Pon las manos en el teclado: con el semáforo en verde, {accion.toLowerCase()} solo en 3 s.
+    </p>
+  ) : (
+    <p className="conteo" aria-live="assertive" data-cuenta-atras={restante}>
+      {accion} en {restante}…
+    </p>
   );
 }
 
@@ -591,6 +607,12 @@ function PasoEjecucion(props: {
 
   useEffect(() => () => temporizadores.current.forEach(clearTimeout), []);
 
+  // Sin botón "Empezar": con las manos en el teclado y el semáforo en verde empieza en 3 s.
+  const restante = useAvanceAutomatico(
+    (!estado || estado.fase === "cancelado") && enVerde(vista),
+    empezar,
+  );
+
   // "Tocando": series visuales, ataques oídos y fin automático (PRM-15).
   useEffect(() => {
     if (estado?.fase !== "tocando") return;
@@ -784,9 +806,8 @@ function PasoEjecucion(props: {
           </label>
         </div>
         {lenta && <p className="aviso">{lenta}</p>}
-        <button type="button" onClick={empezar}>
-          Empezar
-        </button>
+        <PanelSemaforo semaforo={vista.semaforo} />
+        <AvisoAvance restante={restante} accion="Empieza" />
       </>
     );
   }
