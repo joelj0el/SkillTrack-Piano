@@ -88,6 +88,18 @@ Pruebas nuevas: PU-web-11 (el detector autoalojado carga y procesa la cámara si
 | PA-HU08-04 | auto-e2e | Pendiente    | Requiere un intento completo; la parte de encuadre está cubierta por PA-HU03-05               |
 | PA-HU08-05 | auto-api | Implementado | Campos del intento de tarea y 403 para el docente no asignado                                 |
 
+## HU-18 · Grabar en modo investigación con metadatos
+
+La historia se adapta a una desviación declarada: las sesiones se graban con la cámara nativa del teléfono y una planilla, y se procesan después con la misma cadena de análisis. La ingesta (`pnpm ingesta`) crea un paquete `PAQ-<codigo_toma>` por toma y lo registra en la base de investigación local.
+
+| PA         | Tipo     | Estado    | Motivo                                                                                                                            |
+| ---------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU18-01 | auto-e2e | Pendiente | El modo investigación dentro de la app no se construye; la pantalla del rol `investigador` solo confirma el acceso                |
+| PA-HU18-02 | auto-e2e | Pendiente | El paquete viene de la ingesta (video, `meta.json`, hashes); los puntos de la mano y el resultado llegan con el reprocesamiento   |
+| PA-HU18-03 | auto-e2e | Pendiente | La grabación no pasa por la app, así que no hay flujo de red que medir                                                            |
+| PA-HU18-04 | manual   | Prototipo | Verifica el sha256 y rechaza un paquete alterado (prueba PA-HU18-04 con fixtures sintéticos); falta ejecutarla con la sesión real |
+| PA-HU18-05 | manual   | Manual    | Requiere el modo investigación en el teléfono; no realizada                                                                       |
+
 ## Estado de esta versión
 
 - **Implementado:** PA-HU03-03, PA-HU03-05, PA-HU05-05, PA-HU08-01, PA-HU08-02 y PA-HU08-05.
