@@ -26,7 +26,7 @@
 | TI-HU08-03                         | Bandeja de salida en IndexedDB                                                         | Implementado                                                                                                                  |
 | TI-HU08-04                         | Prueba de privacidad de un intento completo                                            | Pendiente (la de encuadre está hecha)                                                                                         |
 | TI-HU18-01 a 03                    | Modo investigación dentro de la app                                                    | Pendiente: no se construye; las sesiones se graban con la cámara nativa y se procesan después con la misma cadena de análisis |
-| TI-HU18-04                         | Ingesta de la planilla y los videos en paquetes y registro en la base de investigación | Implementado para videos de la cámara nativa (commit `63bd963`)                                                               |
+| TI-HU18-04                         | Ingesta de la planilla y los videos en paquetes y registro en la base de investigación | Implementado para videos de la cámara nativa (commits `63bd963` y `d8688e6`)                                                  |
 | TV-2-01                            | Script de validación V1                                                                | Pendiente                                                                                                                     |
 
 ## Notas de ejecución
