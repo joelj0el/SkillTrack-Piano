@@ -150,6 +150,22 @@ valores.addRow(["teclado", "EJ-03", "juntas", null, "sintetico"]);
 valores.addRow([null, "EJ-04"]);
 await libro.xlsx.writeFile(resolve(DESTINO, "PLANILLA_TOMAS.xlsx"));
 
+// Teclado dibujado de Do4 a Do6: 15 blancas de 40 px desde x = 20, con el borde frontal en y = 320
+// y las negras desde y = 220 hasta y = 20.
+const BLANCAS_CON_NEGRA = [0, 1, 3, 4, 5, 7, 8, 10, 11, 12];
+const teclado = [
+  "drawbox=x=20:y=20:w=600:h=300:color=white:t=fill",
+  ...Array.from(
+    { length: 14 },
+    (_, i) => `drawbox=x=${60 + 40 * i}:y=20:w=1:h=300:color=gray:t=fill`,
+  ),
+  ...BLANCAS_CON_NEGRA.map((i) => `drawbox=x=${48 + 40 * i}:y=20:w=24:h=200:color=black:t=fill`),
+].join(",");
+const ordenTeclado =
+  `ffmpeg -y -v error -f lavfi -i color=dimgray:s=640x400:r=30,${teclado} -f lavfi ` +
+  "-i anullsrc=r=8000:cl=mono -t 1 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac " +
+  "-b:a 8k -shortest /c/CAL-digital-1.mp4";
+
 const ordenes = VIDEOS.map(
   ([nombre, color]) =>
     `ffmpeg -y -v error -f lavfi -i color=${color}:s=64x36:r=30 -f lavfi -i anullsrc=r=8000:cl=mono ` +
@@ -162,10 +178,12 @@ execFileSync(
     "--rm",
     "-v",
     `${DESTINO}:/s`,
+    "-v",
+    `${resolve(DESTINO, "../calibracion")}:/c`,
     "alpine:3.22",
     "sh",
     "-c",
-    `apk add --no-cache ffmpeg >/dev/null 2>&1 && ${ordenes.join(" && ")}`,
+    `apk add --no-cache ffmpeg >/dev/null 2>&1 && ${[...ordenes, ordenTeclado].join(" && ")}`,
   ],
   { stdio: "inherit" },
 );

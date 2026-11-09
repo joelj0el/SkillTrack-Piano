@@ -62,7 +62,7 @@ const CODIGO_EJECUCION = /^([DE]\d+)-EJ-?(\d{2})-(MI|MD|JUN|JUNTAS)-(\d{2,3})-R(
 const CODIGO_CALIBRACION = /^CAL-([\p{L}]+)-(\d+)$/iu;
 const SEUDONIMO_ETIQUETADOR = /^[A-Z]+-?\d+$/;
 
-function instrumentoDe(valor: string): Instrumento | null {
+export function instrumentoDe(valor: string): Instrumento | null {
   const clave = normalizar(valor);
   if (clave.includes("acust")) return "acustico";
   if (clave.includes("digital")) return "digital";

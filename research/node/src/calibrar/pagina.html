@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Calibrar sesión</title>
+    <link rel="stylesheet" href="/tokens.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: var(--espacio-4);
+        background: var(--color-fondo);
+        color: var(--color-texto);
+        font-family: var(--fuente-texto);
+        font-size: var(--texto-md);
+        line-height: var(--interlineado);
+      }
+      main {
+        display: grid;
+        gap: var(--espacio-3);
+      }
+      h1 {
+        margin: 0;
+        font-size: var(--texto-xl);
+      }
+      p {
+        margin: 0;
+      }
+      .fila {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: var(--espacio-3);
+      }
+      label {
+        display: grid;
+        gap: var(--espacio-1);
+        font-size: var(--texto-sm);
+      }
+      select,
+      input[type="number"],
+      button {
+        min-height: var(--alto-toque);
+        padding: 0 var(--espacio-3);
+        border: var(--borde) solid var(--color-borde);
+        border-radius: var(--radio-sm);
+        background: var(--color-superficie);
+        color: var(--color-texto);
+        font: inherit;
+      }
+      button.principal {
+        border-color: var(--color-acento);
+        background: var(--color-acento);
+        color: var(--color-sobre-acento);
+        font-weight: var(--peso-fuerte);
+      }
+      button:disabled {
+        color: var(--color-texto-suave);
+      }
+      .deslizador {
+        flex: 1;
+      }
+      .deslizador input {
+        width: 100%;
+      }
+      .escena {
+        position: relative;
+        line-height: 0;
+      }
+      video {
+        width: 100%;
+        height: auto;
+      }
+      canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+      }
+      .aviso {
+        font-weight: var(--peso-fuerte);
+      }
+      .error {
+        color: var(--color-peligro);
+        font-weight: var(--peso-fuerte);
+      }
+      .suave {
+        color: var(--color-texto-suave);
+        font-size: var(--texto-sm);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Calibrar sesión</h1>
+      <div class="fila">
+        <label>
+          Clip de calibración
+          <select id="clip"></select>
+        </label>
+        <label>
+          Nota grave (MIDI)
+          <input id="min" type="number" min="0" max="127" />
+        </label>
+        <label>
+          Nota aguda (MIDI)
+          <input id="max" type="number" min="0" max="127" />
+        </label>
+        <label class="deslizador">
+          Fotograma
+          <input id="tiempo" type="range" min="0" step="0.033" value="0" />
+        </label>
+      </div>
+      <p id="paso" class="aviso" aria-live="polite"></p>
+      <div class="escena">
+        <video id="video" muted playsinline preload="auto"></video>
+        <canvas id="capa" aria-label="Fotograma del teclado: marca aquí los 4 puntos"></canvas>
+      </div>
+      <p id="mensaje" role="status"></p>
+      <div class="fila">
+        <button id="guardar" class="principal" type="button" disabled>Guardar calibración</button>
+        <button id="repetir" type="button">Repetir</button>
+      </div>
+      <p id="tomas" class="suave"></p>
+      <p id="sin-calibracion" class="suave"></p>
+    </main>
+    <script type="module">
+      const $ = (id) => document.getElementById(id);
+      const [clipSel, min, max, tiempo, paso, video, capa, mensaje, guardar, repetir] = [
+        "clip",
+        "min",
+        "max",
+        "tiempo",
+        "paso",
+        "video",
+        "capa",
+        "mensaje",
+        "guardar",
+        "repetir",
+      ].map($);
+      const ORDEN = ["frenteIzquierda", "frenteDerecha", "negrasIzquierda", "negrasDerecha"];
+      const ctx = capa.getContext("2d");
+      const color = (token) => getComputedStyle(document.body).getPropertyValue(token).trim();
+
+      let sesion = { clips: [], sin_calibracion: [] };
+      let toques = [];
+      let vista = null;
+      let extremos = { grave: "", aguda: "" };
+
+      async function pedir(ruta, cuerpo) {
+        const r = await fetch(ruta, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(cuerpo),
+        });
+        const datos = await r.json();
+        if (!r.ok) throw new Error(datos.error);
+        return datos;
+      }
+
+      const clipActual = () => sesion.clips.find((c) => c.codigo === clipSel.value);
+      const rango = () => ({ min: Number(min.value), max: Number(max.value) });
+      const tamano = () => ({ ancho: video.videoWidth, alto: video.videoHeight });
+
+      function error(texto) {
+        mensaje.className = "error";
+        mensaje.textContent = texto;
+      }
+      function informar(texto) {
+        mensaje.className = "";
+        mensaje.textContent = texto;
+      }
+
+      function instruccion() {
+        const { grave, aguda } = extremos;
+        return [
+          `Marca el borde frontal de la tecla ${grave}, en su lado izquierdo.`,
+          `Marca el borde frontal de la tecla ${aguda}, en su lado derecho.`,
+          `Marca dónde empiezan las teclas negras, a la izquierda de ${grave}.`,
+          `Marca dónde empiezan las teclas negras, a la derecha de ${aguda}.`,
+        ][toques.length];
+      }
+
+      function dibujar() {
+        ctx.clearRect(0, 0, capa.width, capa.height);
+        ctx.lineWidth = 1.5;
+        for (const tecla of vista?.teclas ?? []) {
+          ctx.beginPath();
+          tecla.puntos.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+          ctx.closePath();
+          ctx.strokeStyle = color("--color-acento");
+          ctx.stroke();
+          if (tecla.negra) {
+            ctx.fillStyle = color("--color-tecla-esperada");
+            ctx.fill();
+          }
+        }
+        ctx.fillStyle = color("--color-acento");
+        for (const t of toques) {
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, 5, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      }
+
+      function actualizar() {
+        paso.textContent =
+          toques.length < 4
+            ? `Punto ${toques.length + 1} de 4: ${instruccion()}`
+            : "Revisa que las teclas dibujadas coincidan con las reales.";
+        guardar.disabled = !vista?.cubre;
+        dibujar();
+      }
+
+      async function reiniciar() {
+        toques = [];
+        vista = null;
+        informar("");
+        try {
+          extremos = await pedir("/api/previsualizar", { rango: rango(), ...tamano() });
+        } catch (e) {
+          error(e.message);
+        }
+        actualizar();
+      }
+
+      function cargarClip() {
+        const clip = clipActual();
+        if (!clip) return;
+        const sugerido = clip.rango_sugerido;
+        min.value = sugerido?.min ?? 48;
+        max.value = sugerido?.max ?? 84;
+        video.src = `/video/${encodeURIComponent(clip.codigo)}`;
+        $("tomas").textContent =
+          `${clip.tomas.length} toma(s) usarán esta calibración` +
+          (clip.guardada ? ". Ya hay una guardada: si guardas, se reemplaza." : ".");
+      }
+
+      video.addEventListener("loadedmetadata", () => {
+        capa.width = video.videoWidth;
+        capa.height = video.videoHeight;
+        tiempo.max = video.duration;
+        tiempo.value = 0;
+        video.currentTime = 0;
+        void reiniciar();
+      });
+      video.addEventListener("error", () =>
+        error("El navegador no puede abrir este video (códec). Usa Chrome o Edge."),
+      );
+      tiempo.addEventListener("input", () => (video.currentTime = Number(tiempo.value)));
+      clipSel.addEventListener("change", cargarClip);
+      min.addEventListener("change", reiniciar);
+      max.addEventListener("change", reiniciar);
+      repetir.addEventListener("click", reiniciar);
+
+      capa.addEventListener("click", async (e) => {
+        if (toques.length >= 4) return;
+        const caja = capa.getBoundingClientRect();
+        toques.push({
+          x: ((e.clientX - caja.left) * capa.width) / caja.width,
+          y: ((e.clientY - caja.top) * capa.height) / caja.height,
+        });
+        if (toques.length === 4) {
+          try {
+            vista = await pedir("/api/previsualizar", {
+              rango: rango(),
+              ...tamano(),
+              toques: marcados(),
+            });
+            if (vista.cubre) informar("");
+            else
+              error(
+                `El encuadre no cubre las teclas del rango: faltan las ${vista.faltan.join(" y ")}.`,
+              );
+          } catch (err) {
+            error(err.message);
+          }
+        }
+        actualizar();
+      });
+
+      const marcados = () => Object.fromEntries(ORDEN.map((k, i) => [k, toques[i]]));
+
+      guardar.addEventListener("click", async () => {
+        try {
+          const r = await pedir("/api/guardar", {
+            clip: clipSel.value,
+            ...tamano(),
+            tiempo_fotograma_s: video.currentTime,
+            rango: rango(),
+            toques: marcados(),
+          });
+          clipActual().guardada = true;
+          informar(`Guardada en ${r.ruta} (${r.tomas.length} toma(s) asociadas).`);
+        } catch (e) {
+          error(e.message);
+        }
+      });
+
+      sesion = await (await fetch("/api/sesion")).json();
+      for (const clip of sesion.clips) {
+        const opcion = document.createElement("option");
+        opcion.value = clip.codigo;
+        opcion.textContent = `${clip.codigo} (${clip.instrumento})`;
+        clipSel.append(opcion);
+      }
+      if (sesion.sin_calibracion.length) {
+        $("sin-calibracion").textContent =
+          "Tomas sin calibración: " +
+          sesion.sin_calibracion.map((s) => `${s.codigo} (${s.motivo})`).join("; ");
+      }
+      if (sesion.clips.length) cargarClip();
+      else error("Esta sesión no tiene clips de calibración.");
+    </script>
+  </body>
+</html>

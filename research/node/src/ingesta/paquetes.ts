@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { createReadStream, existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { basename, extname, join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { VERSION_NUCLEO } from "@skilltrack/core";
 import type { MetodoAsociacion } from "./asociar.ts";
@@ -125,10 +125,25 @@ export async function guardarClip(
   const carpeta = join(salida, "calibracion");
   const ruta = join(carpeta, `${clip.codigo}${extname(nombreOriginal).toLowerCase()}`);
   const sha256 = await sha256Archivo(origenVideo);
+  const ficha = `${JSON.stringify(
+    {
+      codigo: clip.codigo,
+      instrumento: clip.instrumento,
+      fecha: clip.fecha,
+      hora: clip.campos.hora || null,
+      archivo: basename(ruta),
+      archivo_original: nombreOriginal,
+      sha256,
+    },
+    null,
+    2,
+  )}\n`;
+  const rutaFicha = join(carpeta, `${clip.codigo}.json`);
   if (existsSync(ruta)) {
     if ((await sha256Archivo(ruta)) !== sha256) {
       throw new PaqueteRechazado(`Clip alterado: ${clip.codigo} no coincide con su sha256`);
     }
+    await writeFile(rutaFicha, ficha);
     return { ruta, sha256 };
   }
   await mkdir(carpeta, { recursive: true });
@@ -139,6 +154,7 @@ export async function guardarClip(
       throw new PaqueteRechazado("La copia del clip no coincide con el original");
     }
     await rename(temporal, ruta);
+    await writeFile(rutaFicha, ficha);
     return { ruta, sha256 };
   } finally {
     await rm(temporal, { force: true });

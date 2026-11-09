@@ -13,6 +13,7 @@ import {
 import { ObservacionNueva, Observacion, Tarea, TareaCambio, TareaNueva } from "./pedagogia.ts";
 import { Salud } from "./salud.ts";
 
+export * from "./calibracion.ts";
 export * from "./catalogo.ts";
 export * from "./identidad.ts";
 export * from "./instituciones.ts";

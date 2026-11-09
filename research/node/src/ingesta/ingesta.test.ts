@@ -310,6 +310,17 @@ describe("ingesta de la sesión", { timeout: 60_000 }, () => {
     expect(existsSync(join(salida, "PAQ-CAL-digital-1"))).toBe(false);
     const copia = join(salida, "calibracion", "CAL-digital-1.mp4");
     const sha = createHash("sha256").update(readFileSync(copia)).digest("hex");
+    const ficha = JSON.parse(
+      readFileSync(join(salida, "calibracion", "CAL-digital-1.json"), "utf8"),
+    );
+    expect(ficha).toMatchObject({
+      codigo: "CAL-digital-1",
+      instrumento: "digital",
+      fecha: "2026-11-09",
+      hora: "17:50",
+      archivo: "CAL-digital-1.mp4",
+      sha256: sha,
+    });
     expect(await filas(pg, "SELECT * FROM clip_calibracion")).toEqual([
       {
         codigo: "CAL-digital-1",
