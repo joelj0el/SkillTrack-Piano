@@ -18,8 +18,16 @@ function imprimir(r: Reporte, salida: string): void {
     r.solo_verificar ? "MODO VERIFICACIÓN: no se copió ni se registró nada." : "Ingesta terminada.",
   );
   console.log(`Columnas leídas: ${r.columnas.join(", ")}`);
+  console.log(
+    r.columnas_faltantes.length
+      ? `Columnas que faltan (se tratan como vacías): ${r.columnas_faltantes.join(", ")}`
+      : "No falta ninguna columna.",
+  );
   seccion("Tomas válidas", r.tomas_validas);
-  seccion("Tomas de calibración (CAL-)", r.tomas_cal);
+  seccion(
+    "Clips de calibración (no son tomas)",
+    Object.entries(r.clips_calibracion).map(([i, codigos]) => `${i}: ${codigos.join(", ")}`),
+  );
   seccion(
     "Filas sin video",
     r.filas_sin_video.map((f) => `fila ${f.fila} ${f.codigo}: ${f.motivo}`),

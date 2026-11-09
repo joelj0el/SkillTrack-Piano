@@ -5,7 +5,7 @@ import { extname, join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { VERSION_NUCLEO } from "@skilltrack/core";
 import type { MetodoAsociacion } from "./asociar.ts";
-import type { Toma } from "./validar.ts";
+import type { ClipCalibracion, TomaEjecucion } from "./validar.ts";
 
 export const VERSION_INGESTA = "1.0.0";
 const MANIFIESTO = "sha256.txt";
@@ -23,7 +23,7 @@ function sha256Texto(texto: string): string {
 }
 
 function metaDe(
-  toma: Toma,
+  toma: TomaEjecucion,
   asociacion: MetodoAsociacion,
   video: { archivo_original: string; archivo: string; sha256: string; bytes: number },
 ): string {
@@ -37,7 +37,7 @@ function metaDe(
     versiones: {
       ingesta: VERSION_INGESTA,
       nucleo: VERSION_NUCLEO,
-      ejercicio: toma.tipo === "ejecucion" ? toma.versionEjercicio : null,
+      ejercicio: toma.versionEjercicio,
     },
   };
   return `${JSON.stringify(meta, null, 2)}\n`;
@@ -63,7 +63,7 @@ export interface PaqueteListo {
 
 /** Idempotente: un paquete existente se verifica y nunca se sobrescribe. */
 export async function crearPaquete(
-  toma: Toma,
+  toma: TomaEjecucion,
   origenVideo: string,
   nombreOriginal: string,
   asociacion: MetodoAsociacion,
@@ -107,5 +107,40 @@ export async function crearPaquete(
     return { ruta: destino, sha256: sha256Texto(manifiesto) };
   } finally {
     await rm(temporal, { recursive: true, force: true });
+  }
+}
+
+export interface ClipGuardado {
+  ruta: string;
+  sha256: string;
+}
+
+/** Copia el clip a calibracion/; igual que un paquete, si ya existe se verifica y no se toca. */
+export async function guardarClip(
+  clip: ClipCalibracion,
+  origenVideo: string,
+  nombreOriginal: string,
+  salida: string,
+): Promise<ClipGuardado> {
+  const carpeta = join(salida, "calibracion");
+  const ruta = join(carpeta, `${clip.codigo}${extname(nombreOriginal).toLowerCase()}`);
+  const sha256 = await sha256Archivo(origenVideo);
+  if (existsSync(ruta)) {
+    if ((await sha256Archivo(ruta)) !== sha256) {
+      throw new PaqueteRechazado(`Clip alterado: ${clip.codigo} no coincide con su sha256`);
+    }
+    return { ruta, sha256 };
+  }
+  await mkdir(carpeta, { recursive: true });
+  const temporal = `${ruta}.tmp`;
+  try {
+    await copyFile(origenVideo, temporal);
+    if ((await sha256Archivo(temporal)) !== sha256) {
+      throw new PaqueteRechazado("La copia del clip no coincide con el original");
+    }
+    await rename(temporal, ruta);
+    return { ruta, sha256 };
+  } finally {
+    await rm(temporal, { force: true });
   }
 }

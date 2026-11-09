@@ -1,10 +1,28 @@
 import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { asociar, type MetodoAsociacion, type VideoParaAsociar } from "./asociar.ts";
-import { crearPaquete, PaqueteRechazado, type PaqueteListo } from "./paquetes.ts";
+import {
+  crearPaquete,
+  guardarClip,
+  PaqueteRechazado,
+  type ClipGuardado,
+  type PaqueteListo,
+} from "./paquetes.ts";
 import { leerPlanilla } from "./planilla.ts";
-import { prepararEsquema, registrarParticipantes, registrarToma, type Base } from "./registro.ts";
-import { interpretar, type Problema, type Toma, type TomaEjecucion } from "./validar.ts";
+import {
+  prepararEsquema,
+  registrarClip,
+  registrarParticipantes,
+  registrarToma,
+  type Base,
+} from "./registro.ts";
+import {
+  interpretar,
+  type ClipCalibracion,
+  type FilaInterpretada,
+  type Problema,
+  type TomaEjecucion,
+} from "./validar.ts";
 
 const EXTENSIONES_VIDEO = new Set([".mp4", ".mov", ".m4v", ".3gp", ".mkv", ".webm"]);
 
@@ -20,8 +38,10 @@ export interface OpcionesIngesta {
 export interface Reporte {
   solo_verificar: boolean;
   columnas: string[];
+  columnas_faltantes: string[];
   tomas_validas: string[];
-  tomas_cal: string[];
+  /** Códigos de los clips del teclado vacío, por instrumento. No son tomas. */
+  clips_calibracion: Record<string, string[]>;
   filas_sin_video: { fila: number; codigo: string; motivo: string }[];
   videos_sin_fila: string[];
   valores_invalidos: Problema[];
@@ -58,24 +78,24 @@ export async function ingerir({ entrada, salida, fecha, base }: OpcionesIngesta)
   const videos = await listarVideos(entrada);
 
   const valores_invalidos: Problema[] = [];
-  const tomas = new Map<number, Toma>();
+  const interpretadas = new Map<number, FilaInterpretada>();
   const vistos = new Set<string>();
   planilla.tomas.forEach((fila, indice) => {
-    const { toma, problemas } = interpretar(fila, planilla.valores, fecha);
+    const { interpretada, problemas } = interpretar(fila, planilla.valores, fecha);
     valores_invalidos.push(...problemas);
-    if (!toma) return;
-    if (vistos.has(toma.codigo)) {
+    if (!interpretada) return;
+    if (vistos.has(interpretada.codigo)) {
       valores_invalidos.push({
         fila: fila.fila,
-        codigo: toma.codigo,
+        codigo: interpretada.codigo,
         campo: "codigo_toma",
-        valor: toma.codigo,
+        valor: interpretada.codigo,
         motivo: "Código repetido en la planilla",
       });
       return;
     }
-    vistos.add(toma.codigo);
-    tomas.set(indice, toma);
+    vistos.add(interpretada.codigo);
+    interpretadas.set(indice, interpretada);
   });
 
   // También las filas inválidas: su video existe y no debe contarse como "sin fila".
@@ -94,8 +114,9 @@ export async function ingerir({ entrada, salida, fecha, base }: OpcionesIngesta)
   const reporte: Reporte = {
     solo_verificar: !base,
     columnas: planilla.columnas,
+    columnas_faltantes: planilla.columnasFaltantes,
     tomas_validas: [],
-    tomas_cal: [],
+    clips_calibracion: {},
     filas_sin_video: asociados.filasSinVideo.map(({ indice, motivo }) => ({
       fila: planilla.tomas[indice]!.fila,
       codigo: planilla.tomas[indice]!.campos.codigo_toma ?? "",
@@ -110,35 +131,33 @@ export async function ingerir({ entrada, salida, fecha, base }: OpcionesIngesta)
 
   await mkdir(salida, { recursive: true });
   const listas: { toma: TomaEjecucion; paquete: PaqueteListo }[] = [];
-  for (const [indice, toma] of tomas) {
+  const clips: { clip: ClipCalibracion; archivo: string; guardado: ClipGuardado }[] = [];
+  for (const [indice, fila] of interpretadas) {
     const par = asociados.pares.get(indice);
     if (!par) continue;
-    let paquete: PaqueteListo | null = null;
-    if (base) {
-      try {
-        paquete = await crearPaquete(
-          toma,
-          join(entrada, par.nombre),
-          par.nombre,
-          par.metodo,
-          salida,
-        );
-      } catch (error) {
-        if (!(error instanceof PaqueteRechazado)) throw error;
-        reporte.paquetes_rechazados.push({ codigo: toma.codigo, motivo: error.message });
-        continue;
+    const video = join(entrada, par.nombre);
+    try {
+      if (fila.tipo === "calibracion") {
+        if (base) {
+          const guardado = await guardarClip(fila, video, par.nombre, salida);
+          clips.push({ clip: fila, archivo: par.nombre, guardado });
+        }
+        (reporte.clips_calibracion[fila.instrumento] ??= []).push(fila.codigo);
+      } else {
+        if (base) {
+          const paquete = await crearPaquete(fila, video, par.nombre, par.metodo, salida);
+          listas.push({ toma: fila, paquete });
+        }
+        reporte.tomas_validas.push(fila.codigo);
+        reporte.etiquetadores_sin_identificar += fila.etiquetas.filter((e) =>
+          e.etiquetador.startsWith("ETQ-"),
+        ).length;
       }
+      reporte.asociacion[par.metodo]++;
+    } catch (error) {
+      if (!(error instanceof PaqueteRechazado)) throw error;
+      reporte.paquetes_rechazados.push({ codigo: fila.codigo, motivo: error.message });
     }
-    reporte.asociacion[par.metodo]++;
-    if (toma.tipo === "calibracion") {
-      reporte.tomas_cal.push(toma.codigo);
-      continue;
-    }
-    reporte.tomas_validas.push(toma.codigo);
-    reporte.etiquetadores_sin_identificar += toma.etiquetas.filter((e) =>
-      e.etiquetador.startsWith("ETQ-"),
-    ).length;
-    if (paquete) listas.push({ toma, paquete });
   }
 
   if (base) {
@@ -148,6 +167,9 @@ export async function ingerir({ entrada, salida, fecha, base }: OpcionesIngesta)
       listas.map((l) => l.toma),
     );
     for (const { toma, paquete } of listas) await registrarToma(base, toma, paquete);
+    for (const { clip, archivo, guardado } of clips) {
+      await registrarClip(base, clip, archivo, guardado);
+    }
   }
 
   await writeFile(join(salida, "reporte-ingesta.json"), `${JSON.stringify(reporte, null, 2)}\n`);

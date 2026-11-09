@@ -12,10 +12,43 @@ export interface Planilla {
   tomas: FilaPlanilla[];
   valores: Map<string, Set<string>>;
   columnas: string[];
+  /** Encabezados esperados que la hoja Tomas no trae; sus valores se tratan como vacíos. */
+  columnasFaltantes: string[];
 }
+
+/** Encabezados de la planilla de las sesiones, tal como están escritos en ella. */
+export const COLUMNAS_PLANILLA = [
+  "codigo_toma",
+  "archivo_video",
+  "fecha",
+  "hora_inicio",
+  "seudonimo",
+  "rol",
+  "institution",
+  "instrumento",
+  "ejercicio",
+  "manos",
+  "tiempo_bpm",
+  "repeticion",
+  "orignen",
+  "evaluable",
+  "erroes_observados",
+  "compas aprox",
+  "etiquetador_1",
+  "etiquetas_1",
+  "etiquetador_2",
+  "etiquetas_2",
+  "consentimiento",
+  "notas",
+] as const;
 
 const ALIAS: Record<string, string> = {
   codigo: "codigo_toma",
+  hora_inicio: "hora",
+  institution: "institucion",
+  tiempo_bpm: "tempo",
+  orignen: "origen",
+  erroes_observados: "errores_observados",
   archivo: "archivo_video",
   video: "archivo_video",
   nombre_archivo: "archivo_video",
@@ -144,5 +177,11 @@ function leerValores(h: ExcelJS.Worksheet): Map<string, Set<string>> {
 export async function leerPlanilla(ruta: string): Promise<Planilla> {
   const libro = new ExcelJS.Workbook();
   await libro.xlsx.readFile(ruta);
-  return { ...leerTomas(hoja(libro, "Tomas")), valores: leerValores(hoja(libro, "Valores")) };
+  const { tomas, columnas } = leerTomas(hoja(libro, "Tomas"));
+  return {
+    tomas,
+    columnas,
+    valores: leerValores(hoja(libro, "Valores")),
+    columnasFaltantes: COLUMNAS_PLANILLA.filter((c) => !columnas.includes(nombreDeColumna(c))),
+  };
 }

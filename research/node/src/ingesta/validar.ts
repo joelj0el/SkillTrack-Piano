@@ -19,29 +19,32 @@ export interface EtiquetaDeToma {
   etiquetador: string;
   /** Clases marcadas por el etiquetador; "OK" deja la lista vacía. */
   clases: string[];
+  /** El etiquetador escribió OK: sin errores y además aceptable. */
+  aceptable: boolean;
   compasAprox: string | null;
   ronda: Ronda;
 }
 
-interface TomaBase {
+interface FilaBase {
   fila: number;
   codigo: string;
   campos: Record<string, string>;
   fecha: string;
   instrumento: Instrumento;
-  evaluable: boolean;
-  origen: "real" | "actuado";
   institucion: string | null;
-  dispositivo: string | null;
-  condiciones: string | null;
 }
 
-export interface TomaCalibracion extends TomaBase {
+/** Fila CAL-: el teclado vacío de un instrumento. No es una toma. */
+export interface ClipCalibracion extends FilaBase {
   tipo: "calibracion";
 }
 
-export interface TomaEjecucion extends TomaBase {
+export interface TomaEjecucion extends FilaBase {
   tipo: "ejecucion";
+  evaluable: boolean;
+  origen: "real" | "actuado";
+  dispositivo: string | null;
+  condiciones: string | null;
   participante: string;
   rol: "docente_ref" | "estudiante";
   campana: "A" | "B" | "C";
@@ -53,7 +56,7 @@ export interface TomaEjecucion extends TomaBase {
   etiquetas: EtiquetaDeToma[];
 }
 
-export type Toma = TomaCalibracion | TomaEjecucion;
+export type FilaInterpretada = ClipCalibracion | TomaEjecucion;
 
 const CODIGO_EJECUCION = /^([DE]\d+)-EJ-?(\d{2})-(MI|MD|JUN|JUNTAS)-(\d{2,3})-R(\d+)(-ACT)?$/i;
 const CODIGO_CALIBRACION = /^CAL-([\p{L}]+)-(\d+)$/iu;
@@ -64,6 +67,13 @@ function instrumentoDe(valor: string): Instrumento | null {
   if (clave.includes("acust")) return "acustico";
   if (clave.includes("digital")) return "digital";
   if (clave.includes("teclado")) return "teclado";
+  return null;
+}
+
+function rolDe(valor: string): "docente_ref" | "estudiante" | null {
+  const clave = normalizar(valor);
+  if (clave.startsWith("docente")) return "docente_ref";
+  if (clave === "estudiante") return "estudiante";
   return null;
 }
 
@@ -86,7 +96,7 @@ export function interpretar(
   { fila, campos }: FilaPlanilla,
   valores: Map<string, Set<string>>,
   fechaSesion: string,
-): { toma: Toma | null; problemas: Problema[] } {
+): { interpretada: FilaInterpretada | null; problemas: Problema[] } {
   const codigo = campos.codigo_toma ?? "";
   const problemas: Problema[] = [];
   const reportar = (campo: string, valor: string, motivo: string) => {
@@ -108,22 +118,11 @@ export function interpretar(
   const ejecucion = CODIGO_EJECUCION.exec(codigo);
   if (!calibracion && !ejecucion) {
     reportar("codigo_toma", codigo, "No sigue el formato del protocolo");
-    return { toma: null, problemas };
+    return { interpretada: null, problemas };
   }
 
   const instrumento = instrumentoDe(campos.instrumento || calibracion?.[1] || "");
   if (!instrumento) reportar("instrumento", campos.instrumento ?? "", "Instrumento no reconocido");
-
-  const evaluable = booleano(campos.evaluable || (calibracion ? "si" : ""));
-  if (evaluable === null) reportar("evaluable", campos.evaluable ?? "", "Debe ser si o no");
-
-  const actuadaPorCodigo = Boolean(ejecucion?.[6]);
-  const origen = normalizar(campos.origen || (actuadaPorCodigo ? "actuado" : "real"));
-  if (origen !== "real" && origen !== "actuado") {
-    reportar("origen", campos.origen ?? "", "Debe ser real o actuado");
-  } else if ((origen === "actuado") !== actuadaPorCodigo && ejecucion) {
-    reportar("origen", campos.origen ?? "", "No coincide con el sufijo -ACT del código");
-  }
 
   const comunes = {
     fila,
@@ -131,18 +130,32 @@ export function interpretar(
     campos,
     fecha: campos.fecha || fechaSesion,
     instrumento: instrumento as Instrumento,
-    evaluable: evaluable as boolean,
-    origen: origen as "real" | "actuado",
     institucion: campos.institucion || null,
-    dispositivo: campos.dispositivo || null,
-    condiciones: campos.condiciones || null,
   };
 
   if (calibracion) {
+    const delCodigo = instrumentoDe(calibracion[1]!);
+    if (delCodigo && instrumento && delCodigo !== instrumento) {
+      reportar("instrumento", campos.instrumento ?? "", "Contradice el código del clip");
+    }
     return {
-      toma: problemas.length ? null : { ...comunes, tipo: "calibracion" },
+      interpretada: problemas.length ? null : { ...comunes, tipo: "calibracion" },
       problemas,
     };
+  }
+
+  const evaluable = booleano(campos.evaluable ?? "");
+  if (evaluable === null) reportar("evaluable", campos.evaluable ?? "", "Debe ser si o no");
+
+  // La columna basta para marcarla actuada; solo hay contradicción si afirma real con -ACT.
+  const actuadaPorCodigo = Boolean(ejecucion?.[6]);
+  const origen = normalizar(campos.origen || (actuadaPorCodigo ? "actuado" : "real"));
+  if (origen === "sintetico") {
+    reportar("origen", campos.origen ?? "", "La ingesta solo produce tomas reales o actuadas");
+  } else if (origen !== "real" && origen !== "actuado") {
+    reportar("origen", campos.origen ?? "", "Debe ser real o actuado");
+  } else if (origen === "real" && actuadaPorCodigo) {
+    reportar("origen", campos.origen ?? "", "Contradice el sufijo -ACT del código");
   }
 
   const [, seudonimo, numero, manosCodigo, tempoCodigo, repeticion] = ejecucion!;
@@ -160,6 +173,8 @@ export function interpretar(
   contradice("manos", (v) => manosDe(v) === manos);
   contradice("tempo", (v) => Number(v) === tempo);
   contradice("repeticion", (v) => Number(v.replace(/\D/g, "")) === Number(repeticion));
+  const rol = participante.startsWith("D") ? "docente_ref" : "estudiante";
+  contradice("rol", (v) => rolDe(v) === rol);
 
   const campana = (campos.campana || (participante.startsWith("D") ? "A" : "B")).toUpperCase();
   if (!["A", "B", "C"].includes(campana)) reportar("campana", campana, "Debe ser A, B o C");
@@ -196,18 +211,23 @@ export function interpretar(
     etiquetas.push({
       etiquetador,
       clases: tokens.filter((t) => t !== "OK"),
+      aceptable: tokens.includes("OK"),
       compasAprox: campos[`compas_aprox_${n}`] || campos.compas_aprox || null,
       ronda: ronda as Ronda,
     });
   }
 
-  if (problemas.length) return { toma: null, problemas };
+  if (problemas.length) return { interpretada: null, problemas };
   return {
-    toma: {
+    interpretada: {
       ...comunes,
       tipo: "ejecucion",
+      evaluable: evaluable as boolean,
+      origen: origen as "real" | "actuado",
+      dispositivo: campos.dispositivo || null,
+      condiciones: campos.condiciones || null,
       participante,
-      rol: participante.startsWith("D") ? "docente_ref" : "estudiante",
+      rol,
       campana: campana as "A" | "B" | "C",
       ejercicio,
       versionEjercicio: `${ejercicio}@${VERSION_DEL_EJERCICIO}`,
