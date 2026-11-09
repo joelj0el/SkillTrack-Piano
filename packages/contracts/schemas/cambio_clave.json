@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "clave_actual": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "clave_nueva": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 256
+    }
+  },
+  "required": [
+    "clave_actual",
+    "clave_nueva"
+  ],
+  "additionalProperties": false,
+  "title": "CambioClave"
+}

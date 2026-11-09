@@ -1,0 +1,5 @@
+{
+  "tasksVision": "1.1.1",
+  "modelo": "hand_landmarker/float16/1",
+  "modeloSha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1"
+}

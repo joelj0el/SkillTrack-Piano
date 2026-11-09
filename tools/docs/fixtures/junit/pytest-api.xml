@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="pytest" tests="3">
+    <testcase classname="tests.test_pa_hu14" name="test_pa_hu14_02_condiciones_invalidas[a]"/>
+    <testcase classname="tests.test_pa_hu14" name="test_pa_hu14_02_condiciones_invalidas[b]"><failure message="sintético"/></testcase>
+    <testcase classname="tests.test_identidad" name="test_pu_identity_03_hash_argon2id"/>
+  </testsuite>
+</testsuites>

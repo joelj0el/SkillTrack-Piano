@@ -12,6 +12,9 @@ RUN pnpm install --frozen-lockfile
 
 COPY packages packages
 COPY apps/web apps/web
+COPY tools/mediapipe.mjs tools/
+# Detector de la mano autoalojado: WASM del paquete y modelo verificado por SHA-256.
+RUN node tools/mediapipe.mjs
 RUN pnpm --filter @skilltrack/web build
 
 FROM caddy:2.11.7-alpine

@@ -15,15 +15,18 @@
     "format:check": "node tools/formato.mjs --check",
     "typecheck": "pnpm -r typecheck",
     "deps:check": "depcruise apps/web/src packages research/node/src --config .dependency-cruiser.cjs",
-    "contracts:gen": "pnpm --filter @skilltrack/contracts export && uv run --project apps/api datamodel-codegen --input packages/contracts/schemas --input-file-type jsonschema --output apps/api/app/contracts_gen --output-model-type pydantic_v2.BaseModel --target-python-version 3.12 --disable-timestamp --use-double-quotes --formatters builtin && node tools/normalizar-lf.ts apps/api/app/contracts_gen",
+    "contracts:gen": "pnpm --filter @skilltrack/contracts export && uv run --project apps/api datamodel-codegen --input packages/contracts/schemas --input-file-type jsonschema --output apps/api/app/contracts_gen --output-model-type pydantic_v2.BaseModel --target-python-version 3.12 --disable-timestamp --use-double-quotes --formatters builtin --use-title-as-name && node tools/normalizar-lf.ts apps/api/app/contracts_gen",
     "docs:diagrams": "node tools/docs/diagrams.mjs",
     "docs:er": "uv run tools/docs/er.py",
     "docs:tests": "uv run tools/docs/pruebas.py",
     "docs:trace": "uv run tools/docs/traza.py",
-    "docs:build": "node tools/docs/build.mjs"
+    "docs:build": "node tools/docs/build.mjs",
+    "e2e": "playwright test",
+    "mediapipe": "node tools/mediapipe.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
     "@types/node": "26.6.5",
     "dependency-cruiser": "18.7.0",
     "eslint": "10.13.0",

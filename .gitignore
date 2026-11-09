@@ -8,6 +8,8 @@ research/data/
 # Reportes de pruebas (CI los guarda como artefactos)
 reports/
 coverage/
+test-results/
+playwright-report/
 
 # Node
 node_modules/
@@ -21,6 +23,10 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Detector de la mano: se prepara con node tools/mediapipe.mjs (version.json sí se versiona)
+apps/web/public/mediapipe/wasm/
+apps/web/public/mediapipe/*.task
 
 # Documentación generada
 build/

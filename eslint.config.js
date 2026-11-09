@@ -12,13 +12,16 @@ export default tseslint.config(
       "apps/api/**",
       "research/python/**",
       "tools/ci/fixtures/**",
+      "apps/web/public/mediapipe/**",
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
     files: ["**/*.mjs", "**/*.cjs"],
-    languageOptions: { globals: { process: "readonly", module: "writable", console: "readonly" } },
+    languageOptions: {
+      globals: { process: "readonly", module: "writable", console: "readonly", fetch: "readonly" },
+    },
   },
   {
     // Núcleo puro: el reloj, los temporizadores y el azar se inyectan, nunca se leen del entorno.

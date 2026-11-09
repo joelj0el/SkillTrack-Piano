@@ -2,6 +2,7 @@ from logging.config import fileConfig
 
 from alembic import context
 
+import app.modules.models  # noqa: F401  (registra los modelos en Base.metadata)
 from app.core.config import obtener_configuracion
 from app.core.db import Base, crear_engine
 
@@ -23,7 +24,9 @@ def migrar_sin_conexion() -> None:
 
 def migrar_con_conexion() -> None:
     with crear_engine().connect() as conexion:
-        context.configure(connection=conexion, target_metadata=target_metadata)
+        context.configure(
+            connection=conexion, target_metadata=target_metadata, include_schemas=True
+        )
         with context.begin_transaction():
             context.run_migrations()
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="hu17.spec.ts" tests="1">
+    <testcase classname="hu17.spec.ts" name="PA-HU17-01: manifiesto instalable"/>
+  </testsuite>
+</testsuites>

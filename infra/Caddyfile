@@ -1,12 +1,18 @@
 # Origen único: la PWA en / y la API en /api. En local, Caddy emite un certificado interno para localhost.
+{
+	# Con una IP (prueba desde un teléfono) el cliente no envía SNI: Caddy usa este nombre.
+	default_sni {$DOMINIO:localhost}
+}
+
 {$DOMINIO:localhost} {
 	encode zstd gzip
 
 	header {
-		Content-Security-Policy "default-src 'self'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; connect-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		Permissions-Policy "camera=(self), microphone=(self)"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "no-referrer"
+		Strict-Transport-Security "max-age=31536000"
 		-Server
 	}
 

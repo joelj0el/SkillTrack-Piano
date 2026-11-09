@@ -81,3 +81,7 @@ Mientras un comando está pendiente, solo imprime `pendiente: …` y no genera a
 | `docs/`              | Decisiones, requerimientos, arquitectura e iteraciones              |
 
 Las decisiones técnicas se registran en `docs/adr/`.
+
+## Versión de avance
+
+Esta rama contiene una versión de avance de las Iteraciones 1 a 3. Cómo levantarla y qué mostrar: [`docs/iteraciones/it-1/README.md`](docs/iteraciones/it-1/README.md), [`docs/iteraciones/it-2/README.md`](docs/iteraciones/it-2/README.md) y [`docs/iteraciones/it-3/README.md`](docs/iteraciones/it-3/README.md).
