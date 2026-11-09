@@ -90,7 +90,7 @@ Pruebas nuevas: PU-web-11 (el detector autoalojado carga y procesa la cámara si
 
 ## HU-18 · Grabar en modo investigación con metadatos
 
-La historia se adapta a una desviación declarada: las sesiones se graban con la cámara nativa del teléfono y una planilla, y se procesan después con la misma cadena de análisis. La ingesta (`pnpm ingesta`) crea un paquete `PAQ-<codigo_toma>` por toma y lo registra en la base de investigación local; las filas `CAL-` no son tomas y se registran como clips de calibración por instrumento.
+La historia se adapta a una desviación declarada: las sesiones se graban con la cámara nativa del teléfono y una planilla, y se procesan después con la misma cadena de análisis. La ingesta (`pnpm ingesta`) crea un paquete `PAQ-<codigo_toma>` por toma y lo registra en la base de investigación local; las filas `CAL-` no son tomas y se registran como clips de calibración por instrumento. Una toma con consentimiento "no" o vacío se bloquea: no crea paquete ni registro y se reporta.
 
 | PA         | Tipo     | Estado    | Motivo                                                                                                                            |
 | ---------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |

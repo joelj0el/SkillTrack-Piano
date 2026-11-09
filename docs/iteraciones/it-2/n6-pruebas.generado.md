@@ -1,13 +1,13 @@
 # n.6 Pruebas — it-2 (generado)
 
-Generado por `pnpm docs:tests it-2` el 2026-11-09 20:13 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-2` el 2026-11-09 20:32 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
 | Playwright  | 19    | 19        | 0        | 0        |
-| Vitest      | 181   | 181       | 0        | 0        |
+| Vitest      | 184   | 184       | 0        | 0        |
 | pytest      | 68    | 68        | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
@@ -46,6 +46,6 @@ Generado por `pnpm docs:tests it-2` el 2026-11-09 20:13 UTC a partir de los repo
 | outbox       | 3   | 3         | 0        |
 | pedagogy     | 8   | 8         | 0        |
 | quality      | 9   | 9         | 0        |
-| research     | 27  | 27        | 0        |
+| research     | 30  | 30        | 0        |
 | tempo        | 5   | 5         | 0        |
 | web          | 11  | 11        | 0        |
