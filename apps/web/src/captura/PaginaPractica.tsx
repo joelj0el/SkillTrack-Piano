@@ -5,9 +5,15 @@ import {
   detectarAtaques,
   etiquetaTempo,
   evaluarAudio,
+  fraccionEvaluable,
   medirAudio,
+  muestrasDelFotograma,
   opcionesTempo,
   programa,
+  reducirTasa,
+  type MuestraMano,
+  type PedidoAnalisis,
+  type RespuestaAnalisis,
   type SemaforoAudio,
   VERSION_NUCLEO,
   aplicar,
@@ -31,12 +37,6 @@ import { pedir } from "../api.ts";
 import { programarClic, unir, useMicrofono, type Microfono } from "../audio/microfono.ts";
 import { almacenIndexedDb, encolar, vaciar } from "../bandeja/bandeja.ts";
 import { Cargado, NOMBRE_MANOS, useCarga } from "../componentes.tsx";
-import {
-  reducirTasa,
-  type MuestraMano,
-  type PedidoAnalisis,
-  type RespuestaAnalisis,
-} from "./analisis.ts";
 import { useAvanceAutomatico } from "./avance.ts";
 import { claveCalibracion, guardarCalibracion, leerCalibracion } from "./calibracion.ts";
 import { colorDeToken } from "./camara.ts";
@@ -386,27 +386,6 @@ function claseDispositivo(): string {
   return `${so}/${nav}`;
 }
 
-/** Muestra de cada mano del fotograma: altura de cada punta (profundidad relativa) y posición. */
-function muestrasDe(f: Fotograma, t: number): Partial<Record<"MI" | "MD", MuestraMano>> {
-  const salida: Partial<Record<"MI" | "MD", MuestraMano>> = {};
-  for (const id of ["MI", "MD"] as const) {
-    const m = f.asignacion[id]?.datos;
-    if (!m) continue;
-    const palma = Math.hypot(m[5]!.x - m[17]!.x, ((m[5]!.y - m[17]!.y) * f.alto) / f.ancho) || 1;
-    const alturas: MuestraMano["alturas"] = {};
-    const puntas: MuestraMano["puntas"] = {};
-    for (const dedo of DEDOS) {
-      const p = m[PUNTA[dedo]]!;
-      // Profundidad relativa a la muñeca: el dedo que baja se aleja de la cámara (versión simple;
-      // la estimación de la altura con la vista de referencia la decide S1).
-      alturas[dedo] = -p.z / palma;
-      puntas[dedo] = { x: p.x * f.ancho, y: p.y * f.alto };
-    }
-    salida[id] = { t, alturas, puntas };
-  }
-  return salida;
-}
-
 /** P-37: prueba de micrófono en dos tramos (silencio y tocando) con medidor en vivo. */
 export function PasoMicrofono({
   microfono,
@@ -624,7 +603,9 @@ function PasoEjecucion(props: {
       const f = vista.fotograma.current;
       const t = (performance.now() - inicio.current) / 1000;
       if (f) {
-        for (const [id, m] of Object.entries(muestrasDe(f, t))) {
+        for (const [id, m] of Object.entries(
+          muestrasDelFotograma(f.asignacion, f.ancho, f.alto, t),
+        )) {
           (series.current[id as "MI" | "MD"] ??= []).push(m);
         }
       }
@@ -704,12 +685,7 @@ function PasoEjecucion(props: {
   useEffect(() => {
     if (!respuesta || estado?.fase !== "analizando" || !vista.detector) return;
     const acustico = respuesta.acustico;
-    const evaluables = acustico
-      ? acustico.notas.esperadas.filter((n) => n.estado !== "dudosa" && n.estado !== "faltante")
-          .length / Math.max(1, acustico.notas.esperadas.length)
-      : respuesta.notas.filter((n) => n.resultado.estado === "detectada").length /
-        Math.max(1, respuesta.notas.length);
-    const pct = Math.round(evaluables * 1000) / 10;
+    const pct = Math.round(fraccionEvaluable(respuesta) * 1000) / 10;
     const ok = pct >= 70 && !estado.incompleta;
     const eventos: EventoResultado[] = respuesta.notas.map((n) => ({
       idx: n.idx,
