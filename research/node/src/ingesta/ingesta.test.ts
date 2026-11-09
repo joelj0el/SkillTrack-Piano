@@ -10,6 +10,7 @@ import { asociar, type FilaParaAsociar, type VideoParaAsociar } from "./asociar.
 import { ingerir, type Reporte } from "./ingesta.ts";
 import { leerPlanilla } from "./planilla.ts";
 import type { Base } from "./registro.ts";
+import { sinConsentimiento } from "./validar.ts";
 
 const FIXTURES = resolve(import.meta.dirname, "../../fixtures/ingesta");
 
@@ -427,7 +428,7 @@ describe("validación por fila", { timeout: 60_000 }, () => {
 
   it("PU-research-28: sin consentimiento no hay paquete ni registro, y se reporta", async () => {
     const entrada = await entradaCon((hoja, columna) => {
-      hoja.getRow(FILA_D01_REAL).getCell(columna("consentimiento")).value = "No";
+      hoja.getRow(FILA_D01_REAL).getCell(columna("consentimiento")).value = "pendiente";
       hoja.getRow(FILA_D01_ACT).getCell(columna("consentimiento")).value = null;
     });
     const salida = mkdtempSync(join(tmpdir(), "salida-"));
@@ -436,7 +437,7 @@ describe("validación por fila", { timeout: 60_000 }, () => {
     const r = await ingerir({ entrada, salida, fecha: "2026-11-09", base });
 
     expect(r.sin_consentimiento).toEqual([
-      { fila: FILA_D01_REAL, codigo: "D01-EJ01-JUN-60-R1", valor: "No" },
+      { fila: FILA_D01_REAL, codigo: "D01-EJ01-JUN-60-R1", valor: "pendiente" },
       { fila: FILA_D01_ACT, codigo: "D01-EJ01-MI-60-R1-ACT", valor: "" },
     ]);
     expect(r.tomas_validas).toEqual(["E01-EJ01-JUN-60-R1", "E01-EJ02-JUN-65-R1"]);
@@ -446,6 +447,16 @@ describe("validación por fila", { timeout: 60_000 }, () => {
     expect(await filas(pg, "SELECT seudonimo FROM participante WHERE seudonimo = 'D01'")).toEqual(
       [],
     );
+    for (const valor of ["si", "sí", " SÍ ", "Firmado", "FIRMADO "]) {
+      expect(sinConsentimiento({ codigo_toma: "D01-EJ01-JUN-60-R1", consentimiento: valor })).toBe(
+        false,
+      );
+    }
+    for (const valor of ["no", "", "pendiente", "yes", "1", "no firmado"]) {
+      expect(sinConsentimiento({ codigo_toma: "D01-EJ01-JUN-60-R1", consentimiento: valor })).toBe(
+        true,
+      );
+    }
     // Su video existe y tiene fila: no debe aparecer como un video suelto.
     expect(r.videos_sin_fila).toEqual(["VID_20261109_190000.mp4"]);
   });
