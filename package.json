@@ -22,6 +22,7 @@
     "docs:trace": "uv run tools/docs/traza.py",
     "docs:build": "node tools/docs/build.mjs",
     "e2e": "playwright test",
+    "ingesta": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/ingesta/cli.ts",
     "mediapipe": "node tools/mediapipe.mjs"
   },
   "devDependencies": {
