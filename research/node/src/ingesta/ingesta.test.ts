@@ -103,7 +103,7 @@ describe("lectura de la planilla", () => {
   it("PU-research-19: una columna que falta se trata como vacía y se informa", async () => {
     const entrada = await entradaCon((hoja, columna) => {
       hoja.spliceColumns(columna("notas"), 1);
-      hoja.spliceColumns(columna("consentimiento"), 1);
+      hoja.spliceColumns(columna("erroes_observados"), 1);
     });
 
     const r = await ingerir({
@@ -112,7 +112,7 @@ describe("lectura de la planilla", () => {
       fecha: "2026-11-09",
     });
 
-    expect(r.columnas_faltantes).toEqual(["consentimiento", "notas"]);
+    expect(r.columnas_faltantes).toEqual(["erroes_observados", "notas"]);
     expect(r.tomas_validas).toHaveLength(4);
   });
 });
@@ -423,6 +423,64 @@ describe("validación por fila", { timeout: 60_000 }, () => {
         valor: "sintetico",
       }),
     );
+  });
+
+  it("PU-research-28: sin consentimiento no hay paquete ni registro, y se reporta", async () => {
+    const entrada = await entradaCon((hoja, columna) => {
+      hoja.getRow(FILA_D01_REAL).getCell(columna("consentimiento")).value = "No";
+      hoja.getRow(FILA_D01_ACT).getCell(columna("consentimiento")).value = null;
+    });
+    const salida = mkdtempSync(join(tmpdir(), "salida-"));
+    const { base, pg } = baseEnMemoria();
+
+    const r = await ingerir({ entrada, salida, fecha: "2026-11-09", base });
+
+    expect(r.sin_consentimiento).toEqual([
+      { fila: FILA_D01_REAL, codigo: "D01-EJ01-JUN-60-R1", valor: "No" },
+      { fila: FILA_D01_ACT, codigo: "D01-EJ01-MI-60-R1-ACT", valor: "" },
+    ]);
+    expect(r.tomas_validas).toEqual(["E01-EJ01-JUN-60-R1", "E01-EJ02-JUN-65-R1"]);
+    expect(existsSync(join(salida, "PAQ-D01-EJ01-JUN-60-R1"))).toBe(false);
+    expect(existsSync(join(salida, "PAQ-D01-EJ01-MI-60-R1-ACT"))).toBe(false);
+    expect(await filas(pg, "SELECT count(*)::int AS n FROM ejecucion")).toEqual([{ n: 2 }]);
+    expect(await filas(pg, "SELECT seudonimo FROM participante WHERE seudonimo = 'D01'")).toEqual(
+      [],
+    );
+    // Su video existe y tiene fila: no debe aparecer como un video suelto.
+    expect(r.videos_sin_fila).toEqual(["VID_20261109_190000.mp4"]);
+  });
+
+  it("PU-research-29: --verificar también informa las tomas sin consentimiento", async () => {
+    const entrada = await entradaCon((hoja, columna) => {
+      hoja.getRow(FILA_D01_REAL).getCell(columna("consentimiento")).value = "no";
+    });
+
+    const r = await ingerir({
+      entrada,
+      salida: mkdtempSync(join(tmpdir(), "verificar-")),
+      fecha: "2026-11-09",
+    });
+
+    expect(r.solo_verificar).toBe(true);
+    expect(r.sin_consentimiento.map((f) => f.codigo)).toEqual(["D01-EJ01-JUN-60-R1"]);
+    expect(r.tomas_validas).not.toContain("D01-EJ01-JUN-60-R1");
+  });
+
+  it("PU-research-30: sin la columna consentimiento se bloquean las tomas, no los clips", async () => {
+    const entrada = await entradaCon((hoja, columna) => {
+      hoja.spliceColumns(columna("consentimiento"), 1);
+    });
+
+    const r = await ingerir({
+      entrada,
+      salida: mkdtempSync(join(tmpdir(), "verificar-")),
+      fecha: "2026-11-09",
+    });
+
+    expect(r.columnas_faltantes).toEqual(["consentimiento"]);
+    expect(r.tomas_validas).toEqual([]);
+    expect(r.sin_consentimiento).toHaveLength(7);
+    expect(r.clips_calibracion).toEqual({ digital: ["CAL-digital-1"] });
   });
 
   it("PU-research-27: un rol que contradice el seudónimo se reporta", async () => {

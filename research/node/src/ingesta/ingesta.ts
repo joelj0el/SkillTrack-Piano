@@ -18,6 +18,7 @@ import {
 } from "./registro.ts";
 import {
   interpretar,
+  sinConsentimiento,
   type ClipCalibracion,
   type FilaInterpretada,
   type Problema,
@@ -45,6 +46,8 @@ export interface Reporte {
   filas_sin_video: { fila: number; codigo: string; motivo: string }[];
   videos_sin_fila: string[];
   valores_invalidos: Problema[];
+  /** Tomas bloqueadas: consentimiento "no" o vacío. No generan paquete ni registro. */
+  sin_consentimiento: { fila: number; codigo: string; valor: string }[];
   paquetes_rechazados: { codigo: string; motivo: string }[];
   asociacion: Record<MetodoAsociacion, number>;
   etiquetadores_sin_identificar: number;
@@ -78,11 +81,20 @@ export async function ingerir({ entrada, salida, fecha, base }: OpcionesIngesta)
   const videos = await listarVideos(entrada);
 
   const valores_invalidos: Problema[] = [];
+  const sin_consentimiento: Reporte["sin_consentimiento"] = [];
   const interpretadas = new Map<number, FilaInterpretada>();
   const vistos = new Set<string>();
   planilla.tomas.forEach((fila, indice) => {
     const { interpretada, problemas } = interpretar(fila, planilla.valores, fecha);
     valores_invalidos.push(...problemas);
+    if (sinConsentimiento(fila.campos)) {
+      sin_consentimiento.push({
+        fila: fila.fila,
+        codigo: fila.campos.codigo_toma ?? "",
+        valor: fila.campos.consentimiento ?? "",
+      });
+      return;
+    }
     if (!interpretada) return;
     if (vistos.has(interpretada.codigo)) {
       valores_invalidos.push({
@@ -124,6 +136,7 @@ export async function ingerir({ entrada, salida, fecha, base }: OpcionesIngesta)
     })),
     videos_sin_fila: asociados.videosSinFila,
     valores_invalidos,
+    sin_consentimiento,
     paquetes_rechazados: [],
     asociacion: { nombre: 0, hora: 0, orden: 0 },
     etiquetadores_sin_identificar: 0,

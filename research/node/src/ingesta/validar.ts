@@ -92,6 +92,13 @@ function booleano(valor: string): boolean | null {
   return null;
 }
 
+/** Sin firma no se graba: una toma con "no" o vacío no entra. Los clips CAL- no muestran a nadie. */
+export function sinConsentimiento(campos: Record<string, string>): boolean {
+  if (CODIGO_CALIBRACION.test(campos.codigo_toma ?? "")) return false;
+  const valor = campos.consentimiento ?? "";
+  return valor === "" || booleano(valor) === false;
+}
+
 export function interpretar(
   { fila, campos }: FilaPlanilla,
   valores: Map<string, Set<string>>,

@@ -34,6 +34,10 @@ function imprimir(r: Reporte, salida: string): void {
   );
   seccion("Videos sin fila", r.videos_sin_fila);
   seccion(
+    "Tomas bloqueadas por consentimiento",
+    r.sin_consentimiento.map((f) => `fila ${f.fila} ${f.codigo}: "${f.valor}"`),
+  );
+  seccion(
     "Valores inválidos",
     r.valores_invalidos.map(
       (p) => `fila ${p.fila} ${p.codigo}: ${p.campo}="${p.valor}" (${p.motivo})`,
