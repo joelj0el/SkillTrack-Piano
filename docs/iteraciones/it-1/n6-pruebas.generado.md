@@ -1,14 +1,14 @@
 # n.6 Pruebas — it-1 (generado)
 
-Generado por `pnpm docs:tests it-1` el 2026-11-10 19:09 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-1` el 2026-11-10 21:22 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
-| Playwright  | 32    | 31        | 0        | 1        |
-| Vitest      | 244   | 244       | 0        | 0        |
-| pytest      | 68    | 68        | 0        | 0        |
+| Playwright  | 33    | 31        | 1        | 1        |
+| Vitest      | 248   | 248       | 0        | 0        |
+| pytest      | 74    | 74        | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
 
@@ -20,6 +20,8 @@ Generado por `pnpm docs:tests it-1` el 2026-11-10 19:09 UTC a partir de los repo
 | PA-HU01-04 | pytest              | 1     | aprobada  | test_pa_hu01_04_cinco_fallos_bloquean_con_429_y_quedan_auditados                                        |
 | PA-HU01-05 | pytest              | 2     | aprobada  | test_pa_hu01_05_cookie_segura_sin_token_en_el_cuerpo_y_csrf                                             |
 | PA-HU02-01 | pytest              | 1     | aprobada  | test_pa_hu02_01_catalogo_con_el_repertorio_v0_en_orden_y_401_sin_sesion                                 |
+| PA-HU02-02 | pytest              | 1     | aprobada  | test_pa_hu02_02_la_version_vigente_tiene_un_evento_por_nota_del_musicxml                                |
+| PA-HU02-04 | Playwright          | 1     | aprobada  | PA-HU02-04: el detalle muestra partitura, digitación, tempo y guía, a 2 toques de Mis tareas            |
 | PA-HU14-01 | Playwright          | 1     | aprobada  | PA-HU14-01: la tarea asignada aparece en Mis tareas del estudiante con sus 5 datos                      |
 | PA-HU14-02 | pytest              | 6     | aprobada  | test_pa_hu14_02_condiciones_invalidas_dan_422_indicando_el_campo[cambio0-tempo_min_bpm]                 |
 | PA-HU14-03 | pytest              | 1     | aprobada  | test_pa_hu14_03_docente_sin_asignacion_recibe_403_y_queda_auditado                                      |
@@ -42,14 +44,15 @@ Generado por `pnpm docs:tests it-1` el 2026-11-10 19:09 UTC a partir de los repo
 
 | Módulo        | IDs | Aprobados | Fallidos |
 | ------------- | --- | --------- | -------- |
-| accesibilidad | 8   | 8         | 0        |
+| accesibilidad | 8   | 7         | 1        |
 | align         | 7   | 7         | 0        |
 | api           | 9   | 9         | 0        |
 | attempts      | 2   | 2         | 0        |
 | audio         | 22  | 22        | 0        |
 | cadena        | 4   | 4         | 0        |
 | capture       | 18  | 18        | 0        |
-| catalog       | 4   | 4         | 0        |
+| catalog       | 9   | 9         | 0        |
+| catalogo      | 2   | 2         | 0        |
 | ci            | 4   | 4         | 0        |
 | contracts     | 18  | 18        | 0        |
 | core          | 1   | 1         | 0        |
@@ -69,4 +72,4 @@ Generado por `pnpm docs:tests it-1` el 2026-11-10 19:09 UTC a partir de los repo
 | research      | 62  | 62        | 0        |
 | tempo         | 5   | 5         | 0        |
 | ui            | 6   | 6         | 0        |
-| web           | 11  | 11        | 0        |
+| web           | 13  | 13        | 0        |

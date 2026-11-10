@@ -19,9 +19,9 @@ Tareas de la iteración y su estado en esta versión. Cada tarea implementada ti
 | TI-HU31-04 | Restablecer contraseña con auditoría                                   | PA API                    | Implementado                                                                                                               |
 | TI-HU31-05 | Pantallas de administración                                            | PA E2E                    | Implementado                                                                                                               |
 | TI-HU02-01 | `ejercicio`, `version_ejercicio` + contrato con `eventos_esperados`    | PU                        | Implementado                                                                                                               |
-| TI-HU02-02 | Script MusicXML → `eventos_esperados` + SVG                            | PU del script             | Pendiente: requiere la partitura transcrita a MusicXML                                                                     |
+| TI-HU02-02 | Script MusicXML → `eventos_esperados` + SVG                            | PU del script             | Implementado (commit `0bb4bc3`); probado con una partitura de prueba sintética, faltan los cuatro MusicXML del panel       |
 | TI-HU02-03 | Endpoints de lectura del catálogo                                      | PA API                    | Implementado                                                                                                               |
-| TI-HU02-04 | Pantallas de catálogo y detalle                                        | PA E2E                    | Prototipo: sin partitura                                                                                                   |
+| TI-HU02-04 | Pantallas de catálogo y detalle                                        | PA E2E                    | Implementado (commit `6bab508`); la guía de posición espera los textos y las ilustraciones del panel                       |
 | TI-HU14-01 | `tarea`, `observacion` + migración + contratos                         | PU                        | Implementado                                                                                                               |
 | TI-HU14-02 | Endpoints del docente + auditoría                                      | PA API + 403              | Implementado                                                                                                               |
 | TI-HU14-03 | Pantallas del docente                                                  | PA E2E                    | Implementado                                                                                                               |
@@ -37,5 +37,9 @@ Tareas de la iteración y su estado en esta versión. Cada tarea implementada ti
 ## Estado de esta versión
 
 - **Implementado:** las tareas marcadas así, con sus pruebas en verde.
-- **Prototipo:** TI-HU02-04 y la parte visual de TI-HU17-02.
-- **Pendiente:** el despliegue de prueba de TI-HU17-04, TI-HU17-05, TI-HU02-02 y TI-HU29-03, por los motivos de la tabla.
+- **Prototipo:** la parte visual de TI-HU17-02.
+- **Pendiente:** el despliegue de prueba de TI-HU17-04, TI-HU17-05 y TI-HU29-03, por los motivos de la tabla.
+
+## Dependencias agregadas
+
+Verovio 6.2.1, LGPL-3.0: solo en la herramienta que genera el SVG; no se distribuye en la app.
