@@ -10,11 +10,13 @@ import {
   TEMPO_SUGERIDO,
   Tarea,
 } from "@skilltrack/contracts";
+import { Ban, ClipboardPlus, MessageSquarePlus, Save } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import { z } from "zod";
 import { ErrorApi, pedir } from "../api.ts";
 import { Cargado, NOMBRE_MANOS, useCarga } from "../componentes.tsx";
+import { Boton, EstadoVista, PaginaCabecera, useAviso } from "../ui/base.tsx";
 import { Observaciones, ResumenTarea } from "./estudiante.tsx";
 
 /** P-20 "Mis estudiantes". */
@@ -25,21 +27,23 @@ export function MisEstudiantes() {
   );
   return (
     <section>
-      <h1>Mis estudiantes</h1>
+      <PaginaCabecera titulo="Mis estudiantes" />
       <Cargado carga={carga}>
         {(estudiantes) =>
           estudiantes.length === 0 ? (
-            <p className="tarjeta">
-              Todavía no tienes estudiantes asignados. El administrador de tu institución los
-              asigna.
-            </p>
+            <EstadoVista tipo="vacio" titulo="Sin estudiantes por ahora">
+              <p>
+                Todavía no tienes estudiantes asignados. El administrador de tu institución los
+                asigna.
+              </p>
+            </EstadoVista>
           ) : (
             <ul className="lista">
               {estudiantes.map((e) => (
                 <li key={e.id}>
                   <Link className="tarjeta" to={`/estudiantes/${e.id}`}>
-                    <strong>{e.nombre_visible}</strong>
-                    <div className="suave">{e.usuario}</div>
+                    <span className="tarjeta-titulo">{e.nombre_visible}</span>
+                    <div className="metadato">{e.usuario}</div>
                   </Link>
                 </li>
               ))}
@@ -101,6 +105,7 @@ function FormularioTarea({
   alGuardar: () => void;
 }) {
   const [errores, setErrores] = useState<Record<string, string> | string | null>(null);
+  const avisar = useAviso();
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -118,6 +123,7 @@ function FormularioTarea({
       });
       setErrores(null);
       formulario.reset();
+      avisar("Tarea asignada");
       alGuardar();
     } catch (e) {
       setErrores(erroresDe(e));
@@ -188,13 +194,16 @@ function FormularioTarea({
         </label>
       </div>
       <Errores errores={errores} />
-      <button type="submit">Asignar tarea</button>
+      <Boton type="submit" icono={ClipboardPlus}>
+        Asignar tarea
+      </Boton>
     </form>
   );
 }
 
 function EditarTarea({ tarea, alGuardar }: { tarea: Tarea; alGuardar: () => void }) {
   const [errores, setErrores] = useState<Record<string, string> | string | null>(null);
+  const avisar = useAviso();
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -207,6 +216,7 @@ function EditarTarea({ tarea, alGuardar }: { tarea: Tarea; alGuardar: () => void
         fecha_limite: datos.get("fecha_limite"),
       });
       setErrores(null);
+      avisar("Cambios guardados");
       alGuardar();
     } catch (e) {
       setErrores(erroresDe(e));
@@ -215,6 +225,7 @@ function EditarTarea({ tarea, alGuardar }: { tarea: Tarea; alGuardar: () => void
 
   async function cancelar() {
     await pedir("POST", `/tareas/${tarea.id}/cancelar`, Tarea);
+    avisar("Tarea cancelada");
     alGuardar();
   }
 
@@ -246,10 +257,12 @@ function EditarTarea({ tarea, alGuardar }: { tarea: Tarea; alGuardar: () => void
         </div>
         <Errores errores={errores} />
         <div className="fila">
-          <button type="submit">Guardar cambios</button>
-          <button type="button" className="secundario" onClick={() => void cancelar()}>
+          <Boton type="submit" icono={Save}>
+            Guardar cambios
+          </Boton>
+          <Boton variante="peligro" icono={Ban} onClick={() => void cancelar()}>
             Cancelar tarea
-          </button>
+          </Boton>
         </div>
       </form>
     </details>
@@ -266,6 +279,7 @@ function NuevaObservacion({
   alGuardar: () => void;
 }) {
   const [errores, setErrores] = useState<Record<string, string> | string | null>(null);
+  const avisar = useAviso();
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -280,6 +294,7 @@ function NuevaObservacion({
       });
       setErrores(null);
       formulario.reset();
+      avisar("Observación registrada");
       alGuardar();
     } catch (e) {
       setErrores(erroresDe(e));
@@ -310,7 +325,9 @@ function NuevaObservacion({
         />
       </label>
       <Errores errores={errores} />
-      <button type="submit">Registrar observación</button>
+      <Boton type="submit" variante="secundario" icono={MessageSquarePlus}>
+        Registrar observación
+      </Boton>
     </form>
   );
 }
@@ -332,11 +349,9 @@ export function DetalleEstudiante() {
     <Cargado carga={carga}>
       {([estudiante, tareas, ejercicios, aspectos]) => (
         <section>
-          <h1>{estudiante.nombre_visible}</h1>
+          <PaginaCabecera titulo={estudiante.nombre_visible} />
           <details className="tarjeta" open={tareas.length === 0}>
-            <summary>
-              <strong>Asignar tarea</strong>
-            </summary>
+            <summary>Asignar tarea</summary>
             <FormularioTarea
               estudianteId={estudianteId}
               ejercicios={ejercicios}
