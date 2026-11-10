@@ -870,6 +870,80 @@ details > summary::-webkit-details-marker {
   fill: var(--color-tecla-negra);
 }
 
+/* Partitura: el SVG llega sin estilos (la CSP los bloquea); estas reglas reponen los trazos. */
+.partitura {
+  margin: 0 0 var(--espacio-3);
+  padding: var(--espacio-3);
+  overflow-x: auto;
+  border: var(--borde) solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-tecla-blanca);
+}
+
+.partitura svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--color-tecla-negra);
+}
+
+.partitura :is(ellipse, path, polygon, polyline, rect) {
+  stroke: currentColor;
+}
+
+.partitura g.fing {
+  font-weight: var(--peso-fuerte);
+}
+
+.digitacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-1);
+  margin: 0 0 var(--espacio-3);
+  padding: 0;
+  list-style: none;
+}
+
+.digitacion li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--espacio-1);
+  padding: var(--espacio-1) var(--espacio-2);
+  border-radius: var(--radio-sm);
+  background: var(--color-mano-fondo);
+  color: var(--color-mano);
+  font-size: var(--texto-sm);
+}
+
+.digitacion .dedo {
+  font-weight: var(--peso-fuerte);
+}
+
+.guia {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--espacio-3);
+}
+
+.guia .tarjeta {
+  margin: 0;
+}
+
+.guia h3 {
+  margin-top: 0;
+}
+
+.ilustracion-reservada {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  margin: var(--espacio-2) 0;
+  border: var(--borde) dashed var(--color-borde-control);
+  border-radius: var(--radio-sm);
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
 .partitura-pendiente {
   padding: var(--espacio-6);
   text-align: center;
