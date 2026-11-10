@@ -1,14 +1,14 @@
 # n.6 Pruebas — it-1 (generado)
 
-Generado por `pnpm docs:tests it-1` el 2026-10-28 17:14 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-1` el 2026-11-10 19:09 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
-| Playwright  | 14    | 14        | 0        | 0        |
-| Vitest      | 33    | 33        | 0        | 0        |
-| pytest      | 58    | 58        | 0        | 0        |
+| Playwright  | 32    | 31        | 0        | 1        |
+| Vitest      | 244   | 244       | 0        | 0        |
+| pytest      | 68    | 68        | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
 
@@ -40,17 +40,33 @@ Generado por `pnpm docs:tests it-1` el 2026-10-28 17:14 UTC a partir de los repo
 
 ## Pruebas unitarias y de propiedades por módulo
 
-| Módulo       | IDs | Aprobados | Fallidos |
-| ------------ | --- | --------- | -------- |
-| api          | 9   | 9         | 0        |
-| catalog      | 4   | 4         | 0        |
-| ci           | 4   | 4         | 0        |
-| contracts    | 13  | 13        | 0        |
-| core         | 1   | 1         | 0        |
-| docs         | 3   | 3         | 0        |
-| identity     | 12  | 12        | 0        |
-| infra        | 3   | 3         | 0        |
-| institutions | 4   | 4         | 0        |
-| pedagogy     | 8   | 8         | 0        |
-| research     | 3   | 3         | 0        |
-| web          | 8   | 8         | 0        |
+| Módulo        | IDs | Aprobados | Fallidos |
+| ------------- | --- | --------- | -------- |
+| accesibilidad | 8   | 8         | 0        |
+| align         | 7   | 7         | 0        |
+| api           | 9   | 9         | 0        |
+| attempts      | 2   | 2         | 0        |
+| audio         | 22  | 22        | 0        |
+| cadena        | 4   | 4         | 0        |
+| capture       | 18  | 18        | 0        |
+| catalog       | 4   | 4         | 0        |
+| ci            | 4   | 4         | 0        |
+| contracts     | 18  | 18        | 0        |
+| core          | 1   | 1         | 0        |
+| design        | 5   | 5         | 0        |
+| diseno        | 3   | 3         | 0        |
+| docs          | 6   | 6         | 0        |
+| exercise      | 4   | 4         | 0        |
+| features      | 20  | 20        | 0        |
+| geometry      | 16  | 16        | 0        |
+| hooks         | 2   | 2         | 0        |
+| identity      | 12  | 12        | 0        |
+| infra         | 12  | 12        | 0        |
+| institutions  | 4   | 4         | 0        |
+| outbox        | 3   | 3         | 0        |
+| pedagogy      | 8   | 8         | 0        |
+| quality       | 9   | 9         | 0        |
+| research      | 62  | 62        | 0        |
+| tempo         | 5   | 5         | 0        |
+| ui            | 6   | 6         | 0        |
+| web           | 11  | 11        | 0        |
