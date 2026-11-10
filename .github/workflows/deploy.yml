@@ -1,0 +1,65 @@
+name: Despliegue
+
+# Se ejecuta solo con el botón "Run workflow" de la pestaña Actions.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: despliegue
+  cancel-in-progress: false
+
+jobs:
+  imagenes:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Iniciar sesión en GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Construir y publicar las imágenes del commit
+        run: |
+          imagenes="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker build -f apps/api/Dockerfile -t "$imagenes/api:$GITHUB_SHA" .
+          docker build -f apps/web/Dockerfile -t "$imagenes/web:$GITHUB_SHA" .
+          docker push "$imagenes/api:$GITHUB_SHA"
+          docker push "$imagenes/web:$GITHUB_SHA"
+
+  desplegar:
+    needs: imagenes
+    runs-on: ubuntu-24.04
+    environment: produccion
+    env:
+      SSH_DESTINO: ${{ secrets.SSH_USUARIO }}@${{ secrets.SSH_HOST }}
+      CARPETA: /opt/skilltrack
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Preparar SSH
+        env:
+          SSH_CLAVE: ${{ secrets.SSH_CLAVE }}
+          SSH_HUELLA: ${{ secrets.SSH_HUELLA }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_CLAVE" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_HUELLA" > ~/.ssh/known_hosts
+      - name: Copiar el compose y el Caddyfile de producción
+        run: scp infra/docker-compose.prod.yml infra/Caddyfile.prod "$SSH_DESTINO:$CARPETA/"
+      - name: Actualizar, migrar y levantar
+        run: |
+          # La carpeta y el commit se expanden aquí, en el runner, a propósito.
+          # shellcheck disable=SC2029
+          ssh "$SSH_DESTINO" "cd $CARPETA && \
+            sed -i '/^ETIQUETA=/d' .env && echo 'ETIQUETA=$GITHUB_SHA' >> .env && \
+            docker compose -f docker-compose.prod.yml pull && \
+            docker compose -f docker-compose.prod.yml run --rm api alembic upgrade head && \
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans && \
+            docker image prune -f"
+      - name: Comprobar que la API responde
+        env:
+          DOMINIO: ${{ vars.DOMINIO }}
+        run: curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "https://$DOMINIO/api/health"
