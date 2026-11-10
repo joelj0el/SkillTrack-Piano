@@ -1,13 +1,13 @@
 # n.6 Pruebas — it-2 (generado)
 
-Generado por `pnpm docs:tests it-2` el 2026-11-09 21:14 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-2` el 2026-11-10 03:30 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
-| Playwright  | 19    | 19        | 0        | 0        |
-| Vitest      | 201   | 201       | 0        | 0        |
+| Playwright  | 21    | 20        | 0        | 1        |
+| Vitest      | 222   | 222       | 0        | 0        |
 | pytest      | 68    | 68        | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
@@ -20,6 +20,7 @@ Generado por `pnpm docs:tests it-2` el 2026-11-09 21:14 UTC a partir de los repo
 | PA-HU08-01 | pytest      | 1     | aprobada  | test_pa_hu08_01_mismo_client_uuid_una_sola_fila_201_y_luego_200                                          |
 | PA-HU08-02 | pytest      | 5     | aprobada  | test_pa_hu08_02_binarios_reciben_415_y_no_se_guarda_nada[multipart/form-data; boundary=x]                |
 | PA-HU08-05 | pytest      | 1     | aprobada  | test_pa_hu08_05_intento_de_tarea_con_sus_campos_y_403_para_docente_ajeno                                 |
+| PA-HU18-02 | Playwright  | 1     | omitida   | PA-HU18-02: el clip del autor se procesa completo y se detectan manos                                    |
 | PA-HU18-04 | Vitest      | 1     | aprobada  | ingesta de la sesión > PA-HU18-04: si se altera un byte del paquete, se rechaza con un mensaje explícito |
 
 ## Pruebas unitarias y de propiedades por módulo
@@ -30,10 +31,11 @@ Generado por `pnpm docs:tests it-2` el 2026-11-09 21:14 UTC a partir de los repo
 | api          | 9   | 9         | 0        |
 | attempts     | 2   | 2         | 0        |
 | audio        | 22  | 22        | 0        |
+| cadena       | 4   | 4         | 0        |
 | capture      | 18  | 18        | 0        |
 | catalog      | 4   | 4         | 0        |
 | ci           | 4   | 4         | 0        |
-| contracts    | 16  | 16        | 0        |
+| contracts    | 18  | 18        | 0        |
 | core         | 1   | 1         | 0        |
 | docs         | 3   | 3         | 0        |
 | exercise     | 4   | 4         | 0        |
@@ -46,6 +48,6 @@ Generado por `pnpm docs:tests it-2` el 2026-11-09 21:14 UTC a partir de los repo
 | outbox       | 3   | 3         | 0        |
 | pedagogy     | 8   | 8         | 0        |
 | quality      | 9   | 9         | 0        |
-| research     | 46  | 46        | 0        |
+| research     | 62  | 62        | 0        |
 | tempo        | 5   | 5         | 0        |
 | web          | 11  | 11        | 0        |
