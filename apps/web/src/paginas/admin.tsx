@@ -4,11 +4,13 @@ import {
   UsuarioCreado,
   UsuarioListado,
 } from "@skilltrack/contracts";
+import { KeyRound, Link2Off, UserPlus, UsersRound } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { z } from "zod";
 import { ErrorApi, pedir } from "../api.ts";
 import { Cargado, fechaLegible, useCarga } from "../componentes.tsx";
 import { useSesion } from "../sesion.tsx";
+import { Boton, PaginaCabecera, useAviso } from "../ui/base.tsx";
 
 const NOMBRE_ROL = {
   admin_inst: "Administrador",
@@ -60,6 +62,7 @@ export function Usuarios() {
   );
   const [clave, setClave] = useState<{ usuario: string; clave: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const avisar = useAviso();
 
   async function crearUsuario(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -92,6 +95,7 @@ export function Usuarios() {
         estudiante_id: Number(datos.get("estudiante_id")),
       });
       setError(null);
+      avisar("Asignación creada");
       await recargar();
     } catch (e) {
       setError(mensaje(e));
@@ -114,7 +118,7 @@ export function Usuarios() {
 
   return (
     <section>
-      <h1>Usuarios</h1>
+      <PaginaCabecera titulo="Usuarios" />
       {clave && <ClaveUnaVez {...clave} />}
       {error && (
         <p className="error" role="alert">
@@ -122,7 +126,7 @@ export function Usuarios() {
         </p>
       )}
       <h2>Crear usuario</h2>
-      <form aria-label="Crear usuario" onSubmit={(e) => void crearUsuario(e)}>
+      <form className="tarjeta" aria-label="Crear usuario" onSubmit={(e) => void crearUsuario(e)}>
         <label>
           Nombre visible
           <input name="nombre_visible" required maxLength={120} />
@@ -148,7 +152,9 @@ export function Usuarios() {
         <label className="fila">
           <input name="es_menor" type="checkbox" /> Menor de edad
         </label>
-        <button type="submit">Crear usuario</button>
+        <Boton type="submit" icono={UserPlus}>
+          Crear usuario
+        </Boton>
       </form>
       <Cargado carga={carga}>
         {([usuarios, asignaciones]) => {
@@ -161,25 +167,32 @@ export function Usuarios() {
               <ul className="lista" aria-label="Personas">
                 {usuarios.map((u) => (
                   <li key={u.id} className="tarjeta">
-                    <strong>{u.nombre_visible}</strong> <span className="suave">{u.usuario}</span>
+                    <span className="tarjeta-titulo">{u.nombre_visible}</span>
+                    <span className="metadato">{u.usuario}</span>
                     <div className="suave">
                       {u.roles.map((r) => NOMBRE_ROL[r]).join(", ")}
                       {u.es_menor && " · menor de edad"}
                     </div>
                     {u.roles.includes("estudiante") && (
-                      <button
-                        type="button"
-                        className="secundario"
-                        onClick={() => void restablecer(u)}
-                      >
-                        Restablecer contraseña
-                      </button>
+                      <div className="tarjeta-pie">
+                        <Boton
+                          variante="secundario"
+                          icono={KeyRound}
+                          onClick={() => void restablecer(u)}
+                        >
+                          Restablecer contraseña
+                        </Boton>
+                      </div>
                     )}
                   </li>
                 ))}
               </ul>
               <h2>Asignar estudiante a docente</h2>
-              <form aria-label="Asignar estudiante" onSubmit={(e) => void asignar(e)}>
+              <form
+                className="tarjeta"
+                aria-label="Asignar estudiante"
+                onSubmit={(e) => void asignar(e)}
+              >
                 <label>
                   Docente
                   <select name="docente_id" required>
@@ -200,7 +213,9 @@ export function Usuarios() {
                     ))}
                   </select>
                 </label>
-                <button type="submit">Asignar</button>
+                <Boton type="submit" icono={UsersRound}>
+                  Asignar
+                </Boton>
               </form>
               <h2>Asignaciones</h2>
               <ul className="lista" aria-label="Asignaciones">
@@ -212,9 +227,15 @@ export function Usuarios() {
                       {a.hasta ? ` · cerrada el ${fechaLegible(a.hasta)}` : " · vigente"}
                     </div>
                     {!a.hasta && (
-                      <button type="button" className="secundario" onClick={() => void cerrar(a)}>
-                        Cerrar asignación
-                      </button>
+                      <div className="tarjeta-pie">
+                        <Boton
+                          variante="secundario"
+                          icono={Link2Off}
+                          onClick={() => void cerrar(a)}
+                        >
+                          Cerrar asignación
+                        </Boton>
+                      </div>
                     )}
                   </li>
                 ))}

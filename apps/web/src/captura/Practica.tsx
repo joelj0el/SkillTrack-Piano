@@ -8,11 +8,14 @@ import {
   type Asignacion,
   type Semaforo,
 } from "@skilltrack/core";
+import { ArrowLeft, Camera, Check, OctagonX, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { colorDeToken, toqueAVideo, useCamara, type Camara } from "./camara.ts";
 import { CONEXIONES, crearDetector, type DeteccionManos, type Detector } from "./detector.ts";
 import { NOMBRE_MANO, crearContadorFps, type ManoVista } from "./manos-en-vivo.ts";
+
+import { Boton, EstadoVista } from "../ui/base.tsx";
 
 const ANCHO_CALIDAD = 160;
 const ALTO_CALIDAD = 90;
@@ -37,12 +40,16 @@ function ErrorCamara({
   reintentar: () => void;
 }) {
   return (
-    <section aria-labelledby="titulo-error-camara">
-      <h1 id="titulo-error-camara">
-        {camara.motivo === "permiso"
+    <EstadoVista
+      tipo="error"
+      nivel={1}
+      titulo={
+        camara.motivo === "permiso"
           ? "No tenemos permiso para usar la cámara"
-          : "No encontramos una cámara"}
-      </h1>
+          : "No encontramos una cámara"
+      }
+      accion={<Boton onClick={reintentar}>Reintentar</Boton>}
+    >
       {camara.motivo === "permiso" ? (
         <ol>
           <li>Toca el candado o el ícono de ajustes junto a la dirección de la página.</li>
@@ -52,10 +59,7 @@ function ErrorCamara({
       ) : (
         <p>Revisa que el teléfono tenga cámara y que ninguna otra aplicación la esté usando.</p>
       )}
-      <button type="button" onClick={reintentar}>
-        Reintentar
-      </button>
-    </section>
+    </EstadoVista>
   );
 }
 
@@ -219,15 +223,12 @@ export function VistaCamara({
 
   if (camara.tipo === "error") return <ErrorCamara camara={camara} reintentar={reintentar} />;
 
-  // Pantalla completa sin desplazamiento: cabecera compacta, video escalado sin recortar y el
-  // panel del paso (abajo en vertical, a la derecha en horizontal).
   return (
-    <section className="practica" aria-label="Práctica">
-      <header className="practica-cabecera">
-        <Link to={volverA} className="practica-salir">
-          ← Salir
-        </Link>
-        <strong className="practica-titulo">{titulo}</strong>
+    <MarcoPractica
+      titulo={titulo}
+      volverA={volverA}
+      aviso={aviso}
+      estado={
         <span data-estado-detector={detector ? "listo" : errorDetector ? "error" : "cargando"}>
           {detector
             ? `Manos: ${detector.delegado}`
@@ -237,34 +238,35 @@ export function VistaCamara({
                 ? "Pidiendo la cámara…"
                 : "Cargando el detector…"}
         </span>
-        <span data-fps={Math.round(fps)}>{Math.round(fps)} fps</span>
-        <label className="practica-opcion">
-          <input type="checkbox" checked={frontal} onChange={(e) => setFrontal(e.target.checked)} />
-          Cámara frontal
-        </label>
-        {aviso && (
-          <details className="practica-aviso">
-            <summary>Secuencia provisional</summary>
-            {aviso}
-          </details>
-        )}
-      </header>
-      <div className="practica-cuerpo">
-        <div
-          className={onToque ? "capa-video tocable" : "capa-video"}
-          onClick={(e) => {
-            const v = video.current;
-            if (!onToque || !v || v.videoWidth === 0) return;
-            const caja = e.currentTarget.getBoundingClientRect();
-            const p = toqueAVideo(
-              e.clientX - caja.left,
-              e.clientY - caja.top,
-              { ancho: caja.width, alto: caja.height },
-              { ancho: v.videoWidth, alto: v.videoHeight },
-            );
-            if (p) onToque(p);
-          }}
-        >
+      }
+      opciones={
+        <>
+          <span data-fps={Math.round(fps)}>{Math.round(fps)} fps</span>
+          <label className="practica-opcion">
+            <input
+              type="checkbox"
+              checked={frontal}
+              onChange={(e) => setFrontal(e.target.checked)}
+            />
+            Cámara frontal
+          </label>
+        </>
+      }
+      tocable={Boolean(onToque)}
+      alTocar={(e) => {
+        const v = video.current;
+        if (!onToque || !v || v.videoWidth === 0) return;
+        const caja = e.currentTarget.getBoundingClientRect();
+        const p = toqueAVideo(
+          e.clientX - caja.left,
+          e.clientY - caja.top,
+          { ancho: caja.width, alto: caja.height },
+          { ancho: v.videoWidth, alto: v.videoHeight },
+        );
+        if (p) onToque(p);
+      }}
+      escena={
+        <>
           <video
             ref={video}
             className="vista-camara"
@@ -273,11 +275,93 @@ export function VistaCamara({
             aria-label="Vista de la cámara"
           />
           <canvas ref={capa} className="capa-dibujo" aria-hidden="true" />
+        </>
+      }
+      pie={<canvas ref={muestra} width={ANCHO_CALIDAD} height={ALTO_CALIDAD} hidden />}
+    >
+      {children({ fotograma, semaforo, video, detector })}
+    </MarcoPractica>
+  );
+}
+
+/** Pantalla completa sin desplazamiento: cabecera compacta, escena y panel del paso. */
+export function MarcoPractica({
+  titulo,
+  volverA,
+  aviso,
+  estado,
+  opciones,
+  tocable = false,
+  alTocar,
+  escena,
+  pie,
+  children,
+}: {
+  titulo: string;
+  volverA: string;
+  aviso?: ReactNode;
+  estado?: ReactNode;
+  opciones?: ReactNode;
+  tocable?: boolean;
+  alTocar?: React.MouseEventHandler<HTMLDivElement>;
+  escena: ReactNode;
+  pie?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="practica" aria-label="Práctica">
+      <header className="practica-cabecera">
+        <Link to={volverA} className="practica-salir">
+          <ArrowLeft aria-hidden="true" />
+          Salir
+        </Link>
+        <strong className="practica-titulo">{titulo}</strong>
+        {estado}
+        {opciones}
+        {aviso && (
+          <details className="practica-aviso">
+            <summary>Secuencia provisional</summary>
+            {aviso}
+          </details>
+        )}
+      </header>
+      <div className="practica-cuerpo">
+        <div className={tocable ? "capa-video tocable" : "capa-video"} onClick={alTocar}>
+          {escena}
         </div>
-        <div className="practica-panel">{children({ fotograma, semaforo, video, detector })}</div>
+        <div className="practica-panel">{children}</div>
       </div>
-      <canvas ref={muestra} width={ANCHO_CALIDAD} height={ALTO_CALIDAD} hidden />
+      {pie}
     </section>
+  );
+}
+
+const ICONO_SEMAFORO = { verde: Check, ambar: TriangleAlert, rojo: OctagonX, pidiendo: Camera };
+
+/** Tarjeta de semáforo: pulso suave en ámbar y check en verde, siempre con icono y texto. */
+export function TarjetaSemaforo({
+  nivel,
+  titulo,
+  children,
+  ...resto
+}: {
+  nivel: keyof typeof ICONO_SEMAFORO;
+  titulo: string;
+  children?: ReactNode;
+  role?: string;
+  "aria-live"?: "polite";
+  "data-semaforo"?: string;
+  "data-semaforo-audio"?: string;
+}) {
+  const Icono = ICONO_SEMAFORO[nivel];
+  return (
+    <div className={`tarjeta semaforo semaforo-${nivel}`} {...resto}>
+      <span className="semaforo-icono">
+        <Icono key={nivel} aria-hidden="true" />
+      </span>
+      <strong className="semaforo-texto">{titulo}</strong>
+      {children}
+    </div>
   );
 }
 
@@ -286,21 +370,25 @@ export function PanelSemaforo({ semaforo }: { semaforo: Semaforo | null }) {
     ? { verde: "Listo", ambar: "Casi listo", rojo: "Corrige el encuadre" }[semaforo.nivel]
     : "Midiendo…";
   return (
-    <div
-      className={`tarjeta semaforo semaforo-${semaforo?.nivel ?? "pidiendo"}`}
+    <TarjetaSemaforo
+      nivel={semaforo?.nivel ?? "pidiendo"}
+      titulo={titulo}
       role="status"
       aria-live="polite"
       data-semaforo={semaforo?.nivel ?? "pidiendo"}
     >
-      <strong>{titulo}</strong>
       <ul className="lista">
         {semaforo?.motivos.map((m) => (
           <li key={m.codigo} data-motivo={m.codigo}>
-            <span aria-hidden="true">{m.gravedad === "rojo" ? "⛔ " : "⚠ "}</span>
+            {m.gravedad === "rojo" ? (
+              <OctagonX aria-hidden="true" />
+            ) : (
+              <TriangleAlert aria-hidden="true" />
+            )}
             {m.texto}
           </li>
         ))}
       </ul>
-    </div>
+    </TarjetaSemaforo>
   );
 }

@@ -77,7 +77,7 @@ describe("pantallas", () => {
     abrir("/tareas");
 
     const vencida = await screen.findByText("Vencida");
-    expect(vencida.textContent).toContain("⚠");
+    expect(vencida.querySelector("svg")).not.toBeNull();
     expect(screen.getByText("Asignada")).toBeDefined();
   });
 

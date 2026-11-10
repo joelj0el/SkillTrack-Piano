@@ -1,8 +1,11 @@
 import { LONGITUD_MINIMA_CLAVE } from "@skilltrack/contracts";
+import { KeyRound, LogIn } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { ErrorApi, SinConexion, pedir } from "../api.ts";
 import { rutaInicial, useSesion } from "../sesion.tsx";
+import { Boton } from "../ui/base.tsx";
+import { LogoTeclas } from "../ui/ilustraciones.tsx";
 
 function mensajeDeError(error: unknown): string {
   if (error instanceof SinConexion) return "Sin conexión. Revisa tu red e inténtalo de nuevo.";
@@ -34,26 +37,31 @@ export function Entrar() {
   }
 
   return (
-    <section>
-      <h1>Iniciar sesión</h1>
-      <form onSubmit={(e) => void enviar(e)}>
-        <label>
-          Usuario
-          <input name="usuario" autoComplete="username" required />
-        </label>
-        <label>
-          Contraseña
-          <input name="clave" type="password" autoComplete="current-password" required />
-        </label>
-        {error && (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        )}
-        <button type="submit" disabled={enviando}>
-          Entrar
-        </button>
-      </form>
+    <section className="entrada">
+      <div className="entrada-marca">
+        <LogoTeclas />
+      </div>
+      <div className="tarjeta">
+        <h1>Iniciar sesión</h1>
+        <form onSubmit={(e) => void enviar(e)}>
+          <label>
+            Usuario
+            <input name="usuario" autoComplete="username" required />
+          </label>
+          <label>
+            Contraseña
+            <input name="clave" type="password" autoComplete="current-password" required />
+          </label>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+          <Boton type="submit" cargando={enviando} icono={LogIn}>
+            Entrar
+          </Boton>
+        </form>
+      </div>
     </section>
   );
 }
@@ -87,45 +95,49 @@ export function CambiarClave() {
 
   const temporal = estado.tipo === "activo" && estado.usuario.clave_temporal;
   return (
-    <section>
-      <h1>Cambiar contraseña</h1>
-      {temporal && (
-        <p className="aviso">
-          Estás usando una contraseña temporal. Define una contraseña nueva para continuar.
-        </p>
-      )}
-      <form onSubmit={(e) => void enviar(e)}>
-        <label>
-          Contraseña actual
-          <input name="actual" type="password" autoComplete="current-password" required />
-        </label>
-        <label>
-          Contraseña nueva (mínimo {LONGITUD_MINIMA_CLAVE} caracteres)
-          <input
-            name="nueva"
-            type="password"
-            autoComplete="new-password"
-            minLength={LONGITUD_MINIMA_CLAVE}
-            required
-          />
-        </label>
-        <label>
-          Repite la contraseña nueva
-          <input
-            name="confirmacion"
-            type="password"
-            autoComplete="new-password"
-            minLength={LONGITUD_MINIMA_CLAVE}
-            required
-          />
-        </label>
-        {error && (
-          <p className="error" role="alert">
-            {error}
+    <section className="entrada">
+      <div className="tarjeta">
+        <h1>Cambiar contraseña</h1>
+        {temporal && (
+          <p className="aviso">
+            Estás usando una contraseña temporal. Define una contraseña nueva para continuar.
           </p>
         )}
-        <button type="submit">Guardar contraseña</button>
-      </form>
+        <form onSubmit={(e) => void enviar(e)}>
+          <label>
+            Contraseña actual
+            <input name="actual" type="password" autoComplete="current-password" required />
+          </label>
+          <label>
+            Contraseña nueva (mínimo {LONGITUD_MINIMA_CLAVE} caracteres)
+            <input
+              name="nueva"
+              type="password"
+              autoComplete="new-password"
+              minLength={LONGITUD_MINIMA_CLAVE}
+              required
+            />
+          </label>
+          <label>
+            Repite la contraseña nueva
+            <input
+              name="confirmacion"
+              type="password"
+              autoComplete="new-password"
+              minLength={LONGITUD_MINIMA_CLAVE}
+              required
+            />
+          </label>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+          <Boton type="submit" icono={KeyRound}>
+            Guardar contraseña
+          </Boton>
+        </form>
+      </div>
     </section>
   );
 }
