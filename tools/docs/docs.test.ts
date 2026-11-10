@@ -11,7 +11,7 @@ const { scripts } = JSON.parse(
 ) as {
   scripts: Record<string, string>;
 };
-const COMANDOS = ["docs:diagrams", "docs:er", "docs:tests", "docs:trace", "docs:build"];
+const COMANDOS = ["docs:diagrams", "docs:er", "docs:tests", "docs:trace", "docs:build", "docs:ids"];
 
 function ejecutar(comando: string, ...argumentos: string[]) {
   const [programa = "", ...resto] = (scripts[comando] ?? "").split(" ");
@@ -19,7 +19,7 @@ function ejecutar(comando: string, ...argumentos: string[]) {
 }
 
 describe("esqueletos docs:*", () => {
-  it("PU-docs-01: los cinco comandos existen y apuntan a un archivo de tools/docs", () => {
+  it("PU-docs-01: los seis comandos existen y apuntan a un archivo de tools/docs", () => {
     for (const comando of COMANDOS) {
       const archivo = scripts[comando]?.match(/tools\/docs\/\S+\.(mjs|py)/)?.[0];
       expect(archivo, comando).toBeDefined();
@@ -52,4 +52,37 @@ describe("esqueletos docs:*", () => {
     expect(n6).not.toContain("sin-id");
     expect(ejecutar("docs:tests", "iteracion-1").status).not.toBe(0);
   }, 120_000);
+});
+
+describe("docs:ids", () => {
+  it("PU-docs-04: informa cada ID inválido, inexistente, repetido o dinámico", () => {
+    const fixtures = fileURLToPath(new URL("./fixtures/ids/", import.meta.url));
+    const r = ejecutar("docs:ids", "--raiz", fixtures);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/apps\/x\/a\.test\.ts:5: sin ID válido/);
+    expect(r.stderr).toMatch(/PA-HU99-01 no existe en ninguna tarjeta/);
+    expect(r.stderr).toMatch(/PU-x-01 repetido en: apps\/x\/a\.test\.ts:2, apps\/x\/b\.test\.ts:3/);
+    expect(r.stderr).toMatch(/b\.test\.ts:4: título armado con/);
+    expect(r.stderr).toMatch(/test_y\.py:\d+: sin ID válido: test_sin_id/);
+    expect(r.stderr).not.toMatch(/PA-HU01-01|PA-HU02-01|PU-api-01/);
+    expect(r.stderr).toMatch(/docs:ids: 5 errores en 10 pruebas/);
+  }, 120_000);
+
+  it("PU-docs-05: todas las pruebas del repositorio tienen un ID válido", () => {
+    const r = ejecutar("docs:ids");
+    expect(r.stderr).toBe("");
+    expect(r.status).toBe(0);
+  }, 120_000);
+});
+
+describe("docs:build", () => {
+  it("PU-docs-06: lee el orden de orden.yaml y usa reference.docx solo si existe", async () => {
+    const { argumentosDocker, leerOrden, IMAGEN } = await import("./build.mjs");
+    expect(leerOrden("# c\narchivos:\n  - a.md\n  - b.md\notra: 1\n")).toEqual(["a.md", "b.md"]);
+    expect(() => leerOrden("archivos:\n")).toThrow();
+    const sin = argumentosDocker("/r", ["a.md"], false);
+    expect(sin).toContain(IMAGEN);
+    expect(sin.join(" ")).not.toContain("reference.docx");
+    expect(argumentosDocker("/r", ["a.md"], true)).toContain("--reference-doc=reference.docx");
+  });
 });

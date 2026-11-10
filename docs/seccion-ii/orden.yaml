@@ -1,0 +1,3 @@
+# Orden de los archivos de la Sección II: docs:build los une en build/SECCION_II.docx.
+archivos:
+  - prueba-formato.md

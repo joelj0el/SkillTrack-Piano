@@ -12,6 +12,7 @@ export default tseslint.config(
       "apps/api/**",
       "research/python/**",
       "tools/ci/fixtures/**",
+      "tools/docs/fixtures/**",
       "apps/web/public/mediapipe/**",
     ],
   },

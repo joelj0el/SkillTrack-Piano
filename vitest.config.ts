@@ -14,7 +14,7 @@ export default defineConfig({
             "research/node/src/**/*.test.ts",
             "infra/**/*.test.ts",
           ],
-          exclude: [...configDefaults.exclude, "tools/ci/fixtures/**"],
+          exclude: [...configDefaults.exclude, "tools/ci/fixtures/**", "tools/docs/fixtures/**"],
         },
       },
       "apps/web",

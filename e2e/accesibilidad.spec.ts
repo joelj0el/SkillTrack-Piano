@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { Admin, CLAVE_DEMO, entrar, unico } from "./ayuda.ts";
 
 const IMPACTOS_GRAVES = ["serious", "critical"];
@@ -37,95 +37,140 @@ test("PU-diseno-03: el análisis detecta un error grave", async ({ page }) => {
   expect((await erroresGraves(page)).join()).toContain("button-name");
 });
 
-for (const tema of ["claro", "oscuro"]) {
-  test.describe(`accesibilidad en tema ${tema}`, () => {
-    test.beforeEach(async ({ context }) => {
-      await context.addInitScript((t) => localStorage.setItem("skilltrack.tema", t), tema);
-    });
+async function sinSesion(page: Page): Promise<void> {
+  test.setTimeout(120_000);
+  await page.goto("/entrar");
+  await expect(page.getByRole("heading", { name: "Iniciar sesión" })).toBeVisible();
+  await revisar(page, "inicio de sesión");
 
-    test(`PU-a11y-${tema}-01: pantallas sin sesión y pasos de la práctica`, async ({ page }) => {
-      test.setTimeout(120_000);
-      await page.goto("/entrar");
-      await expect(page.getByRole("heading", { name: "Iniciar sesión" })).toBeVisible();
-      await revisar(page, "inicio de sesión");
+  await page.goto("/design");
+  await expect(page.getByRole("heading", { name: "Sistema de diseño" })).toBeVisible();
+  await revisar(page, "galería");
 
-      await page.goto("/design");
-      await expect(page.getByRole("heading", { name: "Sistema de diseño" })).toBeVisible();
-      await revisar(page, "galería");
-
-      for (const vista of VISTAS_PRACTICA) {
-        await page.goto(`/design/vista/${vista}`);
-        await expect(page.locator(".practica")).toBeVisible();
-        await revisar(page, `práctica: ${vista}`);
-      }
-    });
-
-    test(`PU-a11y-${tema}-02: administración y cambio de contraseña`, async ({ page }) => {
-      test.setTimeout(120_000);
-      await entrar(page, "admin.demo", CLAVE_DEMO);
-      await page.goto("/usuarios");
-      await expect(page.getByRole("list", { name: "Personas" })).toBeVisible();
-      await revisar(page, "usuarios en el móvil");
-      await page.setViewportSize(ESCRITORIO);
-      await revisar(page, "usuarios en el escritorio");
-      await page.getByRole("button", { name: "Salir" }).click();
-
-      const admin = await Admin.demo();
-      const usuario = unico("axe");
-      const { clave } = await admin.crear(usuario, "estudiante");
-      await entrar(page, usuario, clave);
-      await expect(page.getByRole("heading", { name: "Cambiar contraseña" })).toBeVisible();
-      await revisar(page, "cambio de contraseña");
-    });
-
-    test(`PU-a11y-${tema}-03: docente`, async ({ page }) => {
-      test.setTimeout(120_000);
-      await entrar(page, "docente.demo", CLAVE_DEMO);
-      await page.goto("/estudiantes");
-      await expect(page.locator("a.tarjeta").first()).toBeVisible();
-      await revisar(page, "mis estudiantes");
-
-      await page.locator("a.tarjeta").first().click();
-      await page.getByText("Asignar tarea").first().click();
-      await expect(page.getByRole("form", { name: "Asignar tarea" })).toBeVisible();
-      await revisar(page, "ficha, asignar tarea y observación");
-      await page.setViewportSize(ESCRITORIO);
-      await revisar(page, "ficha en el escritorio");
-    });
-
-    test(`PU-a11y-${tema}-04: estudiante, micrófono y encuadre`, async ({ page, context }) => {
-      test.setTimeout(180_000);
-      await context.grantPermissions(["camera", "microphone"]);
-      await entrar(page, "estudiante.demo", CLAVE_DEMO);
-      await page.goto("/tareas");
-      await expect(page.locator("a.tarjeta").first()).toBeVisible();
-      await revisar(page, "mis tareas");
-
-      await page.locator("a.tarjeta").first().click();
-      const practicar = page.getByRole("link", { name: "Practicar" });
-      await expect(practicar).toBeVisible();
-      const destino = await practicar.getAttribute("href");
-      await revisar(page, "detalle de la tarea");
-
-      await page.goto("/catalogo");
-      await expect(page.locator("a.tarjeta").first()).toBeVisible();
-      await revisar(page, "catálogo");
-
-      await page.locator("a.tarjeta").first().click();
-      await expect(page.getByRole("heading", { name: "Guía de posición" })).toBeVisible();
-      await revisar(page, "detalle del ejercicio");
-
-      await page.goto("/microfono");
-      await expect(page.locator("[data-nivel]")).toBeAttached();
-      await revisar(page, "micrófono");
-
-      await page.goto(destino!);
-      await expect(page.locator("[data-semaforo]")).not.toHaveAttribute(
-        "data-semaforo",
-        "pidiendo",
-        { timeout: 30_000 },
-      );
-      await revisar(page, "encuadre con la cámara");
-    });
-  });
+  for (const vista of VISTAS_PRACTICA) {
+    await page.goto(`/design/vista/${vista}`);
+    await expect(page.locator(".practica")).toBeVisible();
+    await revisar(page, `práctica: ${vista}`);
+  }
 }
+
+async function administracion(page: Page): Promise<void> {
+  test.setTimeout(120_000);
+  await entrar(page, "admin.demo", CLAVE_DEMO);
+  await page.goto("/usuarios");
+  await expect(page.getByRole("list", { name: "Personas" })).toBeVisible();
+  await revisar(page, "usuarios en el móvil");
+  await page.setViewportSize(ESCRITORIO);
+  await revisar(page, "usuarios en el escritorio");
+  await page.getByRole("button", { name: "Salir" }).click();
+
+  const admin = await Admin.demo();
+  const usuario = unico("axe");
+  const { clave } = await admin.crear(usuario, "estudiante");
+  await entrar(page, usuario, clave);
+  await expect(page.getByRole("heading", { name: "Cambiar contraseña" })).toBeVisible();
+  await revisar(page, "cambio de contraseña");
+}
+
+async function docente(page: Page): Promise<void> {
+  test.setTimeout(120_000);
+  await entrar(page, "docente.demo", CLAVE_DEMO);
+  await page.goto("/estudiantes");
+  await expect(page.locator("a.tarjeta").first()).toBeVisible();
+  await revisar(page, "mis estudiantes");
+
+  await page.locator("a.tarjeta").first().click();
+  await page.getByText("Asignar tarea").first().click();
+  await expect(page.getByRole("form", { name: "Asignar tarea" })).toBeVisible();
+  await revisar(page, "ficha, asignar tarea y observación");
+  await page.setViewportSize(ESCRITORIO);
+  await revisar(page, "ficha en el escritorio");
+}
+
+async function estudiante(page: Page, context: BrowserContext): Promise<void> {
+  test.setTimeout(180_000);
+  await context.grantPermissions(["camera", "microphone"]);
+  await entrar(page, "estudiante.demo", CLAVE_DEMO);
+  await page.goto("/tareas");
+  await expect(page.locator("a.tarjeta").first()).toBeVisible();
+  await revisar(page, "mis tareas");
+
+  await page.locator("a.tarjeta").first().click();
+  const practicar = page.getByRole("link", { name: "Practicar" });
+  await expect(practicar).toBeVisible();
+  const destino = await practicar.getAttribute("href");
+  await revisar(page, "detalle de la tarea");
+
+  await page.goto("/catalogo");
+  await expect(page.locator("a.tarjeta").first()).toBeVisible();
+  await revisar(page, "catálogo");
+
+  await page.locator("a.tarjeta").first().click();
+  await expect(page.getByRole("heading", { name: "Guía de posición" })).toBeVisible();
+  await revisar(page, "detalle del ejercicio");
+
+  await page.goto("/microfono");
+  await expect(page.locator("[data-nivel]")).toBeAttached();
+  await revisar(page, "micrófono");
+
+  await page.goto(destino!);
+  await expect(page.locator("[data-semaforo]")).not.toHaveAttribute("data-semaforo", "pidiendo", {
+    timeout: 30_000,
+  });
+  await revisar(page, "encuadre con la cámara");
+}
+
+async function enTema(context: BrowserContext, tema: "claro" | "oscuro"): Promise<void> {
+  await context.addInitScript((t) => localStorage.setItem("skilltrack.tema", t), tema);
+}
+
+test("PU-accesibilidad-01: sin sesión y pasos de la práctica, en claro", async ({
+  page,
+  context,
+}) => {
+  await enTema(context, "claro");
+  await sinSesion(page);
+});
+test("PU-accesibilidad-02: sin sesión y pasos de la práctica, en oscuro", async ({
+  page,
+  context,
+}) => {
+  await enTema(context, "oscuro");
+  await sinSesion(page);
+});
+test("PU-accesibilidad-03: administración y cambio de contraseña, en claro", async ({
+  page,
+  context,
+}) => {
+  await enTema(context, "claro");
+  await administracion(page);
+});
+test("PU-accesibilidad-04: administración y cambio de contraseña, en oscuro", async ({
+  page,
+  context,
+}) => {
+  await enTema(context, "oscuro");
+  await administracion(page);
+});
+test("PU-accesibilidad-05: docente, en claro", async ({ page, context }) => {
+  await enTema(context, "claro");
+  await docente(page);
+});
+test("PU-accesibilidad-06: docente, en oscuro", async ({ page, context }) => {
+  await enTema(context, "oscuro");
+  await docente(page);
+});
+test("PU-accesibilidad-07: estudiante, micrófono y encuadre, en claro", async ({
+  page,
+  context,
+}) => {
+  await enTema(context, "claro");
+  await estudiante(page, context);
+});
+test("PU-accesibilidad-08: estudiante, micrófono y encuadre, en oscuro", async ({
+  page,
+  context,
+}) => {
+  await enTema(context, "oscuro");
+  await estudiante(page, context);
+});
