@@ -1,5 +1,6 @@
 # Datos de investigación y secretos (nunca en git)
 research/data/
+fixtures/autor/
 **/PAQ-*
 .env
 .env.*

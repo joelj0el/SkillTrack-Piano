@@ -1,0 +1,22 @@
+# Base de investigación: solo en la laptop del autor. Este archivo nunca se despliega en un servidor.
+name: skilltrack-research
+
+services:
+  db-research:
+    image: postgres:17.11
+    environment:
+      POSTGRES_DB: research
+      POSTGRES_USER: research
+      POSTGRES_PASSWORD: ${RESEARCH_DB_PASSWORD:-research}
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - datos-research:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U research -d research"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  datos-research:

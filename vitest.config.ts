@@ -2,6 +2,8 @@ import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    // La tabla de la terminal también lista los archivos con cobertura completa.
+    coverage: { provider: "v8", reporter: [["text", { skipFull: false }]] },
     projects: [
       {
         test: {

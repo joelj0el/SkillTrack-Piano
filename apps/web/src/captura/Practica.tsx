@@ -1,5 +1,6 @@
 import {
   aGrises,
+  crearAsignador,
   evaluarCalidad,
   luminanciaMedia,
   movimiento,
@@ -12,7 +13,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { colorDeToken, toqueAVideo, useCamara, type Camara } from "./camara.ts";
 import { CONEXIONES, crearDetector, type DeteccionManos, type Detector } from "./detector.ts";
-import { NOMBRE_MANO, crearAsignador, crearContadorFps, type ManoVista } from "./manos-en-vivo.ts";
+import { NOMBRE_MANO, crearContadorFps, type ManoVista } from "./manos-en-vivo.ts";
 
 import { Boton, EstadoVista } from "../ui/base.tsx";
 
@@ -160,7 +161,7 @@ export function VistaCamara({
     const v = video.current;
     const lienzo = capa.current;
     const ctx = lienzo.getContext("2d");
-    const asignar = crearAsignador(() => frontalRef.current);
+    const asignar = crearAsignador<ManoVista>(() => frontalRef.current);
     const contarFps = crearContadorFps();
     let ultimoFps = 0;
     let ultimoT = -1;

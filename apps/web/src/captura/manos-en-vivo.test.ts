@@ -1,19 +1,19 @@
-import { evaluarCalidad } from "@skilltrack/core";
+import { crearAsignador, evaluarCalidad } from "@skilltrack/core";
 import { describe, expect, it } from "vitest";
-import { crearAsignador, crearContadorFps } from "./manos-en-vivo.ts";
+import { crearContadorFps, type ManoVista } from "./manos-en-vivo.ts";
 
 const mano = (x: number) => Array.from({ length: 21 }, () => ({ x, y: 0.5, z: 0 }));
 
 describe("manos en vivo", () => {
   it("PU-capture-08: en la vista de referencia la mano de la izquierda de la imagen es la izquierda", () => {
-    const asignar = crearAsignador(() => false);
+    const asignar = crearAsignador<ManoVista>(() => false);
     const r = asignar([mano(0.8), mano(0.2)]);
     expect(r.MI?.datos[0]?.x).toBe(0.2);
     expect(r.MD?.datos[0]?.x).toBe(0.8);
   });
 
   it("PU-capture-09: con la cámara frontal (espejo) se invierte la asignación", () => {
-    const asignar = crearAsignador(() => true);
+    const asignar = crearAsignador<ManoVista>(() => true);
     const r = asignar([mano(0.8), mano(0.2)]);
     expect(r.MI?.datos[0]?.x).toBe(0.8);
   });

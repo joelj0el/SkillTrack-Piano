@@ -1,10 +1,9 @@
 import type { Ejercicio } from "@skilltrack/contracts";
-import { secuenciaEscala } from "@skilltrack/core";
+import { secuenciaEscala, type RespuestaAnalisis } from "@skilltrack/core";
 import { Check, CircleHelp, Hand, Music, Plus, Timer, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { Navigate, useParams } from "react-router";
 import type { Microfono } from "../audio/microfono.ts";
-import type { RespuestaAnalisis } from "../captura/analisis.ts";
 import {
   PasoCalibracion,
   PasoEjecucion,

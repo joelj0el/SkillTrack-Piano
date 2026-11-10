@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Reprocesamiento</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@skilltrack/core": "/nucleo/index.ts",
+          "@mediapipe/tasks-vision": "/vision.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <video id="video" muted playsinline preload="auto"></video>
+    <script type="module">
+      import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
+      import {
+        analizar,
+        crearAsignador,
+        muestrasDelFotograma,
+        rasgosDeLaMano,
+      } from "@skilltrack/core";
+
+      const BASE = "/mediapipe";
+      const TASA_AUDIO = 48000;
+      const ESPERA_MS = 30000;
+      const ESPERA_FOTOGRAMA_MS = 200;
+      const FOTOGRAMAS_POR_DEFECTO = 30;
+      const video = document.getElementById("video");
+      const fila = (p) => [p.x, p.y, p.z];
+
+      const ERRORES_MEDIA = {
+        1: "lectura cancelada",
+        2: "error de red",
+        3: "error al decodificar",
+        4: "formato o códec no admitido",
+      };
+
+      function cargar(url) {
+        return new Promise((ok, mal) => {
+          const reloj = setTimeout(() => mal(new Error("El video no cargó a tiempo")), ESPERA_MS);
+          const fin = (accion) => {
+            clearTimeout(reloj);
+            video.onloadeddata = video.onerror = null;
+            accion();
+          };
+          video.onloadeddata = () => fin(ok);
+          video.onerror = () =>
+            fin(() => mal(new Error(ERRORES_MEDIA[video.error?.code] ?? "error desconocido")));
+          video.src = url;
+          video.load();
+        });
+      }
+
+      window.comprobar = async (url) => {
+        try {
+          await cargar(url);
+        } catch (e) {
+          return { decodificable: false, motivo: e.message };
+        }
+        if (!video.videoWidth)
+          return { decodificable: false, motivo: "la imagen no se decodifica" };
+        return {
+          decodificable: true,
+          ancho: video.videoWidth,
+          alto: video.videoHeight,
+          duracion_s: video.duration,
+        };
+      };
+
+      // Mismas opciones que el detector de la app.
+      async function crearDetector() {
+        const archivos = await FilesetResolver.forVisionTasks(`${BASE}/wasm`);
+        const opciones = (delegate) => ({
+          baseOptions: { modelAssetPath: `${BASE}/hand_landmarker.task`, delegate },
+          runningMode: "VIDEO",
+          numHands: 2,
+        });
+        try {
+          return {
+            detector: await HandLandmarker.createFromOptions(archivos, opciones("GPU")),
+            delegado: "GPU",
+          };
+        } catch {
+          return {
+            detector: await HandLandmarker.createFromOptions(archivos, opciones("CPU")),
+            delegado: "CPU",
+          };
+        }
+      }
+
+      /** Salta a un instante y espera su fotograma; null si no apareció uno nuevo. */
+      function irA(t) {
+        return new Promise((ok, mal) => {
+          let hecho = false;
+          const fin = (accion, valor) => {
+            if (hecho) return;
+            hecho = true;
+            clearTimeout(vigilante);
+            video.onseeked = null;
+            accion(valor);
+          };
+          const vigilante = setTimeout(
+            () => fin(mal, new Error("El video dejó de avanzar")),
+            ESPERA_MS,
+          );
+          video.requestVideoFrameCallback((_ahora, datos) => fin(ok, datos.mediaTime));
+          video.onseeked = () => setTimeout(() => fin(ok, null), ESPERA_FOTOGRAMA_MS);
+          video.currentTime = t;
+        });
+      }
+
+      /** Reproducir salta fotogramas: se va a cada uno, con el video detenido. */
+      async function recorrer(tiempos, alFotograma) {
+        for (const t of tiempos) {
+          const presentado = await irA(t);
+          if (presentado !== null) alFotograma(presentado);
+        }
+      }
+
+      async function leerAudio(url) {
+        const datos = await (await fetch(url)).arrayBuffer();
+        const contexto = new OfflineAudioContext(1, 1, TASA_AUDIO);
+        let pista;
+        try {
+          pista = await contexto.decodeAudioData(datos);
+        } catch {
+          return { motivo: "El video no trae una pista de audio decodificable" };
+        }
+        const muestras = new Float32Array(pista.length);
+        for (let c = 0; c < pista.numberOfChannels; c++) {
+          const canal = pista.getChannelData(c);
+          for (let i = 0; i < muestras.length; i++)
+            muestras[i] += canal[i] / pista.numberOfChannels;
+        }
+        return { audio: { muestras, tasa: pista.sampleRate, t0: 0 } };
+      }
+
+      window.procesar = async ({
+        url,
+        homografia,
+        rango,
+        esperadas,
+        metronomo,
+        tempo,
+        tiempos,
+      }) => {
+        await cargar(url);
+        const { videoWidth: ancho, videoHeight: alto, duration: duracion_s } = video;
+        const { detector, delegado } = await crearDetector();
+        const asignar = crearAsignador(() => false);
+        const fotogramas = [];
+        const series = {};
+        let ultimoMs = -1;
+        const instantes =
+          tiempos ??
+          Array.from(
+            { length: Math.floor(duracion_s * FOTOGRAMAS_POR_DEFECTO) },
+            (_, k) => (k + 0.5) / FOTOGRAMAS_POR_DEFECTO,
+          );
+
+        await recorrer(instantes, (t) => {
+          const tMs = t * 1000;
+          if (tMs <= ultimoMs) return;
+          ultimoMs = tMs;
+
+          const r = detector.detectForVideo(video, tMs);
+          const mundo = new Map(r.landmarks.map((m, i) => [m, r.worldLandmarks[i]]));
+          const asignacion = asignar(r.landmarks);
+          for (const [id, m] of Object.entries(muestrasDelFotograma(asignacion, ancho, alto, t))) {
+            (series[id] ??= []).push(m);
+          }
+          fotogramas.push({
+            t,
+            manos: ["MI", "MD"].flatMap((id) => {
+              const datos = asignacion[id]?.datos;
+              if (!datos) return [];
+              const metros = mundo.get(datos);
+              return [
+                {
+                  mano: id,
+                  puntos: datos.map(fila),
+                  mundo: metros.map(fila),
+                  rasgos: rasgosDeLaMano(metros),
+                },
+              ];
+            }),
+          });
+        });
+        detector.close();
+
+        const { audio, motivo } = await leerAudio(url);
+        const analisis = analizar(
+          {
+            series,
+            calibracion: homografia,
+            rango,
+            esperadas,
+            metronomo,
+            ...(tempo === null ? {} : { tempoElegido: tempo }),
+            ...(audio ? { audio } : {}),
+          },
+          () => performance.now(),
+        );
+        return {
+          ancho,
+          alto,
+          duracion_s,
+          delegado,
+          perdidos: instantes.length - fotogramas.length,
+          fotogramas,
+          analisis,
+          audio: audio
+            ? { pista: true, motivo: null, tasa_hz: audio.tasa }
+            : { pista: false, motivo, tasa_hz: null },
+        };
+      };
+
+      window.listo = true;
+    </script>
+  </body>
+</html>
