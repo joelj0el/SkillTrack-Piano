@@ -1,0 +1,34 @@
+# Producción en Azure. La base de datos es el servicio administrado de Azure: aquí no hay `db`.
+# Las imágenes las publica el flujo de despliegue en GHCR, con el commit como etiqueta.
+# Las variables vienen del archivo .env de la máquina virtual (ver produccion.env.example).
+name: skilltrack-piano
+
+services:
+  api:
+    image: ghcr.io/${IMAGENES:?}/api:${ETIQUETA:?}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?}
+    # Las migraciones se aplican en el despliegue, antes de levantar; aquí solo se sirve la API.
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  web:
+    image: ghcr.io/${IMAGENES:?}/web:${ETIQUETA:?}
+    restart: unless-stopped
+    environment:
+      DOMINIO: ${DOMINIO:?}
+      CORREO_ACME: ${CORREO_ACME:?}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy-datos:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+
+volumes:
+  caddy-datos:
+  caddy-config:
