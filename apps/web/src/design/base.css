@@ -121,7 +121,7 @@ button {
   color: var(--color-sobre-acento);
   border-color: var(--color-acento);
   font-weight: var(--peso-fuerte);
-  transition: opacity var(--duracion);
+  transition: opacity var(--duracion-corta) var(--curva);
 }
 
 button.secundario {
@@ -333,7 +333,7 @@ button:disabled {
   font-size: var(--texto-xl);
   text-align: center;
   color: var(--color-borde);
-  transition: color var(--duracion);
+  transition: opacity var(--duracion-corta) var(--curva);
 }
 
 .pulso-visual.activo {
