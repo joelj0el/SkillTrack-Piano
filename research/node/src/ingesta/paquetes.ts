@@ -44,7 +44,7 @@ function metaDe(
 }
 
 /** Comprueba cada archivo contra el manifiesto del paquete; devuelve el manifiesto. */
-async function verificar(directorio: string): Promise<string> {
+export async function verificarPaquete(directorio: string): Promise<string> {
   const manifiesto = await readFile(join(directorio, MANIFIESTO), "utf8");
   for (const linea of manifiesto.trim().split("\n")) {
     const [esperado, nombre] = linea.split(/\s+/);
@@ -82,7 +82,7 @@ export async function crearPaquete(
   });
 
   if (existsSync(destino)) {
-    const manifiesto = await verificar(destino);
+    const manifiesto = await verificarPaquete(destino);
     if ((await readFile(join(destino, "meta.json"), "utf8")) !== meta) {
       throw new PaqueteRechazado(
         "El paquete existente no coincide con la planilla o con el video actual",

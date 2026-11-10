@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { rangoDe, secuenciaEscala } from "@skilltrack/core";
+import { rangoDe, secuenciaEscala, type NotaEsperada } from "@skilltrack/core";
 import { instrumentoDe, type Instrumento } from "../ingesta/validar.ts";
 
 export interface ClipSesion {
@@ -121,12 +121,15 @@ export function asociarTomas(clips: ClipSesion[], tomas: TomaSesion[]): Asociaci
   return { porClip, sinCalibracion };
 }
 
+/** Secuencia que se espera oír y ver en la toma; null si no se conoce su ejercicio. */
+export function esperadasDe(toma: TomaSesion): NotaEsperada[] | null {
+  const tonalidad = TONALIDADES[toma.ejercicio];
+  return tonalidad ? secuenciaEscala(tonalidad, toma.manos) : null;
+}
+
 /** Tramo de teclas que debe cubrir la calibración para servir a todas estas tomas. */
 export function rangoDeTomas(tomas: TomaSesion[]): { min: number; max: number } | null {
-  const notas = tomas.flatMap((t) => {
-    const tonalidad = TONALIDADES[t.ejercicio];
-    return tonalidad ? secuenciaEscala(tonalidad, t.manos) : [];
-  });
+  const notas = tomas.flatMap((t) => esperadasDe(t) ?? []);
   return notas.length ? rangoDe(notas) : null;
 }
 

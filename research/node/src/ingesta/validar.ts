@@ -85,7 +85,7 @@ function manosDe(valor: string): "MI" | "MD" | "juntas" | null {
   return null;
 }
 
-function booleano(valor: string): boolean | null {
+export function booleano(valor: string): boolean | null {
   const clave = normalizar(valor);
   if (["si", "s", "yes", "true", "1"].includes(clave)) return true;
   if (["no", "n", "false", "0"].includes(clave)) return false;

@@ -83,7 +83,7 @@ async function datosDeSesion(carpeta: string) {
 }
 
 /** Sirve por tramos: el navegador los necesita para saltar al fotograma elegido. */
-function servirVideo(req: IncomingMessage, res: ServerResponse, ruta: string): void {
+export function servirVideo(req: IncomingMessage, res: ServerResponse, ruta: string): void {
   const tamano = statSync(ruta).size;
   const tipo = TIPOS_DE_VIDEO[extname(ruta).toLowerCase()] ?? "video/mp4";
   const tramo = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? "");
