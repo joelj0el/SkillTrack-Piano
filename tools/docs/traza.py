@@ -14,6 +14,4 @@ sys.stderr.reconfigure(encoding="utf-8")
 if len(sys.argv) != 2 or not re.fullmatch(r"it-\d+", sys.argv[1]):
     sys.exit("Uso: pnpm docs:trace it-N  (por ejemplo: pnpm docs:trace it-1)")
 
-print(
-    f"docs:trace {sys.argv[1]} — pendiente: se implementa en P-06 (no se generó ningún archivo)."
-)
+print(f"docs:trace {sys.argv[1]} — pendiente: se implementa en P-06 (no se generó ningún archivo).")

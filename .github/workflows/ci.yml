@@ -31,6 +31,10 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm deps:check
       - run: pnpm design:contraste
+      - run: pnpm docs:ids
+      # Los scripts de tools/docs son scripts uv sueltos: se revisan con el ruff de la API.
+      - run: uvx ruff@0.17.3 check --config apps/api/pyproject.toml tools/docs
+      - run: uvx ruff@0.17.3 format --check --config apps/api/pyproject.toml tools/docs
       - run: pnpm test --reporter=default --reporter=junit --outputFile.junit=reports/vitest.xml
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()

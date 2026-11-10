@@ -79,19 +79,13 @@ def agrupar(resultados: list[Resultado]) -> dict[str, dict]:
     """Una fila por ID: un ID con varios casos (parametrizados) solo aprueba si todos aprueban."""
     filas: dict[str, dict] = {}
     for r in resultados:
-        fila = filas.setdefault(
-            r.id, {"nombre": r.nombre, "herramientas": set(), "estados": []}
-        )
+        fila = filas.setdefault(r.id, {"nombre": r.nombre, "herramientas": set(), "estados": []})
         fila["herramientas"].add(r.herramienta)
         fila["estados"].append(r.estado)
     for fila in filas.values():
         estados = fila["estados"]
         fila["estado"] = (
-            "fallida"
-            if "fallida" in estados
-            else "omitida"
-            if "omitida" in estados
-            else "aprobada"
+            "fallida" if "fallida" in estados else "omitida" if "omitida" in estados else "aprobada"
         )
         fila["casos"] = len(estados)
         fila["herramienta"] = " + ".join(sorted(fila["herramientas"]))
@@ -170,17 +164,12 @@ def main() -> None:
     parser.add_argument("iteracion")
     parser.add_argument("--reportes", type=Path, default=RAIZ / "reports")
     parser.add_argument("--salida", type=Path)
-    parser.add_argument(
-        "--historias", help="HU separadas por comas, p. ej. HU-01,HU-14"
-    )
+    parser.add_argument("--historias", help="HU separadas por comas, p. ej. HU-01,HU-14")
     argumentos = parser.parse_args()
     if not re.fullmatch(r"it-\d+", argumentos.iteracion):
         sys.exit("Uso: pnpm docs:tests it-N  (por ejemplo: pnpm docs:tests it-1)")
     historias = (
-        {
-            h.strip().removeprefix("HU-").zfill(2)
-            for h in argumentos.historias.split(",")
-        }
+        {h.strip().removeprefix("HU-").zfill(2) for h in argumentos.historias.split(",")}
         if argumentos.historias
         else None
     )
@@ -190,9 +179,7 @@ def main() -> None:
     )
     resultados = leer(argumentos.reportes)
     if not resultados:
-        sys.exit(
-            f"No hay reportes JUnit con pruebas identificadas en {argumentos.reportes}."
-        )
+        sys.exit(f"No hay reportes JUnit con pruebas identificadas en {argumentos.reportes}.")
     salida.parent.mkdir(parents=True, exist_ok=True)
     texto = generar(argumentos.iteracion, resultados, historias, datetime.now(UTC))
     salida.write_text(texto, encoding="utf-8", newline="\n")

@@ -22,6 +22,7 @@
     "docs:tests": "uv run tools/docs/pruebas.py",
     "docs:trace": "uv run tools/docs/traza.py",
     "docs:build": "node tools/docs/build.mjs",
+    "docs:ids": "uv run tools/docs/ids.py",
     "e2e": "playwright test",
     "ingesta": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/ingesta/cli.ts",
     "calibrar": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/calibrar/cli.ts",
