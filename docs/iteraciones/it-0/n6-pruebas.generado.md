@@ -1,12 +1,12 @@
 # n.6 Pruebas — it-0 (generado)
 
-Generado por `pnpm docs:tests it-0` el 2026-11-10 14:50 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-0` el 2026-11-10 15:15 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
-| Playwright  | 21    | 21        | 0        | 0        |
+| Playwright  | 22    | 22        | 0        | 0        |
 | Vitest      | 167   | 167       | 0        | 0        |
 | pytest      | 68    | 68        | 0        | 0        |
 
@@ -30,7 +30,7 @@ Generado por `pnpm docs:tests it-0` el 2026-11-10 14:50 UTC a partir de los repo
 | contracts    | 15  | 15        | 0        |
 | core         | 1   | 1         | 0        |
 | design       | 5   | 5         | 0        |
-| diseno       | 2   | 2         | 0        |
+| diseno       | 3   | 3         | 0        |
 | docs         | 3   | 3         | 0        |
 | exercise     | 4   | 4         | 0        |
 | features     | 20  | 20        | 0        |
