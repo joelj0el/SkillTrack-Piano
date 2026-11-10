@@ -74,7 +74,7 @@ def ejercicio_dto(ejercicio: Ejercicio, version: VersionEjercicio) -> EjercicioD
             nota_max_midi=version.nota_max_midi,
             eventos_esperados=version.eventos_esperados,
             partitura_svg=version.partitura_svg,
-            transcripcion="verificada" if version.eventos_esperados else "pendiente",
+            transcripcion="importada" if version.eventos_esperados else "pendiente",
         ),
     )
 

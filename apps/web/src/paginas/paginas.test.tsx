@@ -115,3 +115,72 @@ describe("pantallas", () => {
     expect(await screen.findByRole("heading", { name: "Sin conexión" })).toBeDefined();
   });
 });
+
+const ejercicio = (version: Record<string, unknown>) => ({
+  id: 1,
+  codigo: "EJ-01",
+  nombre: "Escala de Do mayor",
+  fuente: "Panel",
+  tonalidad: "Do mayor",
+  compas: "2/4",
+  figura: "semicorchea",
+  orden: 1,
+  variantes_manos: ["MI", "MD", "juntas"],
+  version_vigente: {
+    id: 2,
+    version: 2,
+    tempo_min_permitido_bpm: 60,
+    tempo_max_permitido_bpm: 75,
+    rango_octavas: 2,
+    nota_min_midi: null,
+    nota_max_midi: null,
+    eventos_esperados: [],
+    partitura_svg: null,
+    transcripcion: "pendiente",
+    ...version,
+  },
+});
+
+describe("detalle del ejercicio", () => {
+  it("PU-web-14: muestra la partitura, la digitación por mano y la guía con sus tres apartados", async () => {
+    servidor({
+      "/api/auth/me": { estado: 200, cuerpo: usuario("estudiante") },
+      "/api/catalogo/ejercicios/EJ-01": {
+        estado: 200,
+        cuerpo: ejercicio({
+          partitura_svg: '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0"/></svg>',
+          transcripcion: "importada",
+          eventos_esperados: [
+            { idx: 0, tiempo_beats: 0, mano: "MI", dedo: 5, clase_altura: 0, midi: 48 },
+            { idx: 1, tiempo_beats: 0, mano: "MD", dedo: 1, clase_altura: 0, midi: 60 },
+          ],
+        }),
+      },
+    });
+    abrir("/catalogo/EJ-01");
+
+    const partitura = await screen.findByRole("img", { name: /Partitura de Escala de Do mayor/ });
+    expect(partitura.querySelector("svg")).not.toBeNull();
+    expect(screen.getByText(/revisión del panel/)).toBeDefined();
+    const derecha = screen.getByRole("region", { name: "Digitación de la mano derecha" });
+    expect(derecha.textContent).toBe("Mano derechaDo4, dedo 1");
+    expect(screen.getByRole("region", { name: "Digitación de la mano izquierda" })).toBeDefined();
+    for (const apartado of ["Muñeca", "Separación entre dedos", "Curvatura"]) {
+      expect(screen.getByRole("heading", { name: apartado })).toBeDefined();
+    }
+    expect(screen.getAllByText("Pendiente de aprobación del panel.")).toHaveLength(3);
+    expect(screen.getAllByRole("img", { name: /: pendiente$/ })).toHaveLength(3);
+  });
+
+  it("PU-web-15: sin transcripción, la partitura y la digitación quedan como pendientes", async () => {
+    servidor({
+      "/api/auth/me": { estado: 200, cuerpo: usuario("estudiante") },
+      "/api/catalogo/ejercicios/EJ-01": { estado: 200, cuerpo: ejercicio({}) },
+    });
+    abrir("/catalogo/EJ-01");
+
+    expect(await screen.findByText(/Partitura pendiente de transcripción/)).toBeDefined();
+    expect(screen.getByText("Digitación pendiente de transcripción.")).toBeDefined();
+    expect(screen.queryByRole("img", { name: /Partitura de/ })).toBeNull();
+  });
+});

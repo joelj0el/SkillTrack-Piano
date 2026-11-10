@@ -33,8 +33,9 @@ export const VersionEjercicio = z
     nota_max_midi: z.int().min(0).max(127).nullable(),
     eventos_esperados: z.array(EventoEsperado),
     partitura_svg: z.string().nullable(),
-    // "pendiente" mientras la partitura no se transcriba y verifique nota por nota.
-    transcripcion: z.enum(["pendiente", "verificada"]),
+    // "pendiente" sin partitura; "importada" con la partitura cargada desde MusicXML;
+    // "verificada" solo cuando un docente del panel la revise nota por nota (PA-HU02-03).
+    transcripcion: z.enum(["pendiente", "importada", "verificada"]),
   })
   .meta({ title: "VersionEjercicio" });
 export type VersionEjercicio = z.infer<typeof VersionEjercicio>;

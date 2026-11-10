@@ -33,6 +33,7 @@ class EventoEsperado(BaseModel):
 
 class Transcripcion(StrEnum):
     pendiente = "pendiente"
+    importada = "importada"
     verificada = "verificada"
 
 

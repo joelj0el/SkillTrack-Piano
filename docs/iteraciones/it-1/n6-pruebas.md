@@ -35,3 +35,9 @@ La validación del OE1 con tareas reales del panel (recuperabilidad, PA-HU29-05)
 
 - **Implementado:** pruebas automáticas de todos los criterios `auto-api` y `auto-e2e`, salvo PA-HU02-02 y PA-HU02-04 (ver n.2).
 - **Pendiente:** pruebas manuales PA-HU17-04, PA-HU17-05, PA-HU02-03 y PA-HU29-05.
+
+## Pruebas inestables
+
+| Prueba              | Observación                                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| PU-accesibilidad-02 | PU-accesibilidad-02 se colgó 1 vez (navegador sin respuesta en páginas con mucho dibujo, igual que PA-HU03-05); causa no investigada |

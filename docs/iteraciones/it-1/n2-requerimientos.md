@@ -36,12 +36,12 @@ Historias y criterios de aceptación de la It-1. Tipo: `auto-api` (pytest), `aut
 
 ## HU-02 · Ver el catálogo y abrir un ejercicio
 
-| PA         | Tipo     | Criterio                                                                                                                                      | Estado                                                                                                                           |
-| ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| PA-HU02-01 | auto-api | EJ-01 a EJ-04 en el orden del panel, con versión, tonalidad, 2/4, semicorchea, rango de tempo (PRM-02) y variantes de manos; sin sesión → 401 | Implementado                                                                                                                     |
-| PA-HU02-02 | auto-api | `eventos_esperados` con un evento por nota de la sección analizada, igual al MusicXML fuente                                                  | Pendiente: requiere la transcripción a MusicXML de la partitura del panel                                                        |
-| PA-HU02-03 | manual   | Revisión nota por nota por un docente del panel (acta)                                                                                        | Pendiente: requiere la transcripción                                                                                             |
-| PA-HU02-04 | auto-e2e | El detalle (P-33) muestra partitura (SVG), digitación, rango de tempo y guía de posición; se alcanza en ≤ 2 toques desde "Mis tareas"         | Prototipo: navegación, tempo y apartados de la guía verificados (PU-web-10); partitura, digitación y texto de la guía pendientes |
+| PA         | Tipo     | Criterio                                                                                                                                      | Estado                                                                                                                                                                                        |
+| ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU02-01 | auto-api | EJ-01 a EJ-04 en el orden del panel, con versión, tonalidad, 2/4, semicorchea, rango de tempo (PRM-02) y variantes de manos; sin sesión → 401 | Implementado                                                                                                                                                                                  |
+| PA-HU02-02 | auto-api | `eventos_esperados` con un evento por nota de la sección analizada, igual al MusicXML fuente                                                  | Prototipo: verificado con una partitura de prueba sintética (58 notas, prueba PA-HU02-02); la importación falla si el número no coincide. Faltan los cuatro MusicXML del panel                |
+| PA-HU02-03 | manual   | Revisión nota por nota por un docente del panel (acta)                                                                                        | Pendiente: requiere la transcripción                                                                                                                                                          |
+| PA-HU02-04 | auto-e2e | El detalle (P-33) muestra partitura (SVG), digitación, rango de tempo y guía de posición; se alcanza en ≤ 2 toques desde "Mis tareas"         | Prototipo: la E2E PA-HU02-04 lo verifica con la partitura de prueba sintética; faltan las partituras reales, y los textos e ilustraciones de la guía están pendientes de aprobación del panel |
 
 ## HU-14 · Asignar tareas y registrar observaciones
 
@@ -66,5 +66,5 @@ Historias y criterios de aceptación de la It-1. Tipo: `auto-api` (pytest), `aut
 ## Estado de esta versión
 
 - **Implementado:** cada criterio marcado como "Implementado" tiene su prueba automática con el ID exacto; su resultado sale de los reportes JUnit en `n6-pruebas.generado.md`.
-- **Prototipo:** PA-HU02-04 (falta la partitura) y el sistema de diseño provisional.
-- **Pendiente:** PA-HU02-02 y PA-HU02-03 (transcripción), PA-HU17-04, PA-HU17-05 y PA-HU29-05 (manuales, en dispositivo real, en la nube o con el panel).
+- **Prototipo:** PA-HU02-02 y PA-HU02-04 (verificados con una partitura de prueba sintética; faltan las del panel).
+- **Pendiente:** PA-HU02-03 (revisión del panel nota por nota), PA-HU17-04, PA-HU17-05 y PA-HU29-05 (manuales, en dispositivo real, en la nube o con el panel).
