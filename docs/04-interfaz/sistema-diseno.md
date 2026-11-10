@@ -55,7 +55,7 @@ Paleta completa en claro y en oscuro: neutros cálidos, un solo acento (azul cob
 
 - Duraciones de 150, 250 y 350 ms (`--duracion-corta`, `--duracion-media` y `--duracion-larga`) con la curva `--curva`.
 - Solo se animan `transform` y `opacity`. Está prohibido `transition: all`.
-- El conteo previo y el pulso del metrónomo van al tempo elegido, no a estas duraciones.
+- El conteo previo y el pulso del metrónomo van al tempo elegido, no a estas duraciones. Los bucles de espera (semáforo en ámbar y esqueletos) usan `--duracion-pulso-suave`.
 - Con `prefers-reduced-motion` se eliminan los desplazamientos. El pulso del metrónomo se convierte en un parpadeo de opacidad.
 
 ### Iconos

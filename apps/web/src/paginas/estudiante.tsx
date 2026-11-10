@@ -1,27 +1,57 @@
 import { IntentoGuardado, Tarea } from "@skilltrack/contracts";
+import {
+  Ban,
+  Calendar,
+  Check,
+  Clock,
+  EyeOff,
+  Hand,
+  Metronome,
+  Play,
+  Repeat,
+  TriangleAlert,
+} from "lucide-react";
 import { Link, useParams } from "react-router";
 import { z } from "zod";
 import { pedir } from "../api.ts";
 import { Cargado, NOMBRE_MANOS, fechaLegible, useCarga } from "../componentes.tsx";
+import { Chip, EnlaceBoton, EstadoVista, PaginaCabecera } from "../ui/base.tsx";
+
+const ESTADO_TAREA = {
+  Asignada: { tono: "neutro", icono: Clock },
+  Vencida: { tono: "tiempo", icono: TriangleAlert },
+  Cancelada: { tono: "no-evaluable", icono: Ban },
+} as const;
 
 export function ResumenTarea({ tarea, enlace }: { tarea: Tarea; enlace?: string }) {
   const contenido = (
     <>
-      <strong>
+      <span className="tarjeta-titulo">
         {tarea.ejercicio.codigo} · {tarea.ejercicio.nombre}
-      </strong>
-      <dl className="suave">
-        <div>Manos: {NOMBRE_MANOS[tarea.manos]}</div>
+      </span>
+      <div className="suave datos">
         <div>
+          <Hand aria-hidden="true" />
+          Manos: {NOMBRE_MANOS[tarea.manos]}
+        </div>
+        <div>
+          <Metronome aria-hidden="true" />
           Tempo: ♩ = {tarea.tempo_min_bpm}–{tarea.tempo_max_bpm}
         </div>
-        <div>Plazo: {fechaLegible(tarea.fecha_limite)}</div>
-        <div>Repeticiones por día: {tarea.repeticiones_por_dia}</div>
-      </dl>
-      <span className="etiqueta" data-estado={tarea.estado}>
-        {tarea.estado === "Vencida" && <span aria-hidden="true">⚠ </span>}
-        {tarea.estado}
-      </span>
+        <div>
+          <Calendar aria-hidden="true" />
+          Plazo: {fechaLegible(tarea.fecha_limite)}
+        </div>
+        <div>
+          <Repeat aria-hidden="true" />
+          Repeticiones por día: {tarea.repeticiones_por_dia}
+        </div>
+      </div>
+      <div className="tarjeta-pie">
+        <Chip {...ESTADO_TAREA[tarea.estado]} data-estado={tarea.estado}>
+          {tarea.estado}
+        </Chip>
+      </div>
     </>
   );
   return enlace ? (
@@ -73,14 +103,18 @@ export function MisTareas() {
   const { carga } = useCarga(() => pedir("GET", "/mis-tareas", z.array(Tarea)), []);
   return (
     <section>
-      <h1>Mis tareas</h1>
+      <PaginaCabecera titulo="Mis tareas" />
       <Cargado carga={carga}>
         {(tareas) =>
           tareas.length === 0 ? (
-            <div className="tarjeta" data-vacio="true">
+            <EstadoVista
+              tipo="vacio"
+              titulo="Sin tareas por ahora"
+              data-vacio="true"
+              accion={<Link to="/catalogo">Ver el catálogo de ejercicios</Link>}
+            >
               <p>Tu docente aún no te asignó tareas. Mientras tanto, puedes revisar el catálogo.</p>
-              <Link to="/catalogo">Ver el catálogo de ejercicios</Link>
-            </div>
+            </EstadoVista>
           ) : (
             <>
               <ListaTareas
@@ -121,13 +155,17 @@ export function DetalleTarea() {
         const deLaTarea = intentos.filter((i) => i.tarea_id === tarea.id);
         return (
           <section>
-            <h1>{tarea.ejercicio.nombre}</h1>
+            <PaginaCabecera
+              titulo={tarea.ejercicio.nombre}
+              accion={
+                <EnlaceBoton to={`/practicar/${tarea.id}`} icono={Play}>
+                  Practicar
+                </EnlaceBoton>
+              }
+            />
             <ResumenTarea tarea={tarea} />
-            <p className="fila">
+            <p>
               <Link to={`/catalogo/${tarea.ejercicio.codigo}`}>Ver el ejercicio</Link>
-              <Link className="boton-enlace" to={`/practicar/${tarea.id}`}>
-                Practicar
-              </Link>
             </p>
             <h2>Mis intentos</h2>
             {deLaTarea.length === 0 ? (
@@ -136,10 +174,17 @@ export function DetalleTarea() {
               <ul className="lista" aria-label="Intentos">
                 {deLaTarea.map((i) => (
                   <li key={i.id} className="tarjeta">
-                    <strong>{fechaHora(i.iniciado_en)}</strong> · ♩ = {i.tempo_elegido_bpm ?? "—"} ·{" "}
-                    {i.estado === "evaluado"
-                      ? "Analizado"
-                      : `No evaluable: ${i.motivo_no_evaluable}`}
+                    <span className="tarjeta-titulo">{fechaHora(i.iniciado_en)}</span>
+                    <p className="suave">♩ = {i.tempo_elegido_bpm ?? "—"}</p>
+                    {i.estado === "evaluado" ? (
+                      <Chip tono="correcto" icono={Check}>
+                        Analizado
+                      </Chip>
+                    ) : (
+                      <Chip tono="no-evaluable" icono={EyeOff}>
+                        No evaluable: {i.motivo_no_evaluable}
+                      </Chip>
+                    )}
                     {!i.cuenta_para_tarea && i.motivo_no_cuenta && (
                       <div className="suave">No cuenta para la tarea: {i.motivo_no_cuenta}</div>
                     )}

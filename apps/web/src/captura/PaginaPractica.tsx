@@ -25,12 +25,25 @@ import {
   type NotaEsperada,
   type ToquesCalibracion,
 } from "@skilltrack/core";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Ban,
+  Check,
+  Circle,
+  CircleHelp,
+  Minus,
+  Mic,
+  RefreshCw,
+  RotateCcw,
+  ThumbsUp,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { pedir } from "../api.ts";
 import { programarClic, unir, useMicrofono, type Microfono } from "../audio/microfono.ts";
 import { almacenIndexedDb, encolar, vaciar } from "../bandeja/bandeja.ts";
 import { Cargado, NOMBRE_MANOS, useCarga } from "../componentes.tsx";
+import { Boton, Chip, Esqueleto, EstadoVista, PaginaCabecera } from "../ui/base.tsx";
 import {
   reducirTasa,
   type MuestraMano,
@@ -43,6 +56,7 @@ import { colorDeToken } from "./camara.ts";
 import { duracionEsperada, transicion, type Estado, type Plan } from "./estado.ts";
 import {
   PanelSemaforo,
+  TarjetaSemaforo,
   VistaCamara,
   type Dibujar,
   type Fotograma,
@@ -86,6 +100,23 @@ export function PaginaPractica() {
   return <Cargado carga={carga}>{(c) => <Practica contexto={c} />}</Cargado>;
 }
 
+function trazarTecla(
+  ctx: CanvasRenderingContext2D,
+  aImagen: Homografia,
+  tecla: ModeloTeclado["teclas"][number],
+) {
+  const [y0, y1] = tecla.negra ? [1, 3] : [0, 3];
+  const esquinas = [
+    { x: tecla.x0, y: y0 },
+    { x: tecla.x1, y: y0 },
+    { x: tecla.x1, y: y1 },
+    { x: tecla.x0, y: y1 },
+  ].map((p) => aplicar(aImagen, p));
+  ctx.beginPath();
+  esquinas.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  ctx.closePath();
+}
+
 function dibujarTeclado(
   ctx: CanvasRenderingContext2D,
   aImagen: Homografia,
@@ -95,16 +126,7 @@ function dibujarTeclado(
   const linea = colorDeToken("--color-acento");
   ctx.lineWidth = 1.5;
   for (const tecla of modelo.teclas) {
-    const [y0, y1] = tecla.negra ? [1, 3] : [0, 3];
-    const esquinas = [
-      { x: tecla.x0, y: y0 },
-      { x: tecla.x1, y: y0 },
-      { x: tecla.x1, y: y1 },
-      { x: tecla.x0, y: y1 },
-    ].map((p) => aplicar(aImagen, p));
-    ctx.beginPath();
-    esquinas.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-    ctx.closePath();
+    trazarTecla(ctx, aImagen, tecla);
     ctx.strokeStyle = linea;
     ctx.stroke();
     if (esperadas.has(tecla.midi)) {
@@ -121,7 +143,9 @@ function dibujarTeclaBajoDedos(
   modelo: ModeloTeclado,
 ) {
   ctx.font = "600 13px system-ui";
-  ctx.fillStyle = colorDeToken("--color-texto-sobre-video");
+  const aImagen = invertir(aPlano);
+  const iluminada = colorDeToken("--color-tecla-bajo-dedo");
+  const texto = colorDeToken("--color-texto-sobre-video");
   for (const id of ["MI", "MD"] as const) {
     const mano = f.asignacion[id]?.datos;
     if (!mano) continue;
@@ -129,7 +153,15 @@ function dibujarTeclaBajoDedos(
       const p = mano[PUNTA[dedo]]!;
       const px = { x: p.x * f.ancho, y: p.y * f.alto };
       const tecla = teclaBajo(modelo, aplicar(aPlano, px));
-      if (tecla) ctx.fillText(nombreNota(tecla.midi), px.x - 10, px.y - 10);
+      if (!tecla) continue;
+      const dibujo = modelo.teclas.find((t) => t.midi === tecla.midi);
+      if (dibujo) {
+        trazarTecla(ctx, aImagen, dibujo);
+        ctx.fillStyle = iluminada;
+        ctx.fill();
+      }
+      ctx.fillStyle = texto;
+      ctx.fillText(nombreNota(tecla.midi), px.x - 10, px.y - 10);
     }
   }
 }
@@ -245,7 +277,7 @@ function Practica({ contexto }: { contexto: Contexto }) {
   );
 }
 
-function PasoEncuadre({ vista, continuar }: { vista: Vista; continuar: () => void }) {
+export function PasoEncuadre({ vista, continuar }: { vista: Vista; continuar: () => void }) {
   const restante = useAvanceAutomatico(enVerde(vista), continuar);
   return (
     <>
@@ -271,13 +303,13 @@ function AvisoAvance({ restante, accion }: { restante: number | null; accion: st
       Pon las manos en el teclado: con el semáforo en verde, {accion.toLowerCase()} solo en 3 s.
     </p>
   ) : (
-    <p className="conteo" aria-live="assertive" data-cuenta-atras={restante}>
+    <p className="cuenta-atras" aria-live="assertive" data-cuenta-atras={restante}>
       {accion} en {restante}…
     </p>
   );
 }
 
-function PasoCalibracion(props: {
+export function PasoCalibracion(props: {
   vista: Vista;
   modelo: ModeloTeclado;
   rango: { min: number; max: number };
@@ -319,9 +351,9 @@ function PasoCalibracion(props: {
         </p>
       )}
       {guardada && !aPlano && (
-        <button type="button" className="secundario" onClick={() => props.usarGuardada(guardada)}>
+        <Boton variante="secundario" icono={RotateCcw} onClick={() => props.usarGuardada(guardada)}>
           Usar la calibración guardada
-        </button>
+        </Boton>
       )}
       {cobertura && !cobertura.cubre && (
         <p className="error" role="alert">
@@ -336,8 +368,8 @@ function PasoCalibracion(props: {
         </p>
       )}
       <div className="fila">
-        <button
-          type="button"
+        <Boton
+          icono={Check}
           disabled={!aPlano || !cobertura?.cubre}
           onClick={() => {
             const t = Object.fromEntries(
@@ -354,10 +386,10 @@ function PasoCalibracion(props: {
           }}
         >
           Confirmar
-        </button>
-        <button type="button" className="secundario" onClick={props.repetir}>
+        </Boton>
+        <Boton variante="secundario" icono={RefreshCw} onClick={props.repetir}>
           Repetir
-        </button>
+        </Boton>
       </div>
     </>
   );
@@ -478,40 +510,48 @@ export function PasoMicrofono({
       )}
       <label>
         Nivel del micrófono ({Math.round(microfono.nivelDb)} dBFS)
-        <meter min={0} max={100} value={nivel} data-nivel={Math.round(microfono.nivelDb)} />
+        <meter
+          className="visualmente-oculto"
+          min={0}
+          max={100}
+          value={nivel}
+          data-nivel={Math.round(microfono.nivelDb)}
+        />
+        <span className="medidor" aria-hidden="true">
+          <span className="medidor-barra" style={{ "--nivel": nivel / 100 } as CSSProperties} />
+        </span>
       </label>
       {fase === "silencio" && <p className="aviso">Quédate en silencio unos segundos…</p>}
       {fase === "tocando" && <p className="aviso">Ahora toca unas notas del ejercicio…</p>}
       {semaforo && (
-        <div
-          className={`tarjeta semaforo semaforo-${semaforo.nivel}`}
+        <TarjetaSemaforo
+          nivel={semaforo.nivel}
+          titulo={
+            {
+              verde: "El sonido está bien",
+              ambar: "Se puede mejorar",
+              rojo: "Corrige el sonido",
+            }[semaforo.nivel]
+          }
           role="status"
           data-semaforo-audio={semaforo.nivel}
         >
-          <strong>
-            {
-              {
-                verde: "El sonido está bien",
-                ambar: "Se puede mejorar",
-                rojo: "Corrige el sonido",
-              }[semaforo.nivel]
-            }
-          </strong>
           <ul className="lista">
             {semaforo.mensajes.map((m) => (
               <li key={m}>{m}</li>
             ))}
           </ul>
-        </div>
+        </TarjetaSemaforo>
       )}
       <div className="fila">
-        <button
-          type="button"
-          disabled={estado.tipo !== "activo" || ocupado}
+        <Boton
+          icono={Mic}
+          cargando={ocupado}
+          disabled={estado.tipo !== "activo"}
           onClick={() => void probar()}
         >
           {fase === "hecho" ? "Probar de nuevo" : "Probar el micrófono"}
-        </button>
+        </Boton>
         <button
           type="button"
           className="secundario"
@@ -525,7 +565,7 @@ export function PasoMicrofono({
   );
 }
 
-function PasoEjecucion(props: {
+export function PasoEjecucion(props: {
   vista: Vista;
   contexto: Contexto;
   esperadas: NotaEsperada[];
@@ -816,24 +856,14 @@ function PasoEjecucion(props: {
       <>
         <h2 data-fase={estado.fase}>{estado.fase === "conteo" ? "Prepárate…" : "Tocando"}</h2>
         {estado.fase === "conteo" ? (
-          <p className="conteo" aria-live="assertive" data-pulso={pulso}>
-            {pulso || "…"}
-          </p>
+          <VistaConteo pulso={pulso} tempo={tempo} />
         ) : (
-          <>
-            {metronomo === "con" && !soloVision && (
-              <p className={latido ? "pulso-visual activo" : "pulso-visual"} aria-hidden="true">
-                ●
-              </p>
-            )}
-            <p className="suave">
-              Toca el ejercicio. Al terminar, quédate quieto: el análisis empieza solo.
-            </p>
-          </>
+          <VistaTocando latido={latido} conMetronomo={metronomo === "con" && !soloVision} />
         )}
-        <button
-          type="button"
-          className="secundario boton-grande"
+        <Boton
+          variante="secundario"
+          icono={Ban}
+          className="boton-grande"
           onClick={() => {
             temporizadores.current.forEach(clearTimeout);
             microfono.detener();
@@ -841,19 +871,23 @@ function PasoEjecucion(props: {
           }}
         >
           Cancelar
-        </button>
+        </Boton>
       </>
     );
   }
   if (estado.fase === "no-evaluable") {
     return (
-      <>
-        <h2>No evaluable</h2>
+      <EstadoVista
+        tipo="no-evaluable"
+        titulo="No evaluable"
+        accion={
+          <Boton icono={RefreshCw} onClick={() => setEstado(null)}>
+            Intentar de nuevo
+          </Boton>
+        }
+      >
         <p>{estado.motivo}</p>
-        <button type="button" onClick={() => setEstado(null)}>
-          Intentar de nuevo
-        </button>
-      </>
+      </EstadoVista>
     );
   }
   return (
@@ -868,11 +902,47 @@ function PasoEjecucion(props: {
   );
 }
 
-const SIMBOLO = {
-  correcta: "✓",
-  incorrecta: "✗",
-  dudosa: "dudosa",
-  faltante: "faltante",
+const NOTAS_CONTEO = [1, 2, 3, 4];
+
+/** Conteo previo: grande y al tempo, con una tecla que se enciende en cada pulso. */
+export function VistaConteo({ pulso, tempo }: { pulso: number; tempo: number }) {
+  const estilo = { "--pulso": `${60 / tempo}s` } as CSSProperties;
+  return (
+    <div className="conteo-escena" style={estilo}>
+      <p className="conteo" aria-live="assertive" data-pulso={pulso}>
+        <span key={pulso} className="conteo-numero">
+          {pulso || "…"}
+        </span>
+      </p>
+      <div className="conteo-teclas" aria-hidden="true">
+        {NOTAS_CONTEO.map((n) => (
+          <span key={n} className={n <= pulso ? "encendida" : undefined} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function VistaTocando({ latido, conMetronomo }: { latido: boolean; conMetronomo: boolean }) {
+  return (
+    <>
+      {conMetronomo && (
+        <p className={latido ? "pulso-visual activo" : "pulso-visual"} aria-hidden="true">
+          <Circle />
+        </p>
+      )}
+      <p className="suave">
+        Toca el ejercicio. Al terminar, quédate quieto: el análisis empieza solo.
+      </p>
+    </>
+  );
+}
+
+const ESTADO_NOTA = {
+  correcta: { tono: "correcto", icono: Check, texto: "Correcta" },
+  incorrecta: { tono: "nota", icono: X, texto: "Incorrecta" },
+  dudosa: { tono: "no-evaluable", icono: CircleHelp, texto: "Dudosa" },
+  faltante: { tono: "no-evaluable", icono: Minus, texto: "Faltante" },
 } as const;
 const ESTADO_TEMPO = {
   estable: "Tempo estable",
@@ -880,7 +950,7 @@ const ESTADO_TEMPO = {
   frenaste: "Cambio de tempo: frenaste",
 } as const;
 
-function Resultado(props: {
+export function Resultado(props: {
   estado: Estado;
   respuesta: RespuestaAnalisis | null;
   guardado: string | null;
@@ -889,7 +959,14 @@ function Resultado(props: {
   otro: () => void;
 }) {
   const { estado, respuesta, guardado, contexto, esperadas } = props;
-  if (!respuesta) return <h2 data-fase="analizando">Analizando…</h2>;
+  if (!respuesta) {
+    return (
+      <>
+        <h2 data-fase="analizando">Analizando…</h2>
+        <Esqueleto tarjetas={1} />
+      </>
+    );
+  }
   const acustico = respuesta.acustico;
   const mano = esperadas.some((n) => n.mano === "MD") ? "MD" : "MI";
   const porInstante = esperadas.filter((n) => n.mano === mano);
@@ -940,43 +1017,47 @@ function Resultado(props: {
               <p>Muy pocas notas oídas para estimar el tempo.</p>
             )}
           </div>
-          <table className="tabla" aria-label="Notas">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Nota esperada</th>
-                <th>Oída</th>
-                <th>Mano y dedo (visión)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {acustico.notas.esperadas.map((n, i) => {
-                const indiceAtaque =
-                  "t" in n ? acustico.ataques.findIndex((t) => Math.abs(t - n.t) < 1e-6) : -1;
-                const fusion = indiceAtaque >= 0 ? acustico.fusion[indiceAtaque] : undefined;
-                const irregular = tempo?.tropiezos.includes(indiceAtaque) ?? false;
-                return (
-                  <tr key={i} data-nota-audio={n.estado}>
-                    <td>{i + 1}</td>
-                    <td>{nombreNota(porInstante[i]!.midi)}</td>
-                    <td>
-                      {SIMBOLO[n.estado]}
-                      {n.estado === "incorrecta" &&
-                        ` (oída: ${nombreNota(60 + n.claseOida).slice(0, -1)})`}
-                      {irregular && " · tropiezo o pausa"}
-                    </td>
-                    <td>
-                      {fusion?.modalidad === "VA"
-                        ? `${fusion.mano === "MI" ? "Izquierda" : "Derecha"} · ${fusion.dedo}`
-                        : n.estado === "faltante"
-                          ? "—"
-                          : "sin evento visual"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="tabla-contenedor">
+            <table className="tabla" aria-label="Notas">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nota esperada</th>
+                  <th>Oída</th>
+                  <th>Mano y dedo (visión)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {acustico.notas.esperadas.map((n, i) => {
+                  const indiceAtaque =
+                    "t" in n ? acustico.ataques.findIndex((t) => Math.abs(t - n.t) < 1e-6) : -1;
+                  const fusion = indiceAtaque >= 0 ? acustico.fusion[indiceAtaque] : undefined;
+                  const irregular = tempo?.tropiezos.includes(indiceAtaque) ?? false;
+                  return (
+                    <tr key={i} data-nota-audio={n.estado}>
+                      <td>{i + 1}</td>
+                      <td>{nombreNota(porInstante[i]!.midi)}</td>
+                      <td>
+                        <Chip tono={ESTADO_NOTA[n.estado].tono} icono={ESTADO_NOTA[n.estado].icono}>
+                          {ESTADO_NOTA[n.estado].texto}
+                        </Chip>
+                        {n.estado === "incorrecta" &&
+                          ` (oída: ${nombreNota(60 + n.claseOida).slice(0, -1)})`}
+                        {irregular && " · tropiezo o pausa"}
+                      </td>
+                      <td>
+                        {fusion?.modalidad === "VA"
+                          ? `${fusion.mano === "MI" ? "Izquierda" : "Derecha"} · ${fusion.dedo}`
+                          : n.estado === "faltante"
+                            ? "—"
+                            : "sin evento visual"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           <p className="suave" data-extras={acustico.notas.extras.length}>
             Notas extra: {acustico.notas.extras.length} · Digitación: no evaluable (pendiente de
             transcripción).
@@ -987,34 +1068,36 @@ function Resultado(props: {
       )}
       <details>
         <summary>Detalle visual por mano (tecla y dedo detectados)</summary>
-        <table className="tabla" aria-label="Notas por mano">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Mano</th>
-              <th>Nota esperada</th>
-              <th>Tecla y dedo detectados</th>
-            </tr>
-          </thead>
-          <tbody>
-            {respuesta.notas.map((n) => (
-              <tr key={n.idx} data-nota={n.resultado.estado}>
-                <td>{n.idx + 1}</td>
-                <td>{n.mano === "MI" ? "Izquierda" : "Derecha"}</td>
-                <td>{nombreNota(n.midiEsperado)}</td>
-                <td>
-                  {n.resultado.estado === "detectada"
-                    ? `${nombreNota(n.midiEsperado)} · ${n.resultado.dedo}`
-                    : `No evaluable: ${n.resultado.motivo}`}
-                </td>
+        <div className="tabla-contenedor">
+          <table className="tabla" aria-label="Notas por mano">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Mano</th>
+                <th>Nota esperada</th>
+                <th>Tecla y dedo detectados</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {respuesta.notas.map((n) => (
+                <tr key={n.idx} data-nota={n.resultado.estado}>
+                  <td>{n.idx + 1}</td>
+                  <td>{n.mano === "MI" ? "Izquierda" : "Derecha"}</td>
+                  <td>{nombreNota(n.midiEsperado)}</td>
+                  <td>
+                    {n.resultado.estado === "detectada"
+                      ? `${nombreNota(n.midiEsperado)} · ${n.resultado.dedo}`
+                      : `No evaluable: ${n.resultado.motivo}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </details>
-      <button type="button" onClick={props.otro}>
+      <Boton icono={ThumbsUp} onClick={props.otro}>
         Otro intento
-      </button>
+      </Boton>
     </section>
   );
 }
@@ -1025,16 +1108,21 @@ export function PaginaMicrofono() {
   const [listo, setListo] = useState<"audio" | "vision" | null>(null);
   return (
     <section>
-      <h1>Prueba de micrófono</h1>
-      {listo ? (
-        <p className="aviso" data-continuar={listo}>
-          {listo === "audio"
-            ? "Micrófono listo. Abre una tarea y toca Practicar."
-            : "Seguirás en modo solo visión: las notas y el ritmo no se evaluarán."}
-        </p>
-      ) : (
-        <PasoMicrofono microfono={microfono} continuar={(v) => setListo(v ? "vision" : "audio")} />
-      )}
+      <PaginaCabecera titulo="Prueba de micrófono" />
+      <div className="tarjeta">
+        {listo ? (
+          <p className="aviso" data-continuar={listo}>
+            {listo === "audio"
+              ? "Micrófono listo. Abre una tarea y toca Practicar."
+              : "Seguirás en modo solo visión: las notas y el ritmo no se evaluarán."}
+          </p>
+        ) : (
+          <PasoMicrofono
+            microfono={microfono}
+            continuar={(v) => setListo(v ? "vision" : "audio")}
+          />
+        )}
+      </div>
     </section>
   );
 }

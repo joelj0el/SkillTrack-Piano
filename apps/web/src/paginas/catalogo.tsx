@@ -3,21 +3,22 @@ import { Link, useParams } from "react-router";
 import { z } from "zod";
 import { pedir } from "../api.ts";
 import { Cargado, NOMBRE_MANOS, useCarga } from "../componentes.tsx";
+import { PaginaCabecera } from "../ui/base.tsx";
 
 export function Catalogo() {
   const { carga } = useCarga(() => pedir("GET", "/catalogo/ejercicios", z.array(Ejercicio)), []);
   return (
     <section>
-      <h1>Catálogo de ejercicios</h1>
+      <PaginaCabecera titulo="Catálogo de ejercicios" />
       <Cargado carga={carga}>
         {(ejercicios) => (
           <ul className="lista">
             {ejercicios.map((e) => (
               <li key={e.id}>
                 <Link className="tarjeta" to={`/catalogo/${e.codigo}`}>
-                  <strong>
+                  <span className="tarjeta-titulo">
                     {e.codigo} · {e.nombre}
-                  </strong>
+                  </span>
                   <div className="suave">
                     {e.tonalidad} · {e.compas} · {e.figura} · {e.fuente}
                   </div>
@@ -46,11 +47,15 @@ export function DetalleEjercicio() {
         const v = e.version_vigente;
         return (
           <section>
-            <h1>{e.nombre}</h1>
-            <p className="suave">
-              {e.codigo} · {e.fuente} · {e.tonalidad} · {e.compas} en {e.figura}s · versión{" "}
-              {v.version}
-            </p>
+            <PaginaCabecera
+              titulo={e.nombre}
+              detalle={
+                <>
+                  {e.codigo} · {e.fuente} · {e.tonalidad} · {e.compas} en {e.figura}s · versión{" "}
+                  {v.version}
+                </>
+              }
+            />
             <h2>Partitura y digitación</h2>
             {v.partitura_svg ? (
               <div aria-label="Partitura" dangerouslySetInnerHTML={{ __html: v.partitura_svg }} />
@@ -61,20 +66,22 @@ export function DetalleEjercicio() {
               </div>
             )}
             <h2>Tempo</h2>
-            <p>
+            <p className="tarjeta">
               Tu docente asigna un tempo entre ♩ = {v.tempo_min_permitido_bpm} y ♩ ={" "}
               {v.tempo_max_permitido_bpm}. Para practicar lento puedes bajar hasta ♩ ={" "}
               {TEMPO_PRACTICA_LENTA_MIN}.
             </p>
             <h2>Variantes de manos</h2>
-            <p>{e.variantes_manos.map((m) => NOMBRE_MANOS[m]).join(" · ")}</p>
+            <p className="tarjeta">{e.variantes_manos.map((m) => NOMBRE_MANOS[m]).join(" · ")}</p>
             <h2>Guía de posición</h2>
-            <h3>Muñeca</h3>
-            <p className="suave">{PENDIENTE_PANEL}</p>
-            <h3>Separación entre dedos</h3>
-            <p className="suave">{PENDIENTE_PANEL}</p>
-            <h3>Curvatura</h3>
-            <p className="suave">{PENDIENTE_PANEL}</p>
+            <div className="tarjeta">
+              <h3>Muñeca</h3>
+              <p className="suave">{PENDIENTE_PANEL}</p>
+              <h3>Separación entre dedos</h3>
+              <p className="suave">{PENDIENTE_PANEL}</p>
+              <h3>Curvatura</h3>
+              <p className="suave">{PENDIENTE_PANEL}</p>
+            </div>
           </section>
         );
       }}
