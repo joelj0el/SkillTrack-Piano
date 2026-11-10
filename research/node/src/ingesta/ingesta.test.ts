@@ -5,23 +5,40 @@ import { join, resolve } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { VERSION_NUCLEO } from "@skilltrack/core";
 import ExcelJS from "exceljs";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { asociar, type FilaParaAsociar, type VideoParaAsociar } from "./asociar.ts";
 import { ingerir, type Reporte } from "./ingesta.ts";
 import { leerPlanilla } from "./planilla.ts";
-import type { Base } from "./registro.ts";
+import { prepararEsquema, type Base } from "./registro.ts";
 import { sinConsentimiento } from "./validar.ts";
 
 const FIXTURES = resolve(import.meta.dirname, "../../fixtures/ingesta");
 
-function baseEnMemoria(): { base: Base; pg: PGlite } {
+// Una sola base en memoria para todo el archivo: crear una por prueba hacía lentas las pruebas
+// y, con la máquina cargada, el arranque llegó a agotar el tiempo de los hooks.
+let compartida: { base: Base; pg: PGlite };
+
+beforeAll(async () => {
   const pg = new PGlite();
-  return {
-    pg,
-    base: {
-      consulta: (sql, parametros) => pg.query(sql, parametros) as ReturnType<Base["consulta"]>,
-    },
+  const base: Base = {
+    consulta: (sql, parametros) => pg.query(sql, parametros) as ReturnType<Base["consulta"]>,
   };
+  await prepararEsquema(base);
+  compartida = { base, pg };
+}, 60_000);
+
+afterAll(async () => {
+  await compartida.pg.close();
+});
+
+beforeEach(async () => {
+  await compartida.pg.exec(
+    "TRUNCATE etiqueta, ejecucion, sesion_grabacion, participante, clip_calibracion RESTART IDENTITY CASCADE",
+  );
+});
+
+function baseEnMemoria(): { base: Base; pg: PGlite } {
+  return compartida;
 }
 
 async function filas(pg: PGlite, sql: string): Promise<Record<string, unknown>[]> {
