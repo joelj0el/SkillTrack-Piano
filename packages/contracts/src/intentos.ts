@@ -8,6 +8,9 @@ import { Manos } from "./catalogo.ts";
  */
 export const LIMITE_CUERPO_BYTES = 256 * 1024;
 
+export const SecuenciaEsperada = z.enum(["partitura", "provisional"]);
+export type SecuenciaEsperada = z.infer<typeof SecuenciaEsperada>;
+
 export const EventoResultado = z
   .strictObject({
     idx: z.int().nonnegative(),
@@ -41,6 +44,9 @@ export const ResultadoIntento = z
     duracion_ms: z.int().nonnegative(),
     pct_eventos_evaluables: z.number().min(0).max(100).nullable(),
     pct_digitacion_correcta: z.number().min(0).max(100).nullable(),
+    // De dónde salieron las notas esperadas: la partitura importada o la escala provisional.
+    // Opcional para los intentos que ya estaban en cola: sin el campo, la API registra "provisional".
+    secuencia_esperada: SecuenciaEsperada.optional(),
     eventos: z.array(EventoResultado).max(400),
   })
   .meta({ title: "ResultadoIntento" });
@@ -62,6 +68,7 @@ export const IntentoGuardado = z
     manos: Manos,
     modo_metronomo: z.enum(["con", "sin"]).nullable(),
     tempo_elegido_bpm: z.int().nullable(),
+    secuencia_esperada: SecuenciaEsperada,
     iniciado_en: z.iso.datetime({ offset: true }),
   })
   .meta({ title: "IntentoGuardado" });

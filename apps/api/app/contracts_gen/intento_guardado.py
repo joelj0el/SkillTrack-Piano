@@ -25,6 +25,11 @@ class ModoMetronomo(StrEnum):
     sin = "sin"
 
 
+class SecuenciaEsperada(StrEnum):
+    partitura = "partitura"
+    provisional = "provisional"
+
+
 class IntentoGuardado(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -43,4 +48,5 @@ class IntentoGuardado(BaseModel):
     manos: Manos
     modo_metronomo: ModoMetronomo | None
     tempo_elegido_bpm: conint(ge=-9007199254740991, le=9007199254740991) | None
+    secuencia_esperada: SecuenciaEsperada
     iniciado_en: AwareDatetime

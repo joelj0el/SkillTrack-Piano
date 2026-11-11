@@ -48,3 +48,16 @@ describe("contrato ResultadoIntento", () => {
     expect(ResultadoIntento.safeParse({ ...RESULTADO, version_nucleo: "" }).success).toBe(false);
   });
 });
+
+describe("secuencia esperada", () => {
+  it("PU-contracts-19: la secuencia esperada es opcional y solo admite partitura o provisional", async () => {
+    const { ResultadoIntento } = await import("./intentos.ts");
+    const base = ResultadoIntento.parse({ ...RESULTADO, secuencia_esperada: undefined });
+    expect(base.secuencia_esperada).toBeUndefined();
+    const conPartitura = ResultadoIntento.parse({ ...RESULTADO, secuencia_esperada: "partitura" });
+    expect(conPartitura.secuencia_esperada).toBe("partitura");
+    expect(ResultadoIntento.safeParse({ ...RESULTADO, secuencia_esperada: "otra" }).success).toBe(
+      false,
+    );
+  });
+});

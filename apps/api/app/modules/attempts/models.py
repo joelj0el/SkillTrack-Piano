@@ -49,6 +49,7 @@ class Intento(Base):
     duracion_ms: Mapped[int] = mapped_column(Integer)
     pct_eventos_evaluables: Mapped[float | None] = mapped_column(Float)
     pct_digitacion_correcta: Mapped[float | None] = mapped_column(Float)
+    secuencia_esperada: Mapped[str] = mapped_column(String(12), server_default="provisional")
     eventos: Mapped[list[dict]] = mapped_column(JSONB)
 
 

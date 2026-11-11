@@ -306,6 +306,7 @@ function panelDe(nombre: string) {
           vista={ejemploVista("ambar")}
           contexto={CONTEXTO}
           esperadas={ESPERADAS}
+          secuencia="provisional"
           rango={{ min: 60, max: 84 }}
           aPlano={[1, 0, 0, 0, 1, 0, 0, 0, 1]}
           microfono={MICROFONO}

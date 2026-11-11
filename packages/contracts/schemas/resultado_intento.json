@@ -141,6 +141,13 @@
         }
       ]
     },
+    "secuencia_esperada": {
+      "type": "string",
+      "enum": [
+        "partitura",
+        "provisional"
+      ]
+    },
     "eventos": {
       "maxItems": 400,
       "type": "array",

@@ -15,6 +15,7 @@ import {
   ErrorReproceso,
   reprocesar,
   type Comprobacion,
+  type PedidoProceso,
   type Procesador,
   type SalidaProceso,
 } from "./reprocesar.ts";
@@ -64,6 +65,7 @@ function falso(opciones: {
   version?: string;
 }) {
   const procesadas: string[] = [];
+  const pedidos: PedidoProceso[] = [];
   const procesador: Procesador = {
     version_modelo: opciones.version ?? "modelo@1",
     comprobar: async (ruta) =>
@@ -73,13 +75,14 @@ function falso(opciones: {
         alto: 400,
         duracion_s: 1,
       },
-    procesar: async (ruta) => {
+    procesar: async (ruta, pedido) => {
       procesadas.push(ruta);
+      pedidos.push(pedido);
       return (opciones.salida ?? (() => salida()))(ruta);
     },
     cerrar: async () => {},
   };
-  return { procesador, procesadas };
+  return { procesador, procesadas, pedidos };
 }
 
 async function crearToma(codigo: string, evaluable = "si"): Promise<void> {
@@ -414,5 +417,63 @@ describe("servidor local del reprocesamiento", () => {
       expect(r.status).toBe(206);
       expect((await r.arrayBuffer()).byteLength).toBe(10);
     });
+  });
+});
+
+describe("notas esperadas del reprocesamiento", () => {
+  const catalogo = (eventos: unknown[]) =>
+    [
+      {
+        id: 1,
+        codigo: "EJ-01",
+        nombre: "Escala de Do mayor",
+        fuente: "Panel",
+        tonalidad: "Do mayor",
+        compas: "2/4",
+        figura: "semicorchea",
+        orden: 1,
+        variantes_manos: ["MI", "MD", "juntas"],
+        version_vigente: {
+          id: 5,
+          version: 2,
+          tempo_min_permitido_bpm: 60,
+          tempo_max_permitido_bpm: 75,
+          rango_octavas: 2,
+          nota_min_midi: 48,
+          nota_max_midi: 60,
+          eventos_esperados: eventos,
+          partitura_svg: null,
+          transcripcion: eventos.length ? "importada" : "pendiente",
+        },
+      },
+    ] as never;
+
+  it("PU-research-63: con la partitura importada usa sus notas, con dedo, y su versión", async () => {
+    await crearToma(A);
+    await calibrar([A]);
+    const f = falso({});
+    const eventos = [
+      { idx: 0, tiempo_beats: 0, mano: "MI", dedo: 5, clase_altura: 0, midi: 48 },
+      { idx: 1, tiempo_beats: 0, mano: "MD", dedo: 1, clase_altura: 0, midi: 60 },
+    ];
+    await reprocesar({ carpeta, procesador: f.procesador, catalogo: catalogo(eventos) });
+    expect(f.pedidos[0]!.esperadas.map((n) => [n.mano, n.midi, n.dedo])).toEqual([
+      ["MI", 48, 5],
+      ["MD", 60, 1],
+    ]);
+    const resultado = leerResultado(A);
+    expect(resultado.secuencia_esperada).toBe("partitura");
+    expect(resultado.versiones.ejercicio).toBe("EJ-01@2");
+  });
+
+  it("PU-research-64: sin partitura importada usa la escala provisional y lo registra", async () => {
+    await crearToma(A);
+    await calibrar([A]);
+    const f = falso({});
+    await reprocesar({ carpeta, procesador: f.procesador, catalogo: catalogo([]) });
+    expect(f.pedidos[0]!.esperadas.every((n) => n.dedo === undefined)).toBe(true);
+    const resultado = leerResultado(A);
+    expect(resultado.secuencia_esperada).toBe("provisional");
+    expect(resultado.versiones.ejercicio).toBe("EJ-01@1");
   });
 });

@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
+  type Ejercicio,
   EventosAudio,
   FotogramaReproceso,
   ResultadoReproceso,
@@ -16,13 +17,19 @@ import {
   type RespuestaAnalisis,
 } from "@skilltrack/core";
 import { leerCalibracion } from "../calibrar/calibracion.ts";
-import { asociarTomas, esperadasDe, leerSesion, type TomaSesion } from "../calibrar/sesion.ts";
+import {
+  asociarTomas,
+  esperadasDe,
+  leerSesion,
+  type EsperadasDeToma,
+  type TomaSesion,
+} from "../calibrar/sesion.ts";
 import { PaqueteRechazado, verificarPaquete } from "../ingesta/paquetes.ts";
 import type { Base } from "../ingesta/registro.ts";
 import { booleano } from "../ingesta/validar.ts";
 import { leerCodecs, type Codecs } from "./codecs.ts";
 
-export const VERSION_REPROCESO = "1.0.0";
+export const VERSION_REPROCESO = "1.1.0";
 const RESULTADO = "resultado.json";
 const LANDMARKS = "landmarks.jsonl";
 const AUDIO = "audio_events.json";
@@ -105,6 +112,8 @@ export interface OpcionesReproceso {
   base?: Base;
   /** Procesa solo esta toma, aunque ya esté hecha. */
   solo?: string;
+  /** Catálogo vigente de la app: de él salen las notas esperadas de la partitura importada. */
+  catalogo?: Ejercicio[];
   reloj?: () => number;
   avisar?: (mensaje: string) => void;
 }
@@ -165,6 +174,7 @@ function tempoDe(p: Paquete): number | null {
 
 function documentos(
   p: Paquete,
+  esperadas: EsperadasDeToma,
   calibracion: CalibracionSesion,
   codecs: Codecs,
   versionModelo: string,
@@ -196,12 +206,16 @@ function documentos(
     versiones: {
       nucleo: VERSION_NUCLEO,
       modelo_mano: versionModelo,
-      ejercicio: p.meta.versiones.ejercicio,
+      ejercicio:
+        esperadas.version === null
+          ? p.meta.versiones.ejercicio
+          : `${p.toma.ejercicio}@${esperadas.version}`,
       referencia: null,
       reglas: null,
       clasificador: null,
       reprocesamiento: VERSION_REPROCESO,
     },
+    secuencia_esperada: esperadas.secuencia,
     calibracion: { sesion: calibracion.sesion, clip: calibracion.clip },
     video: {
       archivo: p.meta.video.archivo,
@@ -355,17 +369,17 @@ export async function reprocesar(op: OpcionesReproceso): Promise<ReporteReproces
     const codigo = p.meta.codigo_toma;
     const inicio = reloj();
     try {
-      const esperadas = esperadasDe(p.toma);
+      const esperadas = esperadasDe(p.toma, op.catalogo);
       if (!esperadas) throw new ErrorReproceso(`Ejercicio desconocido: ${p.toma.ejercicio}`);
       const salida = await procesador.procesar(join(p.ruta, p.meta.video.archivo), {
         homografia: calibracion.homografia,
         rango: calibracion.rango,
-        esperadas,
+        esperadas: esperadas.esperadas,
         metronomo: p.meta.campos.modo_metronomo === "con" ? "con" : "sin",
         tempo: tempoDe(p),
         tiempos: codecs.tiempos,
       });
-      const docs = documentos(p, calibracion, codecs, procesador.version_modelo, salida);
+      const docs = documentos(p, esperadas, calibracion, codecs, procesador.version_modelo, salida);
       await escribir(p, docs, async () => {
         if (base && !(await actualizarEvaluable(base, codigo, docs.resultado.evaluable.final))) {
           reporte.sin_registro.push(codigo);

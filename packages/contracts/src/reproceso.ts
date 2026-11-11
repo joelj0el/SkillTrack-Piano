@@ -53,6 +53,8 @@ export const ResultadoReproceso = z.strictObject({
     clasificador: z.string().min(1).nullable(),
     reprocesamiento: z.string().min(1),
   }),
+  /** De dónde salieron las notas esperadas: la partitura importada o la escala provisional. */
+  secuencia_esperada: z.enum(["partitura", "provisional"]),
   calibracion: z.strictObject({
     sesion: z.string().min(1),
     clip: z.string().min(1),

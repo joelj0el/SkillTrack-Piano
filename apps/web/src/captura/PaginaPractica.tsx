@@ -24,11 +24,12 @@ import {
   nombreNota,
   rangoDe,
   rangoEnCuadro,
-  secuenciaEscala,
+  notasEsperadas,
   teclaBajo,
   type Homografia,
   type ModeloTeclado,
   type NotaEsperada,
+  type SecuenciaEsperada,
   type ToquesCalibracion,
 } from "@skilltrack/core";
 import {
@@ -168,7 +169,10 @@ function dibujarTeclaBajoDedos(
 
 function Practica({ contexto }: { contexto: Contexto }) {
   const { ejercicio, manos } = contexto;
-  const esperadas = useMemo(() => secuenciaEscala(ejercicio.tonalidad, manos), [ejercicio, manos]);
+  const { esperadas, secuencia } = useMemo(
+    () => notasEsperadas(ejercicio.version_vigente.eventos_esperados, ejercicio.tonalidad, manos),
+    [ejercicio, manos],
+  );
   const rango = useMemo(() => rangoDe(esperadas), [esperadas]);
   const modelo = useMemo(() => modeloTeclado(rango.min, rango.max), [rango]);
   const [paso, setPaso] = useState<"encuadre" | "microfono" | "calibracion" | "ejecucion">(
@@ -216,12 +220,20 @@ function Practica({ contexto }: { contexto: Contexto }) {
         titulo={`${ejercicio.nombre} · ${NOMBRE_MANOS[manos]}`}
         volverA={contexto.tarea ? `/tareas/${contexto.tarea.id}` : "/tareas"}
         aviso={
-          <p data-secuencia="provisional">
-            Secuencia provisional, sin digitación: la escala de {ejercicio.tonalidad} en 2 octavas
-            (subida y bajada{manos === "juntas" ? ", manos en octava paralela" : ""}), de{" "}
-            {nombreNota(rango.min)} a {nombreNota(rango.max)}. La digitación se evalúa cuando la
-            partitura esté transcrita.
-          </p>
+          secuencia === "partitura" ? (
+            <p data-secuencia="partitura">
+              Secuencia de la partitura importada (versión {ejercicio.version_vigente.version}), con
+              su digitación: {esperadas.length} notas, de {nombreNota(rango.min)} a{" "}
+              {nombreNota(rango.max)}.
+            </p>
+          ) : (
+            <p data-secuencia="provisional">
+              Secuencia provisional, sin digitación: la escala de {ejercicio.tonalidad} en 2 octavas
+              (subida y bajada{manos === "juntas" ? ", manos en octava paralela" : ""}), de{" "}
+              {nombreNota(rango.min)} a {nombreNota(rango.max)}. La digitación se evalúa cuando la
+              partitura esté transcrita.
+            </p>
+          )
         }
         manosEsperadas={manosEsperadas}
         dibujar={dibujar}
@@ -265,6 +277,7 @@ function Practica({ contexto }: { contexto: Contexto }) {
               vista={vista}
               contexto={contexto}
               esperadas={esperadas}
+              secuencia={secuencia}
               rango={rango}
               aPlano={aPlano!}
               microfono={microfono}
@@ -548,12 +561,13 @@ export function PasoEjecucion(props: {
   vista: Vista;
   contexto: Contexto;
   esperadas: NotaEsperada[];
+  secuencia: SecuenciaEsperada;
   rango: { min: number; max: number };
   aPlano: Homografia;
   microfono: Microfono;
   soloVision: boolean;
 }) {
-  const { vista, contexto, esperadas, rango, aPlano, microfono, soloVision } = props;
+  const { vista, contexto, esperadas, secuencia, rango, aPlano, microfono, soloVision } = props;
   const opciones = opcionesTempo(
     contexto.tarea
       ? {
@@ -761,6 +775,7 @@ export function PasoEjecucion(props: {
       duracion_ms: Math.round(performance.now() - inicio.current),
       pct_eventos_evaluables: pct,
       pct_digitacion_correcta: null,
+      secuencia_esperada: secuencia,
       eventos,
     });
     const almacen = almacenIndexedDb();

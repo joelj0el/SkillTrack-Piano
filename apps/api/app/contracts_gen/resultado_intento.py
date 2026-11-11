@@ -38,6 +38,11 @@ class Estado(StrEnum):
     no_evaluable = "no_evaluable"
 
 
+class SecuenciaEsperada(StrEnum):
+    partitura = "partitura"
+    provisional = "provisional"
+
+
 class Estado2(StrEnum):
     digitacion_correcta = "digitacion-correcta"
     dedo_incorrecto = "dedo-incorrecto"
@@ -83,4 +88,5 @@ class ResultadoIntento(BaseModel):
     duracion_ms: conint(ge=0, le=9007199254740991)
     pct_eventos_evaluables: confloat(ge=0.0, le=100.0) | None
     pct_digitacion_correcta: confloat(ge=0.0, le=100.0) | None
+    secuencia_esperada: SecuenciaEsperada | None = None
     eventos: list[EventoResultado] = Field(..., max_length=400)

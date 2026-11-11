@@ -157,3 +157,18 @@ def test_pu_attempts_02_un_intento_con_campos_extra_se_rechaza(cliente: TestClie
 
     assert respuesta.status_code == 422
     assert contar(db) == 0
+
+
+def test_pu_attempts_03_el_intento_guarda_de_donde_salieron_las_notas_esperadas(
+    cliente: TestClient, db: Session
+):
+    e = escenario.crear(db)
+    como(cliente, e.estudiante_a)
+    sin_campo = resultado()
+    sin_campo.pop("secuencia_esperada", None)
+    r = cliente.post("/api/intentos", json=sin_campo)
+    assert r.status_code == 201, r.text
+    assert r.json()["secuencia_esperada"] == "provisional"
+    r = cliente.post("/api/intentos", json={**resultado(), "secuencia_esperada": "partitura"})
+    assert r.status_code == 201, r.text
+    assert r.json()["secuencia_esperada"] == "partitura"

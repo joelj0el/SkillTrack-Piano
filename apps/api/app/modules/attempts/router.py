@@ -46,6 +46,7 @@ def _dto(i: Intento) -> IntentoGuardado:
         manos=i.manos,
         modo_metronomo=i.modo_metronomo,
         tempo_elegido_bpm=i.tempo_elegido_bpm,
+        secuencia_esperada=i.secuencia_esperada,
         iniciado_en=i.iniciado_en,
     )
 
@@ -88,6 +89,9 @@ def guardar_intento(
         duracion_ms=datos.duracion_ms,
         pct_eventos_evaluables=datos.pct_eventos_evaluables,
         pct_digitacion_correcta=datos.pct_digitacion_correcta,
+        secuencia_esperada=(
+            datos.secuencia_esperada.value if datos.secuencia_esperada else "provisional"
+        ),
         eventos=[e.model_dump() for e in datos.eventos],
     )
     db.add(intento)
