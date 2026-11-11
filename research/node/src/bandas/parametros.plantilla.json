@@ -1,0 +1,18 @@
+{
+  "percentiles": { "inferior": 10, "superior": 90, "estado": "[PROVISIONAL]" },
+  "factor_retencion": { "valor": 1.0, "estado": "[PROVISIONAL]" },
+  "rasgos": {
+    "cambio_tempo.pct": { "diferencia_buscada": 5, "fuente": "PRM-09", "estado": "[PROVISIONAL]" },
+    "ataque.desvio_pct": {
+      "diferencia_buscada": 25,
+      "fuente": "PRM-10",
+      "estado": "[PROVISIONAL]"
+    },
+    "desfase_manos.ms": { "diferencia_buscada": 50, "fuente": "PRM-11", "estado": "[PROVISIONAL]" },
+    "altura.pulgar": { "diferencia_buscada": null, "fuente": null, "estado": "PENDIENTE" },
+    "altura.indice": { "diferencia_buscada": null, "fuente": null, "estado": "PENDIENTE" },
+    "altura.medio": { "diferencia_buscada": null, "fuente": null, "estado": "PENDIENTE" },
+    "altura.anular": { "diferencia_buscada": null, "fuente": null, "estado": "PENDIENTE" },
+    "altura.menique": { "diferencia_buscada": null, "fuente": null, "estado": "PENDIENTE" }
+  }
+}

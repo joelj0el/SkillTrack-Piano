@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analizarTempo, tempoEnRango } from "./tempo.ts";
+import { analizarTempo, desviosDelPulso, tempoEnRango } from "./tempo.ts";
 
 /** Ataques de semicorcheas a un tempo que puede variar linealmente de `desde` a `hasta`. */
 function ataques(cantidad: number, desde: number, hasta = desde): number[] {
@@ -88,5 +88,18 @@ describe("tempo medido", () => {
     const ataques = Array.from({ length: 32 }, (_, i) => i * 0.25 + (i === 10 ? 0.1 : 0));
     const r = analizarTempo(ataques, { metronomo: "sin", tempoElegido: null });
     expect(r.tempoMedido).toBeCloseTo(60, 6);
+  });
+});
+
+describe("desvío de cada ataque", () => {
+  it("PU-audio-24: el desvío es la distancia al punto medio de sus vecinos, en % del intervalo local", () => {
+    // Semicorcheas a 0,25 s; la nota 2 llega 0,05 s tarde (20 % del intervalo); los extremos no tienen.
+    const ataques = [0, 0.25, 0.55, 0.75, 1];
+    const d = desviosDelPulso(ataques);
+    expect(d[0]).toBeNull();
+    expect(d[4]).toBeNull();
+    expect(d[2]).toBeCloseTo(20);
+    // La nota 1 queda antes del punto medio entre 0 y 0,55: (0,25 − 0,275) / 0,275.
+    expect(d[1]).toBeCloseTo(-100 / 11);
   });
 });

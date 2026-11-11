@@ -1,0 +1,317 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "formato": {
+      "type": "number",
+      "const": 1
+    },
+    "version": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "version_ejercicio": {
+      "type": "string",
+      "minLength": 1
+    },
+    "n_docentes": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "metodo": {
+      "type": "object",
+      "properties": {
+        "unidad": {
+          "type": "string",
+          "enum": [
+            "evento",
+            "compas"
+          ]
+        },
+        "percentiles": {
+          "type": "object",
+          "properties": {
+            "inferior": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "superior": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "estado": {
+              "type": "string",
+              "enum": [
+                "[PROVISIONAL]",
+                "PENDIENTE",
+                "[CAMPAÑA-A]"
+              ],
+              "title": "EstadoCifra"
+            }
+          },
+          "required": [
+            "inferior",
+            "superior",
+            "estado"
+          ],
+          "additionalProperties": false
+        },
+        "factor_retencion": {
+          "type": "object",
+          "properties": {
+            "valor": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "estado": {
+              "type": "string",
+              "enum": [
+                "[PROVISIONAL]",
+                "PENDIENTE",
+                "[CAMPAÑA-A]"
+              ],
+              "title": "EstadoCifra"
+            }
+          },
+          "required": [
+            "valor",
+            "estado"
+          ],
+          "additionalProperties": false
+        },
+        "parametros_rasgos": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "diferencia_buscada": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fuente": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "estado": {
+                "type": "string",
+                "enum": [
+                  "[PROVISIONAL]",
+                  "PENDIENTE",
+                  "[CAMPAÑA-A]"
+                ],
+                "title": "EstadoCifra"
+              }
+            },
+            "required": [
+              "diferencia_buscada",
+              "fuente",
+              "estado"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "unidad",
+        "percentiles",
+        "factor_retencion",
+        "parametros_rasgos"
+      ],
+      "additionalProperties": false
+    },
+    "bandas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "unidad": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "rasgo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "centro": {
+            "type": "number"
+          },
+          "inferior": {
+            "type": "number"
+          },
+          "superior": {
+            "type": "number"
+          },
+          "n_docentes": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "n_ejecuciones": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "unidad",
+          "rasgo",
+          "centro",
+          "inferior",
+          "superior",
+          "n_docentes",
+          "n_ejecuciones"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rasgos_descartados": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rasgo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "dispersion": {
+            "type": "number",
+            "minimum": 0
+          },
+          "diferencia_buscada": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "factor": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "rasgo",
+          "dispersion",
+          "diferencia_buscada",
+          "factor",
+          "motivo"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rasgos_sin_evaluar": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rasgo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "rasgo",
+          "motivo"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "origen": {
+      "type": "object",
+      "properties": {
+        "campana": {
+          "type": "string",
+          "const": "A"
+        },
+        "rol": {
+          "type": "string",
+          "const": "docente_ref"
+        },
+        "origen_tomas": {
+          "type": "string",
+          "const": "real"
+        },
+        "tomas": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "version_nucleo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "versiones_reprocesamiento": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "generada_en": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        }
+      },
+      "required": [
+        "campana",
+        "rol",
+        "origen_tomas",
+        "tomas",
+        "version_nucleo",
+        "versiones_reprocesamiento",
+        "generada_en"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "formato",
+    "version",
+    "version_ejercicio",
+    "n_docentes",
+    "metodo",
+    "bandas",
+    "rasgos_descartados",
+    "rasgos_sin_evaluar",
+    "origen"
+  ],
+  "additionalProperties": false,
+  "title": "Referencia"
+}
