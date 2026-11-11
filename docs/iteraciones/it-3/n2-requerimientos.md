@@ -16,7 +16,7 @@ Cambios de estado respecto de las tablas siguientes:
 | PA-HU19-01, 02, 03 | Prototipo    | Selector de tempo con práctica lenta, conteo audible con pulso visual y pulso visual mudo con metrónomo; el modo queda en el intento    |
 | PA-HU10-02 a 05    | Prototipo    | Calculados en el teléfono sobre los ataques reales; sin fixtures del autor                                                              |
 | PA-HU21-02, 03, 04 | Prototipo    | Incorrecta, dudosa, faltante y extra con alineamiento de secuencias (PU-align-04 a 07)                                                  |
-| PA-HU11-02         | Prototipo    | Mano y dedo atribuidos a cada ataque con la modalidad (VA o A)                                                                          |
+| PA-HU11-02         | Prototipo    | Un registro por evento esperado con la modalidad de cada dato (PU-eventos-01 a 04); falta la E2E con audio y video (TI-HU11-04)         |
 
 Pruebas nuevas: PU-web-12 (micrófono simulado: nivel, prueba completa y ningún audio por la red), PA-HU20-03 (E2E), PU-align-04 a 07 y PU-capture-13.
 
@@ -59,12 +59,12 @@ Pruebas nuevas: PU-web-12 (micrófono simulado: nivel, prueba completa y ningún
 
 ## HU-11 · Sincronizar visión, audio y partitura
 
-| PA             | Estado    | Motivo / prueba del núcleo                                                                                      |
-| -------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
-| PA-HU11-01     | Pendiente | Manual (S3)                                                                                                     |
-| PA-HU11-02     | Prototipo | Dedo atribuido y modalidad VA o A por ataque (PU-align-01 a 03); falta el registro completo por evento esperado |
-| PA-HU11-03, 04 | Pendiente | Requieren el alineamiento por mano                                                                              |
-| PA-HU11-05     | Pendiente | Requiere el intento completo con cámara y micrófono                                                             |
+| PA             | Estado    | Motivo / prueba del núcleo                                                                                                                                                                           |
+| -------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU11-01     | Pendiente | Manual (S3)                                                                                                                                                                                          |
+| PA-HU11-02     | Prototipo | Registro por evento esperado con ataque, nota, mano, dedo, tecla, zona y rasgos, cada uno con su modalidad (PU-eventos-01 a 04); falta la E2E con audio y video (TI-HU11-04)                         |
+| PA-HU11-03, 04 | Prototipo | Con eventos sintéticos: 80 ms se marca y 10 ms no (PU-desfase-01 y 02); una nota atrás se marca como tal y no como nota incorrecta (PU-alineacion-02, PU-desfase-04). Falta la E2E con audio y video |
+| PA-HU11-05     | Pendiente | Requiere el intento completo con cámara y micrófono                                                                                                                                                  |
 
 HU-37 (avance de la tarea) no se incluyó en esta versión.
 

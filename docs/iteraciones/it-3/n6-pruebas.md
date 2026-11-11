@@ -24,3 +24,9 @@ Las señales son sintéticas y deterministas (nota con fundamental y dos armóni
 ## Estado de esta versión
 
 Implementado: las PU de la tabla. Pendiente: golden de audio, fixtures de micrófono y PA de punta a punta.
+
+## Pruebas inestables
+
+| Prueba              | Observación                                                                                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PU-accesibilidad-07 | Se colgó 1 vez esperando el medidor en /microfono (navegador sin respuesta en una página con cámara o micrófono, igual que PA-HU03-05 y PU-accesibilidad-02); causa no investigada |
