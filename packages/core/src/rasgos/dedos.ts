@@ -65,6 +65,10 @@ export interface EventoVisual {
   midi: number | null;
   /** El dedo estaba oculto en parte de la ventana del evento (p. ej., paso del pulgar). */
   ocluido?: boolean;
+  /** Cuánto bajó la punta (unidades de la señal de altura). */
+  profundidad?: number;
+  /** Posición del contacto a lo largo de la tecla (0 = borde frontal), o null. */
+  zona?: number | null;
 }
 
 export interface EventoEsperadoDigitacion {
@@ -127,9 +131,17 @@ export function eventosVisuales(
   puntaEnTeclado: (dedo: Dedo, t: number) => { x: number; y: number } | null,
   modelo: ModeloTeclado,
 ): EventoVisual[] {
-  return descensos.map(({ dedo, t }) => {
+  return descensos.map(({ dedo, t, profundidad }) => {
     const punta = puntaEnTeclado(dedo, t);
     const tecla = punta ? teclaBajo(modelo, punta) : null;
-    return { mano, dedo, t, midi: tecla?.midi ?? null, ocluido: punta === null };
+    return {
+      mano,
+      dedo,
+      t,
+      midi: tecla?.midi ?? null,
+      ocluido: punta === null,
+      profundidad,
+      zona: tecla?.aLoLargo ?? null,
+    };
   });
 }
