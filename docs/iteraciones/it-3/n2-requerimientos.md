@@ -66,6 +66,18 @@ Pruebas nuevas: PU-web-12 (micrófono simulado: nivel, prueba completa y ningún
 | PA-HU11-03, 04 | Prototipo | Con eventos sintéticos: 80 ms se marca y 10 ms no (PU-desfase-01 y 02); una nota atrás se marca como tal y no como nota incorrecta (PU-alineacion-02, PU-desfase-04). Falta la E2E con audio y video |
 | PA-HU11-05     | Pendiente | Requiere el intento completo con cámara y micrófono                                                                                                                                                  |
 
+## Actualización: intento completo con cámara y micrófono simulados
+
+Las E2E recorren la práctica real (prueba de micrófono, calibración, conteo, ejecución, análisis en el teléfono y envío) con un teclado dibujado como cámara, una escala de Do a manos juntas como micrófono y un detector de la mano simulado. Bloquean el PR en la CI junto con `accesibilidad.spec.ts`.
+
+| PA             | Estado ahora | Motivo                                                                                                                                                                          |
+| -------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU11-02     | Cumplido     | Un registro fusionado por cada uno de los 58 eventos esperados, con la modalidad de cada dato; todo evento VA trae el dedo y la zona que vio la cámara (E2E PA-HU11-02)         |
+| PA-HU11-05     | Cumplido     | Intento completo con audio: ninguna petición con medios ni multipart, ningún cuerpo > 256 KB, ninguna a otro origen; los eventos ocupan ≤ 256 KB (E2E PA-HU11-05)               |
+| PA-HU10-05     | Cumplido     | La escala suena a ♩≈57 con la tarea en 60–70: el resultado lo informa, el intento no cuenta y el avance guarda el motivo (E2E PA-HU10-05)                                       |
+| PA-HU11-03, 04 | Prototipo    | La E2E toca a manos juntas a tiempo; el desfase de 80 ms y la nota atrás siguen cubiertos solo con eventos sintéticos (PU-desfase-01, 02, 04, PU-alineacion-02)                 |
+| Resto          | Sin cambio   | PA-HU10-01, PA-HU21-01 y PA-HU20-04 requieren fixtures anotados del autor; PA-HU11-01 y PA-HU19-04 son manuales (S2, S3); el resto de los Prototipo no tiene todavía prueba E2E |
+
 ## Estado de esta versión
 
 - **Implementado:** ningún PA de punta a punta.

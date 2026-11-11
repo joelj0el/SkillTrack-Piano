@@ -15,7 +15,8 @@
 | TI-HU11-01             | Alineamiento por mano con reanclaje del tempo solo para emparejar                         | Implementado (commit `eece2c6`)                                    |
 | TI-HU11-02             | Fusión: dedo atribuido por evento; desfase entre manos (IND-B3)                           | Implementado (commit `20b0d7c`)                                    |
 | TI-HU11-03             | Registro por evento con modalidad, `ResultadoIntento` v2 y migración de `intento.eventos` | Implementado (commit `9ad1a67`)                                    |
-| TI-HU11-04, 05         | E2E con audio y video; script de sincronización                                           | Pendiente                                                          |
+| TI-HU11-04             | E2E con audio y video simulados (bloquea en la CI desde `ea3667d`)                        | Implementado (commit `d6a2692`)                                    |
+| TI-HU11-05             | Script de sincronización                                                                  | Pendiente                                                          |
 | TI-HU37-01             | Vista `v_avance_tarea`, ruta del avance por día y estado "En práctica"                    | Implementado (commit `eee80ac`)                                    |
 | TI-HU37-02             | Pantallas: "N de M hoy" para el estudiante y días por repeticiones para el docente        | Implementado (commit `eb2a28d`)                                    |
 
@@ -23,6 +24,7 @@
 
 - El primer cálculo del instante de ataque tenía un adelanto sistemático de unos 39 ms (el pico del flujo marca el cuadro en que la nota entra, no su inicio). Se corrigió refinando dentro del cuadro con la mayor subida de energía en bloques de ~5,8 ms.
 - El commit `80d9d59` entró con una prueba en rojo (PU-tempo-03); el siguiente commit lo corrigió. Desde ese momento cada commit se condiciona a que toda la verificación esté en verde.
+- Los cuelgues del navegador en las E2E (PA-HU03-05, PU-accesibilidad-02 y 07) eran la espera moderna de Windows; `pnpm e2e` mantiene despierto el equipo desde `066dc52`. PU-web-11 falló 1 vez en una corrida completa (se quedó pidiendo la cámara, sin suspensión del equipo); no se reprodujo en 9 repeticiones.
 
 ## Estado de esta versión
 

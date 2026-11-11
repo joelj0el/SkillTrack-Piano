@@ -80,13 +80,13 @@ Pruebas nuevas: PU-web-11 (el detector autoalojado carga y procesa la cámara si
 
 ## HU-08 · Persistir cada intento sin video
 
-| PA         | Tipo     | Estado       | Motivo                                                                                        |
-| ---------- | -------- | ------------ | --------------------------------------------------------------------------------------------- |
-| PA-HU08-01 | auto-api | Implementado | Idempotencia por `client_uuid`: 201 y luego 200, una sola fila                                |
-| PA-HU08-02 | auto-api | Implementado | > 256 KB → 413; multipart, audio, video o imagen → 415 (en toda escritura bajo `/api`)        |
-| PA-HU08-03 | auto-e2e | Prototipo    | Pendiente sin red y guardado con red (PU-outbox-01); falta un intento real para la prueba E2E |
-| PA-HU08-04 | auto-e2e | Pendiente    | Requiere un intento completo; la parte de encuadre está cubierta por PA-HU03-05               |
-| PA-HU08-05 | auto-api | Implementado | Campos del intento de tarea y 403 para el docente no asignado                                 |
+| PA         | Tipo     | Estado       | Motivo                                                                                                            |
+| ---------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| PA-HU08-01 | auto-api | Implementado | Idempotencia por `client_uuid`: 201 y luego 200, una sola fila                                                    |
+| PA-HU08-02 | auto-api | Implementado | > 256 KB → 413; multipart, audio, video o imagen → 415 (en toda escritura bajo `/api`)                            |
+| PA-HU08-03 | auto-e2e | Prototipo    | Pendiente sin red y guardado con red (PU-outbox-01); falta un intento real para la prueba E2E                     |
+| PA-HU08-04 | auto-e2e | Cumplido     | Intento completo con cámara y micrófono simulados: 0 medios, 0 cuerpos > 256 KB, 0 a otro origen (E2E PA-HU08-04) |
+| PA-HU08-05 | auto-api | Implementado | Campos del intento de tarea y 403 para el docente no asignado                                                     |
 
 ## HU-18 · Grabar en modo investigación con metadatos
 
