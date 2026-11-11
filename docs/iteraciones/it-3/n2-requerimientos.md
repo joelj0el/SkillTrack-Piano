@@ -73,3 +73,12 @@ HU-37 (avance de la tarea) no se incluyó en esta versión.
 - **Implementado:** ningún PA de punta a punta.
 - **Prototipo:** la lógica de los criterios marcados así, con pruebas unitarias en verde (`n6-pruebas.generado.md`).
 - **Pendiente:** captura de audio, pantallas, alineamiento con la partitura y todo lo que requiere fixtures o dispositivos.
+
+## HU-37 · Avance de la tarea por día
+
+| PA         | Estado    | Motivo                                                                                        |
+| ---------- | --------- | --------------------------------------------------------------------------------------------- |
+| PA-HU37-01 | Pendiente | "N de M hoy" y la lista de intentos con fecha y hora en la tarea del estudiante               |
+| PA-HU37-02 | Pendiente | Solo cuentan los intentos válidos; cada uno indica el motivo; el docente ve la práctica lenta |
+| PA-HU37-03 | Pendiente | El docente ve, por día desde la asignación, las repeticiones válidas frente a la meta         |
+| PA-HU37-04 | Pendiente | Estado Asignada → En práctica → Vencida; docente no asignado, 403                             |
