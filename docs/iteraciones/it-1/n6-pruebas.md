@@ -41,3 +41,5 @@ La validación del OE1 con tareas reales del panel (recuperabilidad, PA-HU29-05)
 | Prueba              | Observación                                                                                                                          |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | PU-accesibilidad-02 | PU-accesibilidad-02 se colgó 1 vez (navegador sin respuesta en páginas con mucho dibujo, igual que PA-HU03-05); causa no investigada |
+
+Causa identificada: los tres cuelgues coinciden con la espera moderna de Windows (Kernel-Power 506/507), que suspende el equipo a mitad de la prueba; `pnpm e2e` corre ahora con `tools/despierto.ts`, que mantiene despierto el equipo (PU-ci-07, 08). Los ejecutores de la CI no se suspenden.

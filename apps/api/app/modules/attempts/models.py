@@ -38,6 +38,9 @@ class Intento(Base):
     modo_metronomo: Mapped[str | None] = mapped_column(String(4))
     tempo_elegido_bpm: Mapped[int | None] = mapped_column(Integer)
     tempo_medido_bpm: Mapped[float | None] = mapped_column(Float)
+    referencia_temporal: Mapped[str | None] = mapped_column(String(16))
+    cambio_tempo_pct: Mapped[float | None] = mapped_column(Float)
+    audio_sin_procesar: Mapped[bool | None] = mapped_column(Boolean)
     estado: Mapped[str] = mapped_column(String(16))
     motivo_no_evaluable: Mapped[str | None] = mapped_column(String(120))
     cuenta_para_tarea: Mapped[bool] = mapped_column(Boolean)
@@ -49,6 +52,7 @@ class Intento(Base):
     duracion_ms: Mapped[int] = mapped_column(Integer)
     pct_eventos_evaluables: Mapped[float | None] = mapped_column(Float)
     pct_digitacion_correcta: Mapped[float | None] = mapped_column(Float)
+    secuencia_esperada: Mapped[str] = mapped_column(String(12), server_default="provisional")
     eventos: Mapped[list[dict]] = mapped_column(JSONB)
 
 

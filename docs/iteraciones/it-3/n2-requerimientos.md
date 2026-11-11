@@ -16,7 +16,7 @@ Cambios de estado respecto de las tablas siguientes:
 | PA-HU19-01, 02, 03 | Prototipo    | Selector de tempo con práctica lenta, conteo audible con pulso visual y pulso visual mudo con metrónomo; el modo queda en el intento    |
 | PA-HU10-02 a 05    | Prototipo    | Calculados en el teléfono sobre los ataques reales; sin fixtures del autor                                                              |
 | PA-HU21-02, 03, 04 | Prototipo    | Incorrecta, dudosa, faltante y extra con alineamiento de secuencias (PU-align-04 a 07)                                                  |
-| PA-HU11-02         | Prototipo    | Mano y dedo atribuidos a cada ataque con la modalidad (VA o A)                                                                          |
+| PA-HU11-02         | Prototipo    | Un registro por evento esperado con la modalidad de cada dato (PU-eventos-01 a 04); falta la E2E con audio y video (TI-HU11-04)         |
 
 Pruebas nuevas: PU-web-12 (micrófono simulado: nivel, prueba completa y ningún audio por la red), PA-HU20-03 (E2E), PU-align-04 a 07 y PU-capture-13.
 
@@ -40,13 +40,13 @@ Pruebas nuevas: PU-web-12 (micrófono simulado: nivel, prueba completa y ningún
 
 ## HU-10 · Ataques, tempo estable y regularidad
 
-| PA         | Estado                                | Motivo / prueba del núcleo                                                                                                       |
-| ---------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| PA-HU10-01 | Pendiente: requiere fixtures anotados | En señal sintética limpia el error de ataque es ≤ 10 ms (PU-audio-05, 09) y el F1 se calcula con tolerancia ±50 ms (PU-audio-08) |
-| PA-HU10-02 | Prototipo                             | Estable, aceleraste y frenaste con tempo inicial, final y porcentaje (PU-audio-10, 11, 12)                                       |
-| PA-HU10-03 | Prototipo                             | Solo la nota retrasada 40 % se marca y el tempo sigue estable (PU-audio-13, 14)                                                  |
-| PA-HU10-04 | Prototipo                             | Referencia: tempo elegido con metrónomo, tempo inicial sin él (PU-audio-15)                                                      |
-| PA-HU10-05 | Prototipo                             | Mensaje "Tocaste a ♩≈55; tu tarea pide 60–70" y no cuenta (PU-audio-16)                                                          |
+| PA         | Estado                                | Motivo / prueba del núcleo                                                                                                                                                    |
+| ---------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU10-01 | Pendiente: requiere fixtures anotados | En señal sintética limpia el error de ataque es ≤ 10 ms (PU-audio-05, 09) y el F1 se calcula con tolerancia ±50 ms (PU-audio-08)                                              |
+| PA-HU10-02 | Prototipo                             | Estable, aceleraste y frenaste con tempo inicial, final y porcentaje (PU-audio-10, 11, 12)                                                                                    |
+| PA-HU10-03 | Prototipo                             | Solo la nota retrasada 40 % se marca y el tempo sigue estable (PU-audio-13, 14)                                                                                               |
+| PA-HU10-04 | Prototipo                             | Referencia: tempo elegido con metrónomo, tempo inicial sin él (PU-audio-15)                                                                                                   |
+| PA-HU10-05 | Prototipo                             | El servidor decide que no cuenta y guarda el motivo "Tocaste a ♩≈55; tu tarea pide 60–70" (PA-HU10-05 de la API, PU-audio-16); falta la E2E con un intento completo con audio |
 
 ## HU-21 · Clase de altura
 
@@ -59,17 +59,36 @@ Pruebas nuevas: PU-web-12 (micrófono simulado: nivel, prueba completa y ningún
 
 ## HU-11 · Sincronizar visión, audio y partitura
 
-| PA             | Estado    | Motivo / prueba del núcleo                                                                                      |
-| -------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
-| PA-HU11-01     | Pendiente | Manual (S3)                                                                                                     |
-| PA-HU11-02     | Prototipo | Dedo atribuido y modalidad VA o A por ataque (PU-align-01 a 03); falta el registro completo por evento esperado |
-| PA-HU11-03, 04 | Pendiente | Requieren el alineamiento por mano                                                                              |
-| PA-HU11-05     | Pendiente | Requiere el intento completo con cámara y micrófono                                                             |
+| PA             | Estado    | Motivo / prueba del núcleo                                                                                                                                                                           |
+| -------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU11-01     | Pendiente | Manual (S3)                                                                                                                                                                                          |
+| PA-HU11-02     | Prototipo | Registro por evento esperado con ataque, nota, mano, dedo, tecla, zona y rasgos, cada uno con su modalidad (PU-eventos-01 a 04); falta la E2E con audio y video (TI-HU11-04)                         |
+| PA-HU11-03, 04 | Prototipo | Con eventos sintéticos: 80 ms se marca y 10 ms no (PU-desfase-01 y 02); una nota atrás se marca como tal y no como nota incorrecta (PU-alineacion-02, PU-desfase-04). Falta la E2E con audio y video |
+| PA-HU11-05     | Pendiente | Requiere el intento completo con cámara y micrófono                                                                                                                                                  |
 
-HU-37 (avance de la tarea) no se incluyó en esta versión.
+## Actualización: intento completo con cámara y micrófono simulados
+
+Las E2E recorren la práctica real (prueba de micrófono, calibración, conteo, ejecución, análisis en el teléfono y envío) con un teclado dibujado como cámara, una escala de Do a manos juntas como micrófono y un detector de la mano simulado. Bloquean el PR en la CI junto con `accesibilidad.spec.ts`.
+
+| PA             | Estado ahora | Motivo                                                                                                                                                                          |
+| -------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU11-02     | Cumplido     | Un registro fusionado por cada uno de los 58 eventos esperados, con la modalidad de cada dato; todo evento VA trae el dedo y la zona que vio la cámara (E2E PA-HU11-02)         |
+| PA-HU11-05     | Cumplido     | Intento completo con audio: ninguna petición con medios ni multipart, ningún cuerpo > 256 KB, ninguna a otro origen; los eventos ocupan ≤ 256 KB (E2E PA-HU11-05)               |
+| PA-HU10-05     | Cumplido     | La escala suena a ♩≈57 con la tarea en 60–70: el resultado lo informa, el intento no cuenta y el avance guarda el motivo (E2E PA-HU10-05)                                       |
+| PA-HU11-03, 04 | Prototipo    | La E2E toca a manos juntas a tiempo; el desfase de 80 ms y la nota atrás siguen cubiertos solo con eventos sintéticos (PU-desfase-01, 02, 04, PU-alineacion-02)                 |
+| Resto          | Sin cambio   | PA-HU10-01, PA-HU21-01 y PA-HU20-04 requieren fixtures anotados del autor; PA-HU11-01 y PA-HU19-04 son manuales (S2, S3); el resto de los Prototipo no tiene todavía prueba E2E |
 
 ## Estado de esta versión
 
 - **Implementado:** ningún PA de punta a punta.
 - **Prototipo:** la lógica de los criterios marcados así, con pruebas unitarias en verde (`n6-pruebas.generado.md`).
 - **Pendiente:** captura de audio, pantallas, alineamiento con la partitura y todo lo que requiere fixtures o dispositivos.
+
+## HU-37 · Avance de la tarea por día
+
+| PA         | Estado   | Motivo                                                                                                                                                                                                         |
+| ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU37-01 | Cumplido | "2 de 3 hoy" y la lista de intentos con fecha y hora (E2E PA-HU37-01)                                                                                                                                          |
+| PA-HU37-02 | Cumplido | No evaluable, práctica lenta, fuera de rango y sin tempo no cuentan, cada uno con su motivo; el docente ve la práctica lenta (PA-HU37-02). Los intentos cancelados no llegan al servidor: la app no los guarda |
+| PA-HU37-03 | Cumplido | Días desde la asignación con repeticiones válidas frente a la meta, y cada intento con fecha y hora (E2E PA-HU37-03)                                                                                           |
+| PA-HU37-04 | Cumplido | Asignada → En práctica → Vencida; un intento que no cuenta no la pone en práctica; docente no asignado, 403 (PA-HU37-04). "Lograda" llega con HU-38                                                            |

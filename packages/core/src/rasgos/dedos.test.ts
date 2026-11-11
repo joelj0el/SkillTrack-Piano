@@ -96,8 +96,17 @@ describe("eventos visuales", () => {
       modelo,
     );
     expect(eventos).toEqual([
-      { mano: "MD", dedo: "indice", t: 0.2, midi: 62, ocluido: false },
-      { mano: "MD", dedo: "pulgar", t: 0.4, midi: null, ocluido: true },
+      // La punta del índice cae a media tecla (y = 0,5): esa es la zona de contacto.
+      { mano: "MD", dedo: "indice", t: 0.2, midi: 62, ocluido: false, profundidad: 0.1, zona: 0.5 },
+      {
+        mano: "MD",
+        dedo: "pulgar",
+        t: 0.4,
+        midi: null,
+        ocluido: true,
+        profundidad: 0.1,
+        zona: null,
+      },
     ]);
   });
 });

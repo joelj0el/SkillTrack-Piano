@@ -1,10 +1,14 @@
 // Procesa las tomas de una sesión con el núcleo de la app, en Edge o Chrome sin interfaz. Uso:
-//   pnpm reprocesar --sesion <carpeta de paquetes> [--solo <codigo>] [--sin-base]
+//   pnpm reprocesar --sesion <carpeta de paquetes> [--catalogo <catalogo.json>] [--solo <codigo>] [--sin-base]
+// El catálogo sale de la app con: python -m app.modules.catalog.exportar; sin él, cada toma usa
+// la escala provisional y su resultado.json lo dice.
 // Se puede cortar y repetir: sigue con las tomas que faltan.
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { Ejercicio } from "@skilltrack/contracts";
 import pg from "pg";
+import { readFileSync } from "node:fs";
 import { abrirProcesador } from "./navegador.ts";
 import { ErrorReproceso, reprocesar, type ReporteReproceso } from "./reprocesar.ts";
 
@@ -56,6 +60,7 @@ const { values } = parseArgs({
   options: {
     sesion: { type: "string" },
     solo: { type: "string" },
+    catalogo: { type: "string" },
     base: { type: "string" },
     "sin-base": { type: "boolean", default: false },
   },
@@ -85,6 +90,13 @@ try {
     carpeta,
     procesador,
     avisar: console.log,
+    ...(values.catalogo
+      ? {
+          catalogo: Ejercicio.array().parse(
+            JSON.parse(readFileSync(resolve(values.catalogo), "utf8")),
+          ),
+        }
+      : {}),
     ...(values.solo ? { solo: values.solo } : {}),
     ...(conexion
       ? {

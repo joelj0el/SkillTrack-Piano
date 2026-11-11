@@ -22,8 +22,31 @@ export interface Detector {
 
 const BASE = "/mediapipe";
 
+/**
+ * Detector simulado de las pruebas E2E. La app nunca lo define: solo lo inyecta la prueba antes de
+ * cargar la página, para un intento completo con la cámara simulada (que no muestra manos). Solo
+ * entrega puntos de la mano al análisis local; no cambia nada de lo que sale por la red.
+ */
+interface DetectorSimulado {
+  version: string;
+  detectar(tMs: number): PuntoNormalizado[][];
+}
+
+declare global {
+  var __skilltrackDetectorSimulado: DetectorSimulado | undefined;
+}
+
 /** Detector autoalojado (ADR-002): WASM y modelo del mismo origen; GPU con repliegue a CPU. */
 export async function crearDetector(): Promise<Detector> {
+  const simulado = globalThis.__skilltrackDetectorSimulado;
+  if (simulado) {
+    return {
+      version: simulado.version,
+      delegado: "CPU",
+      detectar: (_video, tMs) => ({ manos: simulado.detectar(tMs), t: tMs / 1000 }),
+      cerrar: () => undefined,
+    };
+  }
   const registro = (await (await fetch(`${BASE}/version.json`)).json()) as {
     tasksVision: string;
     modelo: string;

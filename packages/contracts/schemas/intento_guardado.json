@@ -94,6 +94,19 @@
         }
       ]
     },
+    "tempo_medido_bpm": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "secuencia_esperada": {
+      "type": "string",
+      "enum": [
+        "partitura",
+        "provisional"
+      ]
+    },
     "iniciado_en": {
       "type": "string",
       "format": "date-time",
@@ -115,6 +128,8 @@
     "manos",
     "modo_metronomo",
     "tempo_elegido_bpm",
+    "tempo_medido_bpm",
+    "secuencia_esperada",
     "iniciado_en"
   ],
   "additionalProperties": false,

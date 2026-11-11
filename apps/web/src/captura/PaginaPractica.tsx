@@ -1,4 +1,4 @@
-import { Ejercicio, ResultadoIntento, Tarea, type EventoResultado } from "@skilltrack/contracts";
+import { Ejercicio, ResultadoIntento, Tarea } from "@skilltrack/contracts";
 import {
   DEDOS,
   PUNTA,
@@ -24,11 +24,12 @@ import {
   nombreNota,
   rangoDe,
   rangoEnCuadro,
-  secuenciaEscala,
+  notasEsperadas,
   teclaBajo,
   type Homografia,
   type ModeloTeclado,
   type NotaEsperada,
+  type SecuenciaEsperada,
   type ToquesCalibracion,
 } from "@skilltrack/core";
 import {
@@ -71,7 +72,6 @@ interface Contexto {
   tarea: Tarea | null;
 }
 
-const NUMERO_DEDO = { pulgar: 1, indice: 2, medio: 3, anular: 4, menique: 5 } as const;
 const ORDEN_TOQUES = [
   "frenteIzquierda",
   "frenteDerecha",
@@ -168,7 +168,10 @@ function dibujarTeclaBajoDedos(
 
 function Practica({ contexto }: { contexto: Contexto }) {
   const { ejercicio, manos } = contexto;
-  const esperadas = useMemo(() => secuenciaEscala(ejercicio.tonalidad, manos), [ejercicio, manos]);
+  const { esperadas, secuencia } = useMemo(
+    () => notasEsperadas(ejercicio.version_vigente.eventos_esperados, ejercicio.tonalidad, manos),
+    [ejercicio, manos],
+  );
   const rango = useMemo(() => rangoDe(esperadas), [esperadas]);
   const modelo = useMemo(() => modeloTeclado(rango.min, rango.max), [rango]);
   const [paso, setPaso] = useState<"encuadre" | "microfono" | "calibracion" | "ejecucion">(
@@ -216,12 +219,20 @@ function Practica({ contexto }: { contexto: Contexto }) {
         titulo={`${ejercicio.nombre} · ${NOMBRE_MANOS[manos]}`}
         volverA={contexto.tarea ? `/tareas/${contexto.tarea.id}` : "/tareas"}
         aviso={
-          <p data-secuencia="provisional">
-            Secuencia provisional, sin digitación: la escala de {ejercicio.tonalidad} en 2 octavas
-            (subida y bajada{manos === "juntas" ? ", manos en octava paralela" : ""}), de{" "}
-            {nombreNota(rango.min)} a {nombreNota(rango.max)}. La digitación se evalúa cuando la
-            partitura esté transcrita.
-          </p>
+          secuencia === "partitura" ? (
+            <p data-secuencia="partitura">
+              Secuencia de la partitura importada (versión {ejercicio.version_vigente.version}), con
+              su digitación: {esperadas.length} notas, de {nombreNota(rango.min)} a{" "}
+              {nombreNota(rango.max)}.
+            </p>
+          ) : (
+            <p data-secuencia="provisional">
+              Secuencia provisional, sin digitación: la escala de {ejercicio.tonalidad} en 2 octavas
+              (subida y bajada{manos === "juntas" ? ", manos en octava paralela" : ""}), de{" "}
+              {nombreNota(rango.min)} a {nombreNota(rango.max)}. La digitación se evalúa cuando la
+              partitura esté transcrita.
+            </p>
+          )
         }
         manosEsperadas={manosEsperadas}
         dibujar={dibujar}
@@ -265,6 +276,7 @@ function Practica({ contexto }: { contexto: Contexto }) {
               vista={vista}
               contexto={contexto}
               esperadas={esperadas}
+              secuencia={secuencia}
               rango={rango}
               aPlano={aPlano!}
               microfono={microfono}
@@ -548,12 +560,13 @@ export function PasoEjecucion(props: {
   vista: Vista;
   contexto: Contexto;
   esperadas: NotaEsperada[];
+  secuencia: SecuenciaEsperada;
   rango: { min: number; max: number };
   aPlano: Homografia;
   microfono: Microfono;
   soloVision: boolean;
 }) {
-  const { vista, contexto, esperadas, rango, aPlano, microfono, soloVision } = props;
+  const { vista, contexto, esperadas, secuencia, rango, aPlano, microfono, soloVision } = props;
   const opciones = opcionesTempo(
     contexto.tarea
       ? {
@@ -727,19 +740,19 @@ export function PasoEjecucion(props: {
     const acustico = respuesta.acustico;
     const pct = Math.round(fraccionEvaluable(respuesta) * 1000) / 10;
     const ok = pct >= 70 && !estado.incompleta;
-    const eventos: EventoResultado[] = respuesta.notas.map((n) => ({
-      idx: n.idx,
-      estado: "no-evaluable",
-      motivo:
-        n.resultado.estado === "detectada"
-          ? "digitación pendiente de transcripción"
-          : n.resultado.motivo,
-      mano: n.mano,
-      dedo: n.resultado.estado === "detectada" ? NUMERO_DEDO[n.resultado.dedo] : null,
-      midi: n.midiEsperado,
-      rasgos: {},
-    }));
+    // Registro v2: un evento por nota esperada, con la modalidad de cada dato.
+    const eventos = respuesta.eventos;
+    const comparados = eventos.filter(
+      (e) => e.dedo.estado === "correcto" || e.dedo.estado === "incorrecto",
+    );
+    const pctDigitacion = comparados.length
+      ? Math.round(
+          (comparados.filter((e) => e.dedo.estado === "correcto").length / comparados.length) *
+            1000,
+        ) / 10
+      : null;
     const resultado = ResultadoIntento.parse({
+      version: 2,
       client_uuid: crypto.randomUUID(),
       version_ejercicio_id: contexto.ejercicio.version_vigente.id,
       tarea_id: contexto.tarea?.id ?? null,
@@ -760,7 +773,13 @@ export function PasoEjecucion(props: {
       iniciado_en: new Date(Date.now() - (performance.now() - inicio.current)).toISOString(),
       duracion_ms: Math.round(performance.now() - inicio.current),
       pct_eventos_evaluables: pct,
-      pct_digitacion_correcta: null,
+      pct_digitacion_correcta: pctDigitacion,
+      tempo_medido_bpm: acustico?.tempo ? Math.round(acustico.tempo.tempoMedido * 10) / 10 : null,
+      referencia_temporal: acustico?.tempo?.referencia ?? null,
+      cambio_tempo_pct: acustico?.tempo ? Math.round(acustico.tempo.cambioPct * 10) / 10 : null,
+      audio_sin_procesar:
+        microfono.estado.tipo === "activo" ? microfono.estado.audioSinProcesar : null,
+      secuencia_esperada: secuencia,
       eventos,
     });
     const almacen = almacenIndexedDb();
@@ -948,7 +967,7 @@ export function Resultado(props: {
   const porInstante = esperadas.filter((n) => n.mano === mano);
   const tempo = acustico?.tempo ?? null;
   const tarea = contexto.tarea;
-  const medido = tempo ? Math.round(tempo.tempoInicial) : null;
+  const medido = tempo ? Math.round(tempo.tempoMedido) : null;
   const fueraDeRango =
     tarea && medido !== null && (medido < tarea.tempo_min_bpm || medido > tarea.tempo_max_bpm)
       ? `Tocaste a ♩≈${medido}; tu tarea pide ${tarea.tempo_min_bpm}–${tarea.tempo_max_bpm}`

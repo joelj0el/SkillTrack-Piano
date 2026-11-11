@@ -1,7 +1,13 @@
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { rangoDe, secuenciaEscala, type NotaEsperada } from "@skilltrack/core";
+import type { Ejercicio } from "@skilltrack/contracts";
+import {
+  notasEsperadas,
+  rangoDe,
+  type NotaEsperada,
+  type SecuenciaEsperada,
+} from "@skilltrack/core";
 import { instrumentoDe, type Instrumento } from "../ingesta/validar.ts";
 
 export interface ClipSesion {
@@ -122,14 +128,33 @@ export function asociarTomas(clips: ClipSesion[], tomas: TomaSesion[]): Asociaci
 }
 
 /** Secuencia que se espera oír y ver en la toma; null si no se conoce su ejercicio. */
-export function esperadasDe(toma: TomaSesion): NotaEsperada[] | null {
-  const tonalidad = TONALIDADES[toma.ejercicio];
-  return tonalidad ? secuenciaEscala(tonalidad, toma.manos) : null;
+export interface EsperadasDeToma {
+  esperadas: NotaEsperada[];
+  secuencia: SecuenciaEsperada;
+  /** Versión del ejercicio de la que salió la partitura; null con la escala provisional. */
+  version: number | null;
+}
+
+/**
+ * Notas que se esperan en la toma: las de la partitura importada en la versión vigente del
+ * catálogo, si existe; si no, la escala provisional. null si no se conoce su ejercicio.
+ */
+export function esperadasDe(toma: TomaSesion, catalogo: Ejercicio[] = []): EsperadasDeToma | null {
+  const ejercicio = catalogo.find((e) => e.codigo === toma.ejercicio);
+  const tonalidad = ejercicio?.tonalidad ?? TONALIDADES[toma.ejercicio];
+  if (!tonalidad) return null;
+  const eventos = ejercicio?.version_vigente.eventos_esperados ?? [];
+  const { esperadas, secuencia } = notasEsperadas(eventos, tonalidad, toma.manos);
+  return {
+    esperadas,
+    secuencia,
+    version: secuencia === "partitura" ? ejercicio!.version_vigente.version : null,
+  };
 }
 
 /** Tramo de teclas que debe cubrir la calibración para servir a todas estas tomas. */
 export function rangoDeTomas(tomas: TomaSesion[]): { min: number; max: number } | null {
-  const notas = tomas.flatMap((t) => esperadasDe(t) ?? []);
+  const notas = tomas.flatMap((t) => esperadasDe(t)?.esperadas ?? []);
   return notas.length ? rangoDe(notas) : null;
 }
 

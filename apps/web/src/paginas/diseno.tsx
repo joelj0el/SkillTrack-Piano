@@ -260,6 +260,7 @@ const RESPUESTA = {
     tempo: {
       tempoInicial: 60,
       tempoFinal: 62,
+      tempoMedido: 61,
       cambioPct: 3.3,
       estado: "estable",
       referencia: "tempo_elegido",
@@ -306,6 +307,7 @@ function panelDe(nombre: string) {
           vista={ejemploVista("ambar")}
           contexto={CONTEXTO}
           esperadas={ESPERADAS}
+          secuencia="provisional"
           rango={{ min: 60, max: 84 }}
           aPlano={[1, 0, 0, 0, 1, 0, 0, 0, 1]}
           microfono={MICROFONO}

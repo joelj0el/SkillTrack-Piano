@@ -81,3 +81,12 @@ describe("tempo y regularidad sobre los ataques", () => {
     expect(tempoEnRango(70.4, 60, 70).cuenta).toBe(true);
   });
 });
+
+describe("tempo medido", () => {
+  it("PU-audio-23: el tempo medido es la mediana de todo el intento, sin dejarse llevar por un tropiezo", () => {
+    // Semicorcheas a ♩ = 60 (0,25 s) con una sola nota retrasada.
+    const ataques = Array.from({ length: 32 }, (_, i) => i * 0.25 + (i === 10 ? 0.1 : 0));
+    const r = analizarTempo(ataques, { metronomo: "sin", tempoElegido: null });
+    expect(r.tempoMedido).toBeCloseTo(60, 6);
+  });
+});

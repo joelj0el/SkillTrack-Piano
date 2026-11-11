@@ -4,9 +4,19 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, confloat, conint, constr
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    confloat,
+    conint,
+    constr,
+)
 
 
 class Instrumento(StrEnum):
@@ -38,10 +48,14 @@ class Estado(StrEnum):
     no_evaluable = "no_evaluable"
 
 
-class Estado2(StrEnum):
-    digitacion_correcta = "digitacion-correcta"
-    dedo_incorrecto = "dedo-incorrecto"
-    no_evaluable = "no-evaluable"
+class SecuenciaEsperada(StrEnum):
+    partitura = "partitura"
+    provisional = "provisional"
+
+
+class ReferenciaTemporal(StrEnum):
+    tempo_elegido = "tempo_elegido"
+    tempo_inicial = "tempo_inicial"
 
 
 class Mano(StrEnum):
@@ -49,23 +63,137 @@ class Mano(StrEnum):
     MD = "MD"
 
 
+class Estado3(StrEnum):
+    evaluado = "evaluado"
+    no_evaluable = "no-evaluable"
+
+
+class Modalidad(StrEnum):
+    A = "A"
+    V = "V"
+    VA = "VA"
+
+
+class Estado4(StrEnum):
+    correcta = "correcta"
+    incorrecta = "incorrecta"
+    dudosa = "dudosa"
+    faltante = "faltante"
+    sin_dato = "sin-dato"
+
+
+class Nota(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    estado: Estado4
+    midi: conint(ge=0, le=127) | None
+    clase_oida: conint(ge=0, le=11) | None
+    modalidad: Modalidad | None
+
+
+class Estado5(StrEnum):
+    correcto = "correcto"
+    incorrecto = "incorrecto"
+    sin_esperado = "sin-esperado"
+    no_detectado = "no-detectado"
+
+
+class Modalidad3Enum(StrEnum):
+    V = "V"
+
+
+class Modalidad3(RootModel[Modalidad3Enum | None]):
+    root: Modalidad3Enum | None = None
+
+
+class Dedo(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    valor: conint(ge=1, le=5) | None
+    estado: Estado5
+    modalidad: Modalidad3 | None
+
+
+class Modalidad4Enum(StrEnum):
+    V = "V"
+
+
+class Modalidad4(RootModel[Modalidad4Enum | None]):
+    root: Modalidad4Enum | None = None
+
+
+class Tecla(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    midi: conint(ge=0, le=127) | None
+    zona: float | None
+    modalidad: Modalidad4 | None
+
+
+class Estado6(StrEnum):
+    a_tiempo = "a-tiempo"
+    tarde = "tarde"
+    una_nota_atras = "una-nota-atras"
+    no_medible = "no-medible"
+
+
+class ManoTarde(StrEnum):
+    MI = "MI"
+    MD = "MD"
+
+
+class Modalidad5(StrEnum):
+    A = "A"
+    V = "V"
+    VA = "VA"
+
+
+class DesfaseManos(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    estado: Estado6
+    ms: confloat(ge=0.0) | None
+    mano_tarde: ManoTarde | None
+    modalidad: Modalidad5 | None
+
+
+class RasgosModalidadEnum(StrEnum):
+    V = "V"
+
+
+class RasgosModalidad(RootModel[RasgosModalidadEnum | None]):
+    root: RasgosModalidadEnum | None = None
+
+
 class EventoResultado(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     idx: conint(ge=0, le=9007199254740991)
-    estado: Estado2
-    motivo: constr(max_length=80) | None
     mano: Mano | None
-    dedo: conint(ge=1, le=5) | None
-    midi: conint(ge=0, le=127) | None
+    midi_esperado: conint(ge=0, le=127) | None
+    dedo_esperado: conint(ge=1, le=5) | None
+    estado: Estado3
+    motivo: constr(max_length=80) | None
+    ataque_ms: conint(ge=0, le=9007199254740991) | None
+    modalidad: Modalidad | None
+    nota: Nota
+    dedo: Dedo
+    tecla: Tecla
+    desfase_manos: DesfaseManos | None
     rasgos: dict[constr(max_length=40), float]
+    rasgos_modalidad: RasgosModalidad | None
 
 
 class ResultadoIntento(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
+    version: Literal[2]
     client_uuid: UUID
     version_ejercicio_id: conint(le=9007199254740991, gt=0)
     tarea_id: conint(le=9007199254740991, gt=0) | None
@@ -83,4 +211,9 @@ class ResultadoIntento(BaseModel):
     duracion_ms: conint(ge=0, le=9007199254740991)
     pct_eventos_evaluables: confloat(ge=0.0, le=100.0) | None
     pct_digitacion_correcta: confloat(ge=0.0, le=100.0) | None
+    secuencia_esperada: SecuenciaEsperada | None = None
+    tempo_medido_bpm: confloat(le=400.0, gt=0.0) | None
+    referencia_temporal: ReferenciaTemporal | None
+    cambio_tempo_pct: confloat(ge=-100.0, le=1000.0) | None
+    audio_sin_procesar: bool | None
     eventos: list[EventoResultado] = Field(..., max_length=400)

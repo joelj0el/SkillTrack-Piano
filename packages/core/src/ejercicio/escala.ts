@@ -48,6 +48,8 @@ export interface NotaEsperada {
   claseAltura: number;
   /** Pulsos desde el inicio (semicorcheas: 0,25 por nota). */
   tiempoBeats: number;
+  /** Dedo de la partitura (1 = pulgar); no existe en la escala provisional. */
+  dedo?: number;
 }
 
 /** "Do mayor", "Si♭ mayor"… → clase de altura de la tónica. */
