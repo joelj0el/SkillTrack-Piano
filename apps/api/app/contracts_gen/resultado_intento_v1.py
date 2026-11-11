@@ -89,4 +89,6 @@ class ResultadoIntentoV1(BaseModel):
     pct_eventos_evaluables: confloat(ge=0.0, le=100.0) | None
     pct_digitacion_correcta: confloat(ge=0.0, le=100.0) | None
     secuencia_esperada: SecuenciaEsperada | None = None
+    referencia_id: conint(le=9007199254740991, gt=0) | None = None
+    conjunto_reglas_id: conint(le=9007199254740991, gt=0) | None = None
     eventos: list[EventoResultadoV1] = Field(..., max_length=400)

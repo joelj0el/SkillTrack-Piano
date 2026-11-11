@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.contracts_gen.ejercicio import Ejercicio as EjercicioDto
 from app.contracts_gen.ejercicio import VersionEjercicio as VersionDto
-from app.modules.catalog.models import ClaseError, Ejercicio, VersionEjercicio
+from app.modules.catalog.models import ClaseError, Ejercicio, Referencia, VersionEjercicio
 
 VERSION_TAXONOMIA = "v0.1"
 
@@ -81,3 +81,41 @@ def ejercicio_dto(ejercicio: Ejercicio, version: VersionEjercicio) -> EjercicioD
 
 def version_existe(db: Session, version_id: int) -> bool:
     return db.get(VersionEjercicio, version_id) is not None
+
+
+def version_por_codigo(db: Session, version_ejercicio: str) -> VersionEjercicio | None:
+    """'EJ-01@1' → la versión 1 del EJ-01 (así la nombran los artefactos de investigación)."""
+    codigo, _, numero = version_ejercicio.partition("@")
+    if not numero.isdigit():
+        return None
+    return db.scalar(
+        select(VersionEjercicio)
+        .join(Ejercicio, Ejercicio.id == VersionEjercicio.ejercicio_id)
+        .where(Ejercicio.codigo == codigo, VersionEjercicio.version == int(numero))
+    )
+
+
+def referencia_existe(db: Session, version_ejercicio_id: int, version: int) -> bool:
+    return (
+        db.scalar(
+            select(Referencia.id).where(
+                Referencia.version_ejercicio_id == version_ejercicio_id,
+                Referencia.version == version,
+            )
+        )
+        is not None
+    )
+
+
+def referencia_vigente(db: Session, version_ejercicio_id: int) -> Referencia | None:
+    return db.scalar(
+        select(Referencia)
+        .where(Referencia.version_ejercicio_id == version_ejercicio_id)
+        .order_by(Referencia.version.desc())
+        .limit(1)
+    )
+
+
+def referencia_es_de(db: Session, referencia_id: int, version_ejercicio_id: int) -> bool:
+    fila = db.get(Referencia, referencia_id)
+    return fila is not None and fila.version_ejercicio_id == version_ejercicio_id

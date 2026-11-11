@@ -50,4 +50,6 @@ class IntentoGuardado(BaseModel):
     tempo_elegido_bpm: conint(ge=-9007199254740991, le=9007199254740991) | None
     tempo_medido_bpm: float | None
     secuencia_esperada: SecuenciaEsperada
+    referencia_id: conint(le=9007199254740991, gt=0) | None
+    conjunto_reglas_id: conint(le=9007199254740991, gt=0) | None
     iniciado_en: AwareDatetime

@@ -1,4 +1,15 @@
-from sqlalchemy import ARRAY, Boolean, ForeignKey, Integer, String, Text, UniqueConstraint
+from datetime import datetime
+
+from sqlalchemy import (
+    ARRAY,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -51,3 +62,22 @@ class ClaseError(Base):
     definicion: Mapped[str | None] = mapped_column(Text)
     modalidad: Mapped[str] = mapped_column(String(2))
     version_taxonomia: Mapped[str] = mapped_column(String(16))
+
+
+class Referencia(Base):
+    """Bandas por consenso de una versión de ejercicio. Inmutable: un disparador lo impone."""
+
+    __tablename__ = "referencia"
+    __table_args__ = (UniqueConstraint("version_ejercicio_id", "version"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version_ejercicio_id: Mapped[int] = mapped_column(ForeignKey("version_ejercicio.id"))
+    version: Mapped[int] = mapped_column(Integer)
+    bandas: Mapped[list[dict]] = mapped_column(JSONB)
+    n_docentes: Mapped[int] = mapped_column(Integer)
+    rasgos_descartados: Mapped[list[dict]] = mapped_column(JSONB)
+    rasgos_sin_evaluar: Mapped[list[dict]] = mapped_column(JSONB)
+    metodo: Mapped[dict] = mapped_column(JSONB)
+    # De dónde sale: campaña, rol, tomas y versiones del núcleo y del reprocesamiento (DP-05).
+    origen: Mapped[dict] = mapped_column(JSONB)
+    publicada_en: Mapped[datetime] = mapped_column(DateTime(timezone=True))

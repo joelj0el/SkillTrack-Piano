@@ -18,7 +18,7 @@ import {
   TareaCambio,
   TareaNueva,
 } from "./pedagogia.ts";
-import { Referencia } from "./referencia.ts";
+import { Referencia, ReferenciaPublicada, ReferenciaVigente } from "./referencia.ts";
 import { Salud } from "./salud.ts";
 
 export * from "./calibracion.ts";
@@ -56,4 +56,6 @@ export const esquemas = {
   resultado_intento_v1: ResultadoIntentoV1,
   intento_guardado: IntentoGuardado,
   referencia: Referencia,
+  referencia_publicada: ReferenciaPublicada,
+  referencia_vigente: ReferenciaVigente,
 };

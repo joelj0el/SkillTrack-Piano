@@ -85,3 +85,25 @@ export const Referencia = z
   })
   .meta({ title: "Referencia" });
 export type Referencia = z.infer<typeof Referencia>;
+
+/** Respuesta al publicar una referencia. */
+export const ReferenciaPublicada = z
+  .strictObject({
+    id: z.int().positive(),
+    version: z.int().positive(),
+    version_ejercicio_id: z.int().positive(),
+    publicada_en: z.iso.datetime({ offset: true }),
+  })
+  .meta({ title: "ReferenciaPublicada" });
+export type ReferenciaPublicada = z.infer<typeof ReferenciaPublicada>;
+
+/** La referencia vigente de una versión de ejercicio, como la descarga el cliente. */
+export const ReferenciaVigente = z
+  .strictObject({
+    id: z.int().positive(),
+    version_ejercicio_id: z.int().positive(),
+    publicada_en: z.iso.datetime({ offset: true }),
+    referencia: Referencia,
+  })
+  .meta({ title: "ReferenciaVigente" });
+export type ReferenciaVigente = z.infer<typeof ReferenciaVigente>;

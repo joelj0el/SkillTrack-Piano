@@ -97,6 +97,10 @@ const camposComunes = {
   // De dónde salieron las notas esperadas: la partitura importada o la escala provisional.
   // Opcional para los intentos que ya estaban en cola: sin el campo, la API registra "provisional".
   secuencia_esperada: SecuenciaEsperada.optional(),
+  // Artefactos vigentes con que se analizó (null si aún no había ninguno publicado). Opcionales
+  // para los intentos que ya estaban en cola.
+  referencia_id: z.int().positive().nullable().optional(),
+  conjunto_reglas_id: z.int().positive().nullable().optional(),
 };
 
 export const ResultadoIntentoV1 = z
@@ -137,6 +141,8 @@ export const IntentoGuardado = z
     tempo_elegido_bpm: z.int().nullable(),
     tempo_medido_bpm: z.number().nullable(),
     secuencia_esperada: SecuenciaEsperada,
+    referencia_id: z.int().positive().nullable(),
+    conjunto_reglas_id: z.int().positive().nullable(),
     iniciado_en: z.iso.datetime({ offset: true }),
   })
   .meta({ title: "IntentoGuardado" });

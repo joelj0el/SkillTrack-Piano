@@ -26,7 +26,7 @@ class Intento(Base):
     estudiante_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
     version_ejercicio_id: Mapped[int] = mapped_column(ForeignKey("version_ejercicio.id"))
     tarea_id: Mapped[int | None] = mapped_column(ForeignKey("tarea.id", ondelete="SET NULL"))
-    referencia_id: Mapped[int | None] = mapped_column(Integer)
+    referencia_id: Mapped[int | None] = mapped_column(ForeignKey("referencia.id"))
     conjunto_reglas_id: Mapped[int | None] = mapped_column(Integer)
     modelo_clasificador_id: Mapped[int | None] = mapped_column(Integer)
     version_nucleo: Mapped[str] = mapped_column(String(32))

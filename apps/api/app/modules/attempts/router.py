@@ -65,6 +65,8 @@ def _dto(i: Intento) -> IntentoGuardado:
         tempo_elegido_bpm=i.tempo_elegido_bpm,
         tempo_medido_bpm=i.tempo_medido_bpm,
         secuencia_esperada=i.secuencia_esperada,
+        referencia_id=i.referencia_id,
+        conjunto_reglas_id=i.conjunto_reglas_id,
         iniciado_en=i.iniciado_en,
     )
 
@@ -102,6 +104,12 @@ def guardar_intento(
         raise pedagogia.error_de_campo("version_ejercicio_id", "La versión no existe.")
     if datos.tarea_id is not None and not pedagogia.tarea_es_de(db, datos.tarea_id, usuario.id):
         raise pedagogia.error_de_campo("tarea_id", "La tarea no es tuya.")
+    if datos.referencia_id is not None and not catalogo.referencia_es_de(
+        db, datos.referencia_id, datos.version_ejercicio_id
+    ):
+        raise pedagogia.error_de_campo(
+            "referencia_id", "La referencia no existe o es de otro ejercicio."
+        )
     tarea = db.get(Tarea, datos.tarea_id) if datos.tarea_id is not None else None
     cuenta, motivo = cuenta_para_tarea(datos, tarea)
     intento = Intento(
@@ -134,6 +142,7 @@ def guardar_intento(
         secuencia_esperada=(
             datos.secuencia_esperada.value if datos.secuencia_esperada else "provisional"
         ),
+        referencia_id=datos.referencia_id,
         eventos=[e.model_dump(mode="json") for e in datos.eventos],
     )
     db.add(intento)

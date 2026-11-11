@@ -212,6 +212,8 @@ class ResultadoIntento(BaseModel):
     pct_eventos_evaluables: confloat(ge=0.0, le=100.0) | None
     pct_digitacion_correcta: confloat(ge=0.0, le=100.0) | None
     secuencia_esperada: SecuenciaEsperada | None = None
+    referencia_id: conint(le=9007199254740991, gt=0) | None = None
+    conjunto_reglas_id: conint(le=9007199254740991, gt=0) | None = None
     tempo_medido_bpm: confloat(le=400.0, gt=0.0) | None
     referencia_temporal: ReferenciaTemporal | None
     cambio_tempo_pct: confloat(ge=-100.0, le=1000.0) | None
