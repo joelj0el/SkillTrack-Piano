@@ -23,7 +23,7 @@
     "docs:trace": "uv run tools/docs/traza.py",
     "docs:build": "node tools/docs/build.mjs",
     "docs:ids": "uv run tools/docs/ids.py",
-    "e2e": "playwright test",
+    "e2e": "node --disable-warning=ExperimentalWarning tools/despierto.ts node_modules/@playwright/test/cli.js test",
     "ingesta": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/ingesta/cli.ts",
     "calibrar": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/calibrar/cli.ts",
     "reprocesar": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/reprocesar/cli.ts",

@@ -1,0 +1,27 @@
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { ESTADO_DESPIERTO, guardianWindows } from "./despierto.ts";
+
+describe("mantener el equipo despierto durante las E2E", () => {
+  it("PU-ci-07: en Windows pide no suspender ni apagar la pantalla mientras viva el proceso", () => {
+    // ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED
+    expect(ESTADO_DESPIERTO).toBe(0x80000003);
+    const guion = guardianWindows(1234);
+    // En decimal y como uint32: Windows PowerShell 5.1 lee 0x80000003 como entero con signo.
+    expect(guion).toContain("SetThreadExecutionState([uint32]2147483651)");
+    expect(guion).toContain("Get-Process -Id 1234");
+  });
+
+  it("PU-ci-08: devuelve el código de salida del comando que envuelve", () => {
+    const carpeta = mkdtempSync(join(tmpdir(), "despierto-"));
+    const script = join(carpeta, "sale.mjs");
+    writeFileSync(script, "process.exit(3);");
+    const r = spawnSync(process.execPath, ["tools/despierto.ts", script, "x"], {
+      encoding: "utf8",
+    });
+    expect(r.status).toBe(3);
+  });
+});
