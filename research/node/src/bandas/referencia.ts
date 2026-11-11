@@ -2,7 +2,12 @@ import { existsSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Referencia, type ParametrosBandas, type ResultadoReproceso } from "@skilltrack/contracts";
-import { aplicarRetencion, construirBandas } from "@skilltrack/core";
+import {
+  aplicarRetencion,
+  construirBandas,
+  validarDejandoUnDocenteFuera,
+  type ValidacionDocente,
+} from "@skilltrack/core";
 import { ROL_DOCENTE } from "./consulta.ts";
 import { observacionesDeToma } from "./observaciones.ts";
 
@@ -77,4 +82,24 @@ export async function escribirReferencia(carpeta: string, r: Referencia): Promis
   if (existsSync(ruta)) throw new Error(`Ya existe ${ruta}: usa otra versión`);
   await writeFile(ruta, `${JSON.stringify(r, null, 2)}\n`, { flag: "wx" });
   return ruta;
+}
+
+export interface InformeV2 {
+  version_ejercicio: string;
+  version_referencia: number;
+  n_docentes: number;
+  /** Porcentaje de los valores del docente excluido dentro de la banda de los demás, por rasgo. */
+  por_docente: ValidacionDocente[];
+}
+
+/** V2: cada docente contra las bandas de los demás, en los rasgos con banda de la referencia. */
+export function validacionV2(tomas: readonly TomaReprocesada[], ref: Referencia): InformeV2 {
+  const obs = tomas.flatMap((t) => observacionesDeToma(t.docente, t.resultado));
+  const rasgos = [...new Set(ref.bandas.map((b) => b.rasgo))];
+  return {
+    version_ejercicio: ref.version_ejercicio,
+    version_referencia: ref.version,
+    n_docentes: ref.n_docentes,
+    por_docente: validarDejandoUnDocenteFuera(obs, ref.metodo.percentiles, rasgos),
+  };
 }

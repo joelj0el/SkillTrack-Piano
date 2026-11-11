@@ -13,7 +13,7 @@ import { ingerir } from "../ingesta/ingesta.ts";
 import { prepararEsquema, type Base } from "../ingesta/registro.ts";
 import { ROL_DOCENTE, tomasDeReferencia } from "./consulta.ts";
 import { observacionesDeToma } from "./observaciones.ts";
-import { construirReferencia, escribirReferencia } from "./referencia.ts";
+import { construirReferencia, escribirReferencia, validacionV2 } from "./referencia.ts";
 
 // Datos SINTÉTICOS: la planilla y los videos de fixtures/ingesta y resultados inventados.
 const FIXTURES = resolve(import.meta.dirname, "../../fixtures/ingesta");
@@ -211,5 +211,38 @@ describe("referencia por consenso", () => {
     expect(ruta).toMatch(/referencia-EJ-01_1-v3\.json$/);
     expect(Referencia.parse(JSON.parse(readFileSync(ruta, "utf8")))).toEqual(ref);
     await expect(escribirReferencia(carpeta, ref)).rejects.toThrow(/Ya existe/);
+  });
+});
+
+describe("V2 dejando un docente fuera", () => {
+  it("PU-research-71: el docente que se aparta de los demás queda fuera de sus bandas", () => {
+    // D04 se aparta (8 % frente a 2–3 %) sin que la dispersión entre docentes descarte el rasgo.
+    const tomas = [
+      ...["D01", "D02", "D03"].flatMap((d, i) => [
+        toma(d, 0, 1, 0, 2 + i * 0.5),
+        toma(d, 1, 1, 0, 2 + i * 0.5),
+      ]),
+      toma("D04", 0, 1, 0, 8),
+    ];
+    const ref = construirReferencia({
+      tomas,
+      parametros,
+      version: 1,
+      versionEjercicio: "EJ-01@1",
+      generadaEn: "2027-02-01T12:00:00Z",
+    });
+    const v2 = validacionV2(tomas, ref);
+    expect(v2.n_docentes).toBe(4);
+    const cambio = (d: string) =>
+      v2.por_docente
+        .find((x) => x.docente === d)!
+        .por_rasgo.find((r) => r.rasgo === "cambio_tempo.pct")!;
+    expect(cambio("D04")).toEqual({
+      rasgo: "cambio_tempo.pct",
+      dentro: 0,
+      total: 1,
+      porcentaje: 0,
+    });
+    expect(cambio("D02").porcentaje).toBe(100);
   });
 });

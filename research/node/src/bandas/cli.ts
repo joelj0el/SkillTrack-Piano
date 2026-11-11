@@ -2,12 +2,19 @@
 //   pnpm bandas --ejercicio EJ-01@1 --version 1 --parametros <parametros.json> [--salida <carpeta>]
 // Los parámetros salen de research/node/src/bandas/parametros.plantilla.json.
 import { existsSync, readFileSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { ParametrosBandas, ResultadoReproceso } from "@skilltrack/contracts";
 import pg from "pg";
 import { tomasDeReferencia } from "./consulta.ts";
-import { construirReferencia, escribirReferencia, type TomaReprocesada } from "./referencia.ts";
+import {
+  construirReferencia,
+  escribirReferencia,
+  nombreReferencia,
+  validacionV2,
+  type TomaReprocesada,
+} from "./referencia.ts";
 
 const BASE_LOCAL = "postgresql://research:research@127.0.0.1:5434/research";
 
@@ -63,6 +70,18 @@ try {
   console.log(`No evaluables tras el análisis: ${noEvaluables.join(", ") || "ninguna"}`);
   for (const d of ref.rasgos_descartados) console.log(`DESCARTADO ${d.rasgo}: ${d.motivo}`);
   for (const s of ref.rasgos_sin_evaluar) console.log(`SIN EVALUAR ${s.rasgo}: ${s.motivo}`);
+
+  // V2: cada docente contra las bandas de los demás (sin umbral: el de G-1 aún no está fijado).
+  const v2 = validacionV2(tomas, ref);
+  const archivoV2 = join(resolve(values.salida), `v2-${nombreReferencia(ref)}`);
+  await writeFile(archivoV2, `${JSON.stringify(v2, null, 2)}\n`, { flag: "wx" });
+  console.log(`\nV2 dejando un docente fuera: ${archivoV2}`);
+  for (const d of v2.por_docente) {
+    for (const r of d.por_rasgo) {
+      const pct = r.porcentaje === null ? "sin datos" : `${r.porcentaje.toFixed(1)} %`;
+      console.log(`  ${d.docente} · ${r.rasgo}: ${pct} (${r.dentro}/${r.total})`);
+    }
+  }
 } finally {
   await cliente.end();
 }
