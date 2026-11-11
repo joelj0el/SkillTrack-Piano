@@ -26,6 +26,7 @@ class Manos(StrEnum):
 
 class Estado(StrEnum):
     Asignada = "Asignada"
+    En_práctica = "En práctica"
     Vencida = "Vencida"
     Cancelada = "Cancelada"
 

@@ -43,7 +43,7 @@ class SecuenciaEsperada(StrEnum):
     provisional = "provisional"
 
 
-class Estado7(StrEnum):
+class Estado8(StrEnum):
     digitacion_correcta = "digitacion-correcta"
     dedo_incorrecto = "dedo-incorrecto"
     no_evaluable = "no-evaluable"
@@ -59,7 +59,7 @@ class EventoResultadoV1(BaseModel):
         extra="forbid",
     )
     idx: conint(ge=0, le=9007199254740991)
-    estado: Estado7
+    estado: Estado8
     motivo: constr(max_length=80) | None
     mano: Mano | None
     dedo: conint(ge=1, le=5) | None

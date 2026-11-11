@@ -63,7 +63,7 @@ class Mano(StrEnum):
     MD = "MD"
 
 
-class Estado2(StrEnum):
+class Estado3(StrEnum):
     evaluado = "evaluado"
     no_evaluable = "no-evaluable"
 
@@ -74,7 +74,7 @@ class Modalidad(StrEnum):
     VA = "VA"
 
 
-class Estado3(StrEnum):
+class Estado4(StrEnum):
     correcta = "correcta"
     incorrecta = "incorrecta"
     dudosa = "dudosa"
@@ -86,13 +86,13 @@ class Nota(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    estado: Estado3
+    estado: Estado4
     midi: conint(ge=0, le=127) | None
     clase_oida: conint(ge=0, le=11) | None
     modalidad: Modalidad | None
 
 
-class Estado4(StrEnum):
+class Estado5(StrEnum):
     correcto = "correcto"
     incorrecto = "incorrecto"
     sin_esperado = "sin-esperado"
@@ -112,7 +112,7 @@ class Dedo(BaseModel):
         extra="forbid",
     )
     valor: conint(ge=1, le=5) | None
-    estado: Estado4
+    estado: Estado5
     modalidad: Modalidad3 | None
 
 
@@ -133,7 +133,7 @@ class Tecla(BaseModel):
     modalidad: Modalidad4 | None
 
 
-class Estado5(StrEnum):
+class Estado6(StrEnum):
     a_tiempo = "a-tiempo"
     tarde = "tarde"
     una_nota_atras = "una-nota-atras"
@@ -155,7 +155,7 @@ class DesfaseManos(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    estado: Estado5
+    estado: Estado6
     ms: confloat(ge=0.0) | None
     mano_tarde: ManoTarde | None
     modalidad: Modalidad5 | None
@@ -177,7 +177,7 @@ class EventoResultado(BaseModel):
     mano: Mano | None
     midi_esperado: conint(ge=0, le=127) | None
     dedo_esperado: conint(ge=1, le=5) | None
-    estado: Estado2
+    estado: Estado3
     motivo: constr(max_length=80) | None
     ataque_ms: conint(ge=0, le=9007199254740991) | None
     modalidad: Modalidad | None

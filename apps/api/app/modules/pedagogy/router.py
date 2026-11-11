@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.contracts_gen.avance_tarea import AvanceTarea as AvanceDto
 from app.contracts_gen.observacion import Observacion as ObservacionDto
 from app.contracts_gen.observacion_nueva import ObservacionNueva
 from app.contracts_gen.tarea import Tarea as TareaDto
@@ -168,6 +169,13 @@ def mis_tareas(usuario: UsuarioEnSesion, db: Db, instante: Ahora) -> list[TareaD
 def ver_tarea(tarea_id: int, usuario: UsuarioEnSesion, db: Db, instante: Ahora) -> TareaDto:
     tarea = _ver_tarea(db, db.get(Tarea, tarea_id), usuario, instante)
     return service.tareas_dto(db, [tarea], hoy_local(instante))[0]
+
+
+@router.get("/tareas/{tarea_id}/avance", response_model=AvanceDto)
+def ver_avance(tarea_id: int, usuario: UsuarioEnSesion, db: Db, instante: Ahora) -> AvanceDto:
+    """HU-37: el estudiante ve el suyo y el docente, el de sus asignados; otro docente, 403."""
+    tarea = _ver_tarea(db, db.get(Tarea, tarea_id), usuario, instante)
+    return service.avance(db, tarea, hoy_local(instante))
 
 
 @router.get("/observaciones/{observacion_id}", response_model=ObservacionDto)

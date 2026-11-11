@@ -33,7 +33,8 @@ export const TareaCambio = z
   .meta({ title: "TareaCambio" });
 export type TareaCambio = z.infer<typeof TareaCambio>;
 
-export const EstadoTarea = z.enum(["Asignada", "Vencida", "Cancelada"]);
+// Asignada → En práctica (≥ 1 intento válido) → Vencida (plazo cumplido); Cancelada por el docente.
+export const EstadoTarea = z.enum(["Asignada", "En práctica", "Vencida", "Cancelada"]);
 export type EstadoTarea = z.infer<typeof EstadoTarea>;
 
 export const Observacion = z
@@ -78,3 +79,37 @@ export const ObservacionNueva = z
   })
   .meta({ title: "ObservacionNueva" });
 export type ObservacionNueva = z.infer<typeof ObservacionNueva>;
+
+/** Intento de la tarea en el avance: si cuenta para la meta del día y, si no, por qué. */
+export const IntentoDeAvance = z
+  .strictObject({
+    id: z.int().positive(),
+    iniciado_en: z.iso.datetime({ offset: true }),
+    estado: z.enum(["evaluado", "no_evaluable"]),
+    tempo_elegido_bpm: z.int().nullable(),
+    tempo_medido_bpm: z.number().nullable(),
+    cuenta_para_tarea: z.boolean(),
+    motivo_no_cuenta: z.string().nullable(),
+  })
+  .meta({ title: "IntentoDeAvance" });
+export type IntentoDeAvance = z.infer<typeof IntentoDeAvance>;
+
+export const DiaDeAvance = z
+  .strictObject({ fecha: z.iso.date(), validas: z.int().nonnegative(), meta: z.int().positive() })
+  .meta({ title: "DiaDeAvance" });
+export type DiaDeAvance = z.infer<typeof DiaDeAvance>;
+
+/** HU-37: repeticiones válidas por día (en la zona horaria de La Paz) frente a la meta. */
+export const AvanceTarea = z
+  .strictObject({
+    tarea_id: z.int().positive(),
+    meta_por_dia: z.int().positive(),
+    hoy: z.iso.date(),
+    validas_hoy: z.int().nonnegative(),
+    /** Un día por cada fecha desde la asignación hasta hoy o el plazo, el primero que llegue. */
+    dias: z.array(DiaDeAvance),
+    /** Del más reciente al más antiguo. */
+    intentos: z.array(IntentoDeAvance),
+  })
+  .meta({ title: "AvanceTarea" });
+export type AvanceTarea = z.infer<typeof AvanceTarea>;

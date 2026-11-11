@@ -19,6 +19,7 @@ import { Chip, EnlaceBoton, EstadoVista, PaginaCabecera } from "../ui/base.tsx";
 
 const ESTADO_TAREA = {
   Asignada: { tono: "neutro", icono: Clock },
+  "En práctica": { tono: "correcto", icono: Repeat },
   Vencida: { tono: "tiempo", icono: TriangleAlert },
   Cancelada: { tono: "no-evaluable", icono: Ban },
 } as const;

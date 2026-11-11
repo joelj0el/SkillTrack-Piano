@@ -10,7 +10,14 @@ import {
   UsuarioListado,
   UsuarioNuevo,
 } from "./instituciones.ts";
-import { ObservacionNueva, Observacion, Tarea, TareaCambio, TareaNueva } from "./pedagogia.ts";
+import {
+  AvanceTarea,
+  ObservacionNueva,
+  Observacion,
+  Tarea,
+  TareaCambio,
+  TareaNueva,
+} from "./pedagogia.ts";
 import { Salud } from "./salud.ts";
 
 export * from "./calibracion.ts";
@@ -40,6 +47,7 @@ export const esquemas = {
   tarea_nueva: TareaNueva,
   tarea_cambio: TareaCambio,
   tarea: Tarea,
+  avance_tarea: AvanceTarea,
   observacion_nueva: ObservacionNueva,
   observacion: Observacion,
   resultado_intento: ResultadoIntento,
