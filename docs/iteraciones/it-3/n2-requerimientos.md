@@ -40,13 +40,13 @@ Pruebas nuevas: PU-web-12 (micrófono simulado: nivel, prueba completa y ningún
 
 ## HU-10 · Ataques, tempo estable y regularidad
 
-| PA         | Estado                                | Motivo / prueba del núcleo                                                                                                       |
-| ---------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| PA-HU10-01 | Pendiente: requiere fixtures anotados | En señal sintética limpia el error de ataque es ≤ 10 ms (PU-audio-05, 09) y el F1 se calcula con tolerancia ±50 ms (PU-audio-08) |
-| PA-HU10-02 | Prototipo                             | Estable, aceleraste y frenaste con tempo inicial, final y porcentaje (PU-audio-10, 11, 12)                                       |
-| PA-HU10-03 | Prototipo                             | Solo la nota retrasada 40 % se marca y el tempo sigue estable (PU-audio-13, 14)                                                  |
-| PA-HU10-04 | Prototipo                             | Referencia: tempo elegido con metrónomo, tempo inicial sin él (PU-audio-15)                                                      |
-| PA-HU10-05 | Prototipo                             | Mensaje "Tocaste a ♩≈55; tu tarea pide 60–70" y no cuenta (PU-audio-16)                                                          |
+| PA         | Estado                                | Motivo / prueba del núcleo                                                                                                                                                    |
+| ---------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU10-01 | Pendiente: requiere fixtures anotados | En señal sintética limpia el error de ataque es ≤ 10 ms (PU-audio-05, 09) y el F1 se calcula con tolerancia ±50 ms (PU-audio-08)                                              |
+| PA-HU10-02 | Prototipo                             | Estable, aceleraste y frenaste con tempo inicial, final y porcentaje (PU-audio-10, 11, 12)                                                                                    |
+| PA-HU10-03 | Prototipo                             | Solo la nota retrasada 40 % se marca y el tempo sigue estable (PU-audio-13, 14)                                                                                               |
+| PA-HU10-04 | Prototipo                             | Referencia: tempo elegido con metrónomo, tempo inicial sin él (PU-audio-15)                                                                                                   |
+| PA-HU10-05 | Prototipo                             | El servidor decide que no cuenta y guarda el motivo "Tocaste a ♩≈55; tu tarea pide 60–70" (PA-HU10-05 de la API, PU-audio-16); falta la E2E con un intento completo con audio |
 
 ## HU-21 · Clase de altura
 
@@ -66,8 +66,6 @@ Pruebas nuevas: PU-web-12 (micrófono simulado: nivel, prueba completa y ningún
 | PA-HU11-03, 04 | Prototipo | Con eventos sintéticos: 80 ms se marca y 10 ms no (PU-desfase-01 y 02); una nota atrás se marca como tal y no como nota incorrecta (PU-alineacion-02, PU-desfase-04). Falta la E2E con audio y video |
 | PA-HU11-05     | Pendiente | Requiere el intento completo con cámara y micrófono                                                                                                                                                  |
 
-HU-37 (avance de la tarea) no se incluyó en esta versión.
-
 ## Estado de esta versión
 
 - **Implementado:** ningún PA de punta a punta.
@@ -76,9 +74,9 @@ HU-37 (avance de la tarea) no se incluyó en esta versión.
 
 ## HU-37 · Avance de la tarea por día
 
-| PA         | Estado    | Motivo                                                                                        |
-| ---------- | --------- | --------------------------------------------------------------------------------------------- |
-| PA-HU37-01 | Pendiente | "N de M hoy" y la lista de intentos con fecha y hora en la tarea del estudiante               |
-| PA-HU37-02 | Pendiente | Solo cuentan los intentos válidos; cada uno indica el motivo; el docente ve la práctica lenta |
-| PA-HU37-03 | Pendiente | El docente ve, por día desde la asignación, las repeticiones válidas frente a la meta         |
-| PA-HU37-04 | Pendiente | Estado Asignada → En práctica → Vencida; docente no asignado, 403                             |
+| PA         | Estado   | Motivo                                                                                                                                                                                                         |
+| ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU37-01 | Cumplido | "2 de 3 hoy" y la lista de intentos con fecha y hora (E2E PA-HU37-01)                                                                                                                                          |
+| PA-HU37-02 | Cumplido | No evaluable, práctica lenta, fuera de rango y sin tempo no cuentan, cada uno con su motivo; el docente ve la práctica lenta (PA-HU37-02). Los intentos cancelados no llegan al servidor: la app no los guarda |
+| PA-HU37-03 | Cumplido | Días desde la asignación con repeticiones válidas frente a la meta, y cada intento con fecha y hora (E2E PA-HU37-03)                                                                                           |
+| PA-HU37-04 | Cumplido | Asignada → En práctica → Vencida; un intento que no cuenta no la pone en práctica; docente no asignado, 403 (PA-HU37-04). "Lograda" llega con HU-38                                                            |
