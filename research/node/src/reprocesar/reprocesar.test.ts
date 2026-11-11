@@ -30,6 +30,8 @@ let base: Base;
 const analisis = (detectadas: number, total: number): RespuestaAnalisis => ({
   visuales: [],
   acustico: null,
+  porMano: null,
+  eventos: [],
   duracionAnalisisMs: 1,
   notas: Array.from({ length: total }, (_, idx) => ({
     idx,

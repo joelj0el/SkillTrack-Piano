@@ -1,5 +1,14 @@
 import { alinearNotas, type AlineamientoNotas } from "../alineacion/notas.ts";
 import { fusionar, type AtaqueFusionado } from "../alineacion/fusion.ts";
+import {
+  alinearPorMano,
+  golpesPorMano,
+  periodoDelPulso,
+  type AlineamientoPorMano,
+} from "../alineacion/manos.ts";
+import { bandaEnAtaque } from "../audio/registro.ts";
+import { desfaseEntreManos } from "../medidas/desfase.ts";
+import { registrarEventos, type EventoRegistrado } from "./registro.ts";
 import { detectarAtaques } from "../audio/ataques.ts";
 import { ENERGIA_MINIMA, cromaEnAtaque } from "../audio/croma.ts";
 import { analizarTempo, type AnalisisTempo } from "../audio/tempo.ts";
@@ -61,6 +70,10 @@ export interface RespuestaAnalisis {
   notas: ResultadoNotaVisual[];
   visuales: EventoVisual[];
   acustico: ResultadoAcustico | null;
+  /** Alineamiento por mano (E9); null si no hubo golpes para estimar el pulso. */
+  porMano: AlineamientoPorMano | null;
+  /** Un registro por evento esperado, con la modalidad de cada dato (ResultadoIntento v2). */
+  eventos: EventoRegistrado[];
   duracionAnalisisMs: number;
 }
 
@@ -131,12 +144,61 @@ export function analizar(p: PedidoAnalisis, reloj: () => number): RespuestaAnali
     };
     visuales.push(...eventosVisuales(mano, detectarDescensos(muestras, DEDOS), punta, modelo));
   }
+  const reducido = p.audio ? reducirTasa(p.audio.muestras, p.audio.tasa) : null;
+  const acustico = p.audio && reducido ? analizarAudio(p, p.audio, reducido, visuales) : null;
+  const { porMano, eventos } = alinearYRegistrar(p, visuales, acustico, reducido);
   return {
     notas: resultadoVisual(p.esperadas, visuales),
     visuales,
-    acustico: p.audio ? analizarAudio(p, p.audio, visuales) : null,
+    acustico,
+    porMano,
+    eventos,
     duracionAnalisisMs: reloj() - inicio,
   };
+}
+
+/** E9, E9b y E11 sobre los ataques oídos (o, sin audio, sobre los eventos visuales). */
+function alinearYRegistrar(
+  p: PedidoAnalisis,
+  visuales: EventoVisual[],
+  acustico: ResultadoAcustico | null,
+  reducido: { muestras: Float32Array; tasa: number } | null,
+): { porMano: AlineamientoPorMano | null; eventos: EventoRegistrado[] } {
+  const manosPresentes = new Set(p.esperadas.map((n) => n.mano));
+  const manos = manosPresentes.size === 2 ? "juntas" : manosPresentes.has("MI") ? "MI" : "MD";
+  const oidas = acustico?.oidas ?? [];
+  const golpes = golpesPorMano(oidas, visuales, manos);
+  const periodo = periodoDelPulso(p.tempoElegido ?? null, p.esperadas, [
+    ...golpes.MI,
+    ...golpes.MD,
+  ]);
+  if (periodo === null) return { porMano: null, eventos: [] };
+  const porMano = alinearPorMano(p.esperadas, golpes, periodo);
+  const banda =
+    p.audio && reducido
+      ? (i: number, grave: number, agudo: number) =>
+          bandaEnAtaque(reducido.muestras, reducido.tasa, oidas[i]!.t - p.audio!.t0, grave, agudo)
+      : undefined;
+  const desfases =
+    manos === "juntas"
+      ? desfaseEntreManos(p.esperadas, porMano, visuales, banda)
+      : new Map<number, never>();
+  const rasgosEn = (mano: "MI" | "MD", t: number) => {
+    const serie = p.series[mano];
+    if (!serie?.length) return {};
+    const cercana = serie.reduce((a, b) => (Math.abs(b.t - t) < Math.abs(a.t - t) ? b : a));
+    return Object.fromEntries(
+      Object.entries(cercana.alturas).map(([dedo, v]) => [`altura.${dedo}`, v as number]),
+    );
+  };
+  const eventos = registrarEventos({
+    esperadas: p.esperadas,
+    alineado: porMano,
+    desfases,
+    visuales,
+    rasgosEn,
+  });
+  return { porMano, eventos };
 }
 
 /** Promedio por bloques hasta ~22 kHz: los parámetros del núcleo de audio están a esa tasa. */
@@ -158,9 +220,9 @@ export function reducirTasa(
 function analizarAudio(
   p: PedidoAnalisis,
   audio: AudioGrabado,
+  { muestras, tasa }: { muestras: Float32Array; tasa: number },
   visuales: EventoVisual[],
 ): ResultadoAcustico {
-  const { muestras, tasa } = reducirTasa(audio.muestras, audio.tasa);
   const relativos = detectarAtaques(muestras, tasa);
   const oidas = relativos.map((t) => {
     const croma = cromaEnAtaque(muestras, tasa, t);

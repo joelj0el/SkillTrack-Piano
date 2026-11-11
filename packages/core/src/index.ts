@@ -2,6 +2,7 @@ export * from "./alineacion/fusion.ts";
 export * from "./alineacion/manos.ts";
 export * from "./alineacion/notas.ts";
 export * from "./analisis/cadena.ts";
+export * from "./analisis/registro.ts";
 export * from "./audio/ataques.ts";
 export * from "./audio/croma.ts";
 export * from "./audio/fft.ts";

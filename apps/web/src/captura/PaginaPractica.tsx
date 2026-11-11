@@ -1,4 +1,4 @@
-import { Ejercicio, ResultadoIntento, Tarea, type EventoResultado } from "@skilltrack/contracts";
+import { Ejercicio, ResultadoIntento, Tarea } from "@skilltrack/contracts";
 import {
   DEDOS,
   PUNTA,
@@ -72,7 +72,6 @@ interface Contexto {
   tarea: Tarea | null;
 }
 
-const NUMERO_DEDO = { pulgar: 1, indice: 2, medio: 3, anular: 4, menique: 5 } as const;
 const ORDEN_TOQUES = [
   "frenteIzquierda",
   "frenteDerecha",
@@ -741,19 +740,19 @@ export function PasoEjecucion(props: {
     const acustico = respuesta.acustico;
     const pct = Math.round(fraccionEvaluable(respuesta) * 1000) / 10;
     const ok = pct >= 70 && !estado.incompleta;
-    const eventos: EventoResultado[] = respuesta.notas.map((n) => ({
-      idx: n.idx,
-      estado: "no-evaluable",
-      motivo:
-        n.resultado.estado === "detectada"
-          ? "digitación pendiente de transcripción"
-          : n.resultado.motivo,
-      mano: n.mano,
-      dedo: n.resultado.estado === "detectada" ? NUMERO_DEDO[n.resultado.dedo] : null,
-      midi: n.midiEsperado,
-      rasgos: {},
-    }));
+    // Registro v2: un evento por nota esperada, con la modalidad de cada dato.
+    const eventos = respuesta.eventos;
+    const comparados = eventos.filter(
+      (e) => e.dedo.estado === "correcto" || e.dedo.estado === "incorrecto",
+    );
+    const pctDigitacion = comparados.length
+      ? Math.round(
+          (comparados.filter((e) => e.dedo.estado === "correcto").length / comparados.length) *
+            1000,
+        ) / 10
+      : null;
     const resultado = ResultadoIntento.parse({
+      version: 2,
       client_uuid: crypto.randomUUID(),
       version_ejercicio_id: contexto.ejercicio.version_vigente.id,
       tarea_id: contexto.tarea?.id ?? null,
@@ -774,7 +773,7 @@ export function PasoEjecucion(props: {
       iniciado_en: new Date(Date.now() - (performance.now() - inicio.current)).toISOString(),
       duracion_ms: Math.round(performance.now() - inicio.current),
       pct_eventos_evaluables: pct,
-      pct_digitacion_correcta: null,
+      pct_digitacion_correcta: pctDigitacion,
       secuencia_esperada: secuencia,
       eventos,
     });

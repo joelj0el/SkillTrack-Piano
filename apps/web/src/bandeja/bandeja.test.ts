@@ -4,6 +4,7 @@ import { ErrorApi, SinConexion } from "../api.ts";
 import { almacenEnMemoria, encolar, vaciar } from "./bandeja.ts";
 
 const resultado = (uuid: string): ResultadoIntento => ({
+  version: 2,
   client_uuid: uuid,
   version_ejercicio_id: 1,
   tarea_id: null,

@@ -63,8 +63,9 @@ const MANOS_DE: Record<"MI" | "MD" | "juntas", IdMano[]> = {
 /**
  * Golpes de cada mano. Cada evento visual se asigna al ataque de audio más cercano; un ataque
  * recibe la mano de los eventos visuales que le tocaron. Un ataque en octava (las dos manos a la
- * vez) sirve a las dos. Un ataque sin ningún evento visual no se puede atribuir: se ofrece a las
- * manos de la tarea solo con el audio. Sin audio, los golpes son los eventos visuales.
+ * vez) sirve a las dos. A una mano que la cámara no vio en ese ataque se le ofrece solo el audio;
+ * si la otra mano sí se vio, sin clase de altura, porque el sonido puede ser de la otra. Sin
+ * audio, los golpes son los eventos visuales.
  */
 export function golpesPorMano(
   ataques: readonly AtaqueAudio[],
@@ -103,17 +104,17 @@ export function golpesPorMano(
         const midi = visuales[i]!.midi;
         golpes[mano].push({ t: a.t, midi, clase: a.clase, modalidad: "VA", ataque: j, visual: i });
       }
-      if (atribuidas.length === 0) {
-        for (const mano of deLaTarea) {
-          golpes[mano].push({
-            t: a.t,
-            midi: null,
-            clase: a.clase,
-            modalidad: "A",
-            ataque: j,
-            visual: null,
-          });
-        }
+      // Las manos de la tarea que la cámara no vio en este ataque reciben solo el audio. Si la
+      // vio otra mano, el sonido puede ser de esa: la clase no se atribuye y la nota queda dudosa.
+      for (const mano of deLaTarea.filter((m) => !atribuidas.includes(m))) {
+        golpes[mano].push({
+          t: a.t,
+          midi: null,
+          clase: atribuidas.length === 0 ? a.clase : null,
+          modalidad: "A",
+          ataque: j,
+          visual: null,
+        });
       }
     });
   }
@@ -159,7 +160,9 @@ function alinearUnaMano(
     const exactos = candidatos.filter((i) => coincide(golpes[i]!, n) === true);
     let elegido: number | null = exactos.length ? masCercano(exactos) : null;
     if (elegido === null && candidatos.length) {
-      const cerca = masCercano(candidatos);
+      // Entre golpes que no coinciden, primero los que vio la cámara: su tecla es un dato.
+      const vistos = candidatos.filter((i) => golpes[i]!.visual !== null);
+      const cerca = masCercano(vistos.length ? vistos : candidatos);
       const siguiente = esperadas[k + 1];
       // Es una omisión solo si el golpe es la nota que viene y está más cerca de su momento.
       const prediccionSiguiente =

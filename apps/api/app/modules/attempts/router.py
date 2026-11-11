@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.contracts_gen.intento_guardado import IntentoGuardado
 from app.contracts_gen.resultado_intento import ResultadoIntento
+from app.contracts_gen.resultado_intento_v1 import ResultadoIntentoV1
 from app.core.reloj import hoy_local
+from app.modules.attempts.conversion import evento_v1_a_v2
 from app.modules.attempts.models import Intento
 from app.modules.audit import service as auditoria
 from app.modules.catalog import service as catalogo
@@ -51,10 +53,23 @@ def _dto(i: Intento) -> IntentoGuardado:
     )
 
 
+def a_v2(recibido: ResultadoIntento | ResultadoIntentoV1) -> ResultadoIntento:
+    """La app en caché o un intento que quedó en cola pueden llegar todavía en la v1."""
+    if isinstance(recibido, ResultadoIntento):
+        return recibido
+    datos = recibido.model_dump(mode="json")
+    datos["eventos"] = [evento_v1_a_v2(e) for e in datos["eventos"]]
+    return ResultadoIntento.model_validate({"version": 2, **datos})
+
+
 @router.post("/intentos", response_model=IntentoGuardado, status_code=status.HTTP_201_CREATED)
 def guardar_intento(
-    datos: ResultadoIntento, respuesta: Response, usuario: UsuarioEnSesion, db: Db
+    recibido: ResultadoIntento | ResultadoIntentoV1,
+    respuesta: Response,
+    usuario: UsuarioEnSesion,
+    db: Db,
 ) -> IntentoGuardado:
+    datos = a_v2(recibido)
     if not instituciones.instituciones_de(db, usuario.id, "estudiante"):
         raise PROHIBIDO
     existente = db.scalar(select(Intento).where(Intento.client_uuid == str(datos.client_uuid)))
@@ -92,7 +107,7 @@ def guardar_intento(
         secuencia_esperada=(
             datos.secuencia_esperada.value if datos.secuencia_esperada else "provisional"
         ),
-        eventos=[e.model_dump() for e in datos.eventos],
+        eventos=[e.model_dump(mode="json") for e in datos.eventos],
     )
     db.add(intento)
     db.commit()

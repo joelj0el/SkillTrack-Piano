@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { ResultadoIntento } from "./index.ts";
+import { ResultadoIntento, ResultadoIntentoV1 } from "./index.ts";
 
-export const RESULTADO = {
+const COMUNES = {
   client_uuid: "0b6a3c3e-6f1e-4d8a-9a51-2f0f3d6f9c11",
   version_ejercicio_id: 1,
   tarea_id: null,
@@ -10,8 +10,8 @@ export const RESULTADO = {
   instrumento: "digital",
   manos: "MD",
   clase_dispositivo: "Android/Chrome",
-  modo: "V",
-  modo_metronomo: null,
+  modo: "VA",
+  modo_metronomo: "sin",
   tempo_elegido_bpm: 60,
   estado: "evaluado",
   motivo_no_evaluable: null,
@@ -19,6 +19,29 @@ export const RESULTADO = {
   duracion_ms: 9000,
   pct_eventos_evaluables: 90,
   pct_digitacion_correcta: 80,
+};
+
+export const EVENTO = {
+  idx: 0,
+  mano: "MD",
+  midi_esperado: 60,
+  dedo_esperado: 1,
+  estado: "evaluado",
+  motivo: null,
+  ataque_ms: 1000,
+  modalidad: "VA",
+  nota: { estado: "correcta", midi: 60, clase_oida: 0, modalidad: "VA" },
+  dedo: { valor: 1, estado: "correcto", modalidad: "V" },
+  tecla: { midi: 60, zona: 0.3, modalidad: "V" },
+  desfase_manos: null,
+  rasgos: { "altura.pulgar": 0.2 },
+  rasgos_modalidad: "V",
+};
+
+export const RESULTADO = { version: 2, ...COMUNES, eventos: [EVENTO] };
+
+export const RESULTADO_V1 = {
+  ...COMUNES,
   eventos: [
     {
       idx: 0,
@@ -59,5 +82,28 @@ describe("secuencia esperada", () => {
     expect(ResultadoIntento.safeParse({ ...RESULTADO, secuencia_esperada: "otra" }).success).toBe(
       false,
     );
+  });
+});
+
+describe("ResultadoIntento v2", () => {
+  it("PU-contracts-20: la v1 sigue siendo válida como v1, pero no como v2", () => {
+    expect(ResultadoIntentoV1.safeParse(RESULTADO_V1).success).toBe(true);
+    expect(ResultadoIntento.safeParse(RESULTADO_V1).success).toBe(false);
+    expect(ResultadoIntentoV1.safeParse(RESULTADO).success).toBe(false);
+  });
+
+  it("PU-contracts-21: cada dato del evento lleva su modalidad y la visión solo marca V", () => {
+    const con = (cambio: object) =>
+      ResultadoIntento.safeParse({ ...RESULTADO, eventos: [{ ...EVENTO, ...cambio }] }).success;
+    expect(con({ dedo: { valor: 1, estado: "correcto", modalidad: "A" } })).toBe(false);
+    expect(con({ nota: { estado: "correcta", midi: 60, clase_oida: 0 } })).toBe(false);
+    expect(
+      con({
+        desfase_manos: { estado: "tarde", ms: 80, mano_tarde: "MI", modalidad: "VA" },
+      }),
+    ).toBe(true);
+    expect(
+      con({ nota: { estado: "sin-dato", midi: null, clase_oida: null, modalidad: null } }),
+    ).toBe(true);
   });
 });

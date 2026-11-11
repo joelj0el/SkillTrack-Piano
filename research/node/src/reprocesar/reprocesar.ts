@@ -29,7 +29,7 @@ import type { Base } from "../ingesta/registro.ts";
 import { booleano } from "../ingesta/validar.ts";
 import { leerCodecs, type Codecs } from "./codecs.ts";
 
-export const VERSION_REPROCESO = "1.1.0";
+export const VERSION_REPROCESO = "1.2.0";
 const RESULTADO = "resultado.json";
 const LANDMARKS = "landmarks.jsonl";
 const AUDIO = "audio_events.json";
@@ -237,6 +237,7 @@ function documentos(
     analisis: {
       notas: s.analisis.notas,
       visuales: s.analisis.visuales,
+      eventos: s.analisis.eventos,
       acustico: acustico
         ? {
             ataques: acustico.ataques,

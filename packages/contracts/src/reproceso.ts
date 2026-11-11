@@ -81,6 +81,8 @@ export const ResultadoReproceso = z.strictObject({
     notas: z.array(z.unknown()),
     visuales: z.array(z.unknown()),
     acustico: z.record(z.string(), z.unknown()).nullable(),
+    /** Registro por evento (el mismo de ResultadoIntento v2). */
+    eventos: z.array(z.unknown()),
   }),
   porcentaje_evaluable: z.number().min(0).max(100),
   evaluable: z.strictObject({

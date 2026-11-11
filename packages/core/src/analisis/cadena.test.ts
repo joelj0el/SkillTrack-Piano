@@ -42,7 +42,7 @@ describe("cadena compartida por la app y el reprocesamiento", () => {
             ? { estado, dedo: "indice", t: 0 }
             : { estado, motivo: "sin evento visual" },
       }) as RespuestaAnalisis["notas"][number];
-    const base = { visuales: [], duracionAnalisisMs: 0 };
+    const base = { visuales: [], duracionAnalisisMs: 0, porMano: null, eventos: [] };
     const sinAudio: RespuestaAnalisis = {
       ...base,
       acustico: null,
@@ -190,5 +190,11 @@ describe("análisis con audio", () => {
     expect(acustico.tempo?.tempoInicial).toBeCloseTo(60, 0);
     // Sin eventos visuales, cada ataque queda solo con audio.
     expect(acustico.fusion.every((f) => f.modalidad === "A")).toBe(true);
+    // Registro v2: uno por nota esperada; sin cámara, la nota es solo audio y no hay dedo.
+    expect(r.eventos).toHaveLength(8);
+    expect(r.eventos.every((e) => e.nota.estado === "correcta" && e.nota.modalidad === "A")).toBe(
+      true,
+    );
+    expect(r.eventos.every((e) => e.dedo.estado === "no-detectado")).toBe(true);
   });
 });

@@ -172,3 +172,61 @@ def test_pu_attempts_03_el_intento_guarda_de_donde_salieron_las_notas_esperadas(
     r = cliente.post("/api/intentos", json={**resultado(), "secuencia_esperada": "partitura"})
     assert r.status_code == 201, r.text
     assert r.json()["secuencia_esperada"] == "partitura"
+
+
+EVENTO_V1 = {
+    "idx": 0,
+    "estado": "dedo-incorrecto",
+    "motivo": None,
+    "mano": "MD",
+    "dedo": 2,
+    "midi": 60,
+    "rasgos": {"altura.indice": 0.3},
+}
+
+EVENTO_V2 = {
+    "idx": 0,
+    "mano": "MI",
+    "midi_esperado": 48,
+    "dedo_esperado": 5,
+    "estado": "evaluado",
+    "motivo": None,
+    "ataque_ms": 1080,
+    "modalidad": "VA",
+    "nota": {"estado": "correcta", "midi": 48, "clase_oida": 0, "modalidad": "VA"},
+    "dedo": {"valor": 5, "estado": "correcto", "modalidad": "V"},
+    "tecla": {"midi": 48, "zona": 0.25, "modalidad": "V"},
+    "desfase_manos": {"estado": "tarde", "ms": 80.0, "mano_tarde": "MI", "modalidad": "VA"},
+    "rasgos": {},
+    "rasgos_modalidad": None,
+}
+
+
+def test_pu_attempts_04_un_intento_v1_se_guarda_convertido_a_v2_sin_inventar_datos(
+    cliente: TestClient, db: Session
+):
+    e = escenario.crear(db)
+    como(cliente, e.estudiante_a)
+    r = cliente.post("/api/intentos", json=resultado(eventos=[EVENTO_V1]))
+    assert r.status_code == 201, r.text
+    [evento] = db.scalar(select(Intento.eventos))
+    assert evento["dedo"] == {"valor": 2, "estado": "incorrecto", "modalidad": "V"}
+    assert evento["nota"] == {
+        "estado": "sin-dato",
+        "midi": None,
+        "clase_oida": None,
+        "modalidad": None,
+    }
+    assert evento["midi_esperado"] == 60 and evento["desfase_manos"] is None
+
+
+def test_pu_attempts_05_un_intento_v2_guarda_cada_dato_con_su_modalidad(
+    cliente: TestClient, db: Session
+):
+    e = escenario.crear(db)
+    como(cliente, e.estudiante_a)
+    r = cliente.post("/api/intentos", json={"version": 2, **resultado(eventos=[EVENTO_V2])})
+    assert r.status_code == 201, r.text
+    assert db.scalar(select(Intento.eventos)) == [EVENTO_V2]
+    mezcla = {"version": 2, **resultado(eventos=[EVENTO_V1])}
+    assert cliente.post("/api/intentos", json=mezcla).status_code == 422
