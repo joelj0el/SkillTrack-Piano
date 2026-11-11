@@ -152,6 +152,50 @@
         "provisional"
       ]
     },
+    "tempo_medido_bpm": {
+      "anyOf": [
+        {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 400
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "referencia_temporal": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "tempo_elegido",
+            "tempo_inicial"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cambio_tempo_pct": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 1000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "audio_sin_procesar": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
     "eventos": {
       "maxItems": 400,
       "type": "array",
@@ -520,6 +564,10 @@
     "duracion_ms",
     "pct_eventos_evaluables",
     "pct_digitacion_correcta",
+    "tempo_medido_bpm",
+    "referencia_temporal",
+    "cambio_tempo_pct",
+    "audio_sin_procesar",
     "eventos"
   ],
   "additionalProperties": false,

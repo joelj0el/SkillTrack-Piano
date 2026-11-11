@@ -94,6 +94,12 @@
         }
       ]
     },
+    "tempo_medido_bpm": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
     "secuencia_esperada": {
       "type": "string",
       "enum": [
@@ -122,6 +128,7 @@
     "manos",
     "modo_metronomo",
     "tempo_elegido_bpm",
+    "tempo_medido_bpm",
     "secuencia_esperada",
     "iniciado_en"
   ],

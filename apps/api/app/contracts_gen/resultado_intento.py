@@ -53,6 +53,11 @@ class SecuenciaEsperada(StrEnum):
     provisional = "provisional"
 
 
+class ReferenciaTemporal(StrEnum):
+    tempo_elegido = "tempo_elegido"
+    tempo_inicial = "tempo_inicial"
+
+
 class Mano(StrEnum):
     MI = "MI"
     MD = "MD"
@@ -207,4 +212,8 @@ class ResultadoIntento(BaseModel):
     pct_eventos_evaluables: confloat(ge=0.0, le=100.0) | None
     pct_digitacion_correcta: confloat(ge=0.0, le=100.0) | None
     secuencia_esperada: SecuenciaEsperada | None = None
+    tempo_medido_bpm: confloat(le=400.0, gt=0.0) | None
+    referencia_temporal: ReferenciaTemporal | None
+    cambio_tempo_pct: confloat(ge=-100.0, le=1000.0) | None
+    audio_sin_procesar: bool | None
     eventos: list[EventoResultado] = Field(..., max_length=400)

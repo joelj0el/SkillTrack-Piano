@@ -48,5 +48,6 @@ class IntentoGuardado(BaseModel):
     manos: Manos
     modo_metronomo: ModoMetronomo | None
     tempo_elegido_bpm: conint(ge=-9007199254740991, le=9007199254740991) | None
+    tempo_medido_bpm: float | None
     secuencia_esperada: SecuenciaEsperada
     iniciado_en: AwareDatetime

@@ -38,7 +38,15 @@ export const EVENTO = {
   rasgos_modalidad: "V",
 };
 
-export const RESULTADO = { version: 2, ...COMUNES, eventos: [EVENTO] };
+export const RESULTADO = {
+  version: 2,
+  ...COMUNES,
+  tempo_medido_bpm: 61.2,
+  referencia_temporal: "tempo_inicial",
+  cambio_tempo_pct: 2.1,
+  audio_sin_procesar: true,
+  eventos: [EVENTO],
+};
 
 export const RESULTADO_V1 = {
   ...COMUNES,

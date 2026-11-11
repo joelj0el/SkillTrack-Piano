@@ -5,6 +5,10 @@ import { almacenEnMemoria, encolar, vaciar } from "./bandeja.ts";
 
 const resultado = (uuid: string): ResultadoIntento => ({
   version: 2,
+  tempo_medido_bpm: null,
+  referencia_temporal: null,
+  cambio_tempo_pct: null,
+  audio_sin_procesar: null,
   client_uuid: uuid,
   version_ejercicio_id: 1,
   tarea_id: null,

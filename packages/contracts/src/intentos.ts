@@ -108,6 +108,12 @@ export const ResultadoIntento = z
   .strictObject({
     version: z.literal(2),
     ...camposComunes,
+    // Medidas temporales del intento (E9b); null sin audio. El servidor decide si cuenta.
+    tempo_medido_bpm: z.number().positive().max(400).nullable(),
+    referencia_temporal: z.enum(["tempo_elegido", "tempo_inicial"]).nullable(),
+    cambio_tempo_pct: z.number().min(-100).max(1000).nullable(),
+    // Si el navegador respetó las 3 restricciones de audio (PA-HU20-02); null sin micrófono.
+    audio_sin_procesar: z.boolean().nullable(),
     eventos: z.array(EventoResultado).max(400),
   })
   .meta({ title: "ResultadoIntento" });
@@ -129,6 +135,7 @@ export const IntentoGuardado = z
     manos: Manos,
     modo_metronomo: z.enum(["con", "sin"]).nullable(),
     tempo_elegido_bpm: z.int().nullable(),
+    tempo_medido_bpm: z.number().nullable(),
     secuencia_esperada: SecuenciaEsperada,
     iniciado_en: z.iso.datetime({ offset: true }),
   })

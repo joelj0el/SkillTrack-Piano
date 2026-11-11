@@ -774,6 +774,11 @@ export function PasoEjecucion(props: {
       duracion_ms: Math.round(performance.now() - inicio.current),
       pct_eventos_evaluables: pct,
       pct_digitacion_correcta: pctDigitacion,
+      tempo_medido_bpm: acustico?.tempo ? Math.round(acustico.tempo.tempoMedido * 10) / 10 : null,
+      referencia_temporal: acustico?.tempo?.referencia ?? null,
+      cambio_tempo_pct: acustico?.tempo ? Math.round(acustico.tempo.cambioPct * 10) / 10 : null,
+      audio_sin_procesar:
+        microfono.estado.tipo === "activo" ? microfono.estado.audioSinProcesar : null,
       secuencia_esperada: secuencia,
       eventos,
     });
@@ -962,7 +967,7 @@ export function Resultado(props: {
   const porInstante = esperadas.filter((n) => n.mano === mano);
   const tempo = acustico?.tempo ?? null;
   const tarea = contexto.tarea;
-  const medido = tempo ? Math.round(tempo.tempoInicial) : null;
+  const medido = tempo ? Math.round(tempo.tempoMedido) : null;
   const fueraDeRango =
     tarea && medido !== null && (medido < tarea.tempo_min_bpm || medido > tarea.tempo_max_bpm)
       ? `Tocaste a ♩≈${medido}; tu tarea pide ${tarea.tempo_min_bpm}–${tarea.tempo_max_bpm}`

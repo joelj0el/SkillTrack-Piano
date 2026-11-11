@@ -28,6 +28,8 @@ export interface AnalisisTempo {
   tempoReferencia: number;
   tempoInicial: number;
   tempoFinal: number;
+  /** Tempo medido de todo el intento: mediana de los intervalos entre ataques. */
+  tempoMedido: number;
   cambioPct: number;
   estado: "estable" | "aceleraste" | "frenaste";
   /** Índices de los ataques marcados como tropiezo o pausa. */
@@ -62,6 +64,7 @@ export function analizarTempo(
     tempoReferencia,
     tempoInicial,
     tempoFinal,
+    tempoMedido: tempoDeIntervalos(ints),
     cambioPct: cambio * 100,
     estado,
     tropiezos,

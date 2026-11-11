@@ -184,6 +184,10 @@ EVENTO_V1 = {
     "rasgos": {"altura.indice": 0.3},
 }
 
+SIN_MEDIR = dict.fromkeys(
+    ("tempo_medido_bpm", "referencia_temporal", "cambio_tempo_pct", "audio_sin_procesar")
+)
+
 EVENTO_V2 = {
     "idx": 0,
     "mano": "MI",
@@ -225,8 +229,10 @@ def test_pu_attempts_05_un_intento_v2_guarda_cada_dato_con_su_modalidad(
 ):
     e = escenario.crear(db)
     como(cliente, e.estudiante_a)
-    r = cliente.post("/api/intentos", json={"version": 2, **resultado(eventos=[EVENTO_V2])})
+    r = cliente.post(
+        "/api/intentos", json={"version": 2, **SIN_MEDIR, **resultado(eventos=[EVENTO_V2])}
+    )
     assert r.status_code == 201, r.text
     assert db.scalar(select(Intento.eventos)) == [EVENTO_V2]
-    mezcla = {"version": 2, **resultado(eventos=[EVENTO_V1])}
+    mezcla = {"version": 2, **SIN_MEDIR, **resultado(eventos=[EVENTO_V1])}
     assert cliente.post("/api/intentos", json=mezcla).status_code == 422

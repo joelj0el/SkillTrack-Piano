@@ -260,6 +260,7 @@ const RESPUESTA = {
     tempo: {
       tempoInicial: 60,
       tempoFinal: 62,
+      tempoMedido: 61,
       cambioPct: 3.3,
       estado: "estable",
       referencia: "tempo_elegido",
