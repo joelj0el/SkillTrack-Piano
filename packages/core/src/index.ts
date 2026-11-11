@@ -1,4 +1,5 @@
 export * from "./bandas/bandas.ts";
+export * from "./bandas/retencion.ts";
 export * from "./alineacion/fusion.ts";
 export * from "./alineacion/manos.ts";
 export * from "./alineacion/notas.ts";
