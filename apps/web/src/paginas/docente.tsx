@@ -1,4 +1,5 @@
 import {
+  AvanceTarea,
   ClaseError,
   Ejercicio,
   EstudianteResumen,
@@ -15,9 +16,49 @@ import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import { z } from "zod";
 import { ErrorApi, pedir } from "../api.ts";
-import { Cargado, NOMBRE_MANOS, useCarga } from "../componentes.tsx";
+import { Cargado, NOMBRE_MANOS, fechaLegible, useCarga } from "../componentes.tsx";
 import { Boton, EstadoVista, PaginaCabecera, useAviso } from "../ui/base.tsx";
-import { Observaciones, ResumenTarea } from "./estudiante.tsx";
+import { ListaIntentos, Observaciones, ResumenTarea } from "./estudiante.tsx";
+
+/** HU-37: por cada día desde la asignación, las repeticiones válidas frente a la meta. */
+function AvanceDeTarea({ tareaId }: { tareaId: number }) {
+  const { carga } = useCarga(
+    () => pedir("GET", `/tareas/${tareaId}/avance`, AvanceTarea),
+    [tareaId],
+  );
+  return (
+    <Cargado carga={carga}>
+      {(avance) => (
+        <details className="avance">
+          <summary>
+            Avance: {avance.validas_hoy} de {avance.meta_por_dia} hoy
+          </summary>
+          <div className="tabla-contenedor">
+            <table className="tabla" aria-label={`Avance por día de la tarea ${tareaId}`}>
+              <thead>
+                <tr>
+                  <th>Día</th>
+                  <th>Repeticiones válidas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...avance.dias].reverse().map((d) => (
+                  <tr key={d.fecha} data-dia={d.fecha}>
+                    <td>{fechaLegible(d.fecha)}</td>
+                    <td>
+                      {d.validas} de {d.meta}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <ListaIntentos avance={avance} />
+        </details>
+      )}
+    </Cargado>
+  );
+}
 
 /** P-20 "Mis estudiantes". */
 export function MisEstudiantes() {
@@ -364,6 +405,7 @@ export function DetalleEstudiante() {
             {tareas.map((t) => (
               <li key={t.id} className="tarjeta" data-tarea={t.id}>
                 <ResumenTarea tarea={t} />
+                <AvanceDeTarea tareaId={t.id} />
                 {t.estado !== "Cancelada" && (
                   <>
                     <EditarTarea tarea={t} alGuardar={() => void recargar()} />

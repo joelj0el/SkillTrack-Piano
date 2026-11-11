@@ -1,4 +1,4 @@
-import { IntentoGuardado, Tarea } from "@skilltrack/contracts";
+import { AvanceTarea, Tarea } from "@skilltrack/contracts";
 import {
   Ban,
   Calendar,
@@ -140,20 +140,68 @@ function fechaHora(iso: string): string {
   return `${dos(fecha.getDate())}/${dos(fecha.getMonth() + 1)}/${fecha.getFullYear()} ${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;
 }
 
+/** HU-37: repeticiones válidas de hoy frente a la meta del día. */
+export function MetaDelDia({ avance }: { avance: AvanceTarea }) {
+  const teclas = Array.from({ length: avance.meta_por_dia }, (_, i) => i < avance.validas_hoy);
+  return (
+    <div className="tarjeta meta-dia" data-meta-hoy={avance.validas_hoy}>
+      <span className="meta-dia-cifra">
+        {avance.validas_hoy} de {avance.meta_por_dia} hoy
+      </span>
+      <span className="meta-dia-teclas" aria-hidden="true">
+        {teclas.map((encendida, i) => (
+          <span key={i} className={encendida ? "encendida" : undefined} />
+        ))}
+      </span>
+      <p className="suave">
+        Cuentan los intentos evaluados con el tempo dentro del rango de la tarea.
+      </p>
+    </div>
+  );
+}
+
+/** Intentos de la tarea, del más reciente al más antiguo, con el motivo si no cuentan. */
+export function ListaIntentos({ avance }: { avance: AvanceTarea }) {
+  if (avance.intentos.length === 0) {
+    return <p className="suave">Todavía no hay intentos de esta tarea.</p>;
+  }
+  return (
+    <ul className="lista" aria-label="Intentos">
+      {avance.intentos.map((i) => (
+        <li key={i.id} className="tarjeta" data-intento-cuenta={i.cuenta_para_tarea}>
+          <span className="tarjeta-titulo">{fechaHora(i.iniciado_en)}</span>
+          <p className="suave">
+            ♩ elegido = {i.tempo_elegido_bpm ?? "—"} · medido ≈{" "}
+            {i.tempo_medido_bpm === null ? "—" : Math.round(i.tempo_medido_bpm)}
+          </p>
+          {i.cuenta_para_tarea ? (
+            <Chip tono="correcto" icono={Check}>
+              Cuenta para la meta
+            </Chip>
+          ) : (
+            <Chip tono="no-evaluable" icono={EyeOff}>
+              No cuenta: {i.motivo_no_cuenta}
+            </Chip>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function DetalleTarea() {
   const { id } = useParams();
   const { carga } = useCarga(
     () =>
       Promise.all([
         pedir("GET", `/tareas/${id}`, Tarea),
-        pedir("GET", "/mis-intentos", z.array(IntentoGuardado)).catch(() => []),
+        pedir("GET", `/tareas/${id}/avance`, AvanceTarea),
       ]),
     [id],
   );
   return (
     <Cargado carga={carga}>
-      {([tarea, intentos]) => {
-        const deLaTarea = intentos.filter((i) => i.tarea_id === tarea.id);
+      {([tarea, avance]) => {
         return (
           <section>
             <PaginaCabecera
@@ -168,31 +216,10 @@ export function DetalleTarea() {
             <p>
               <Link to={`/catalogo/${tarea.ejercicio.codigo}`}>Ver el ejercicio</Link>
             </p>
+            <h2>Hoy</h2>
+            <MetaDelDia avance={avance} />
             <h2>Mis intentos</h2>
-            {deLaTarea.length === 0 ? (
-              <p className="suave">Todavía no registraste intentos de esta tarea.</p>
-            ) : (
-              <ul className="lista" aria-label="Intentos">
-                {deLaTarea.map((i) => (
-                  <li key={i.id} className="tarjeta">
-                    <span className="tarjeta-titulo">{fechaHora(i.iniciado_en)}</span>
-                    <p className="suave">♩ = {i.tempo_elegido_bpm ?? "—"}</p>
-                    {i.estado === "evaluado" ? (
-                      <Chip tono="correcto" icono={Check}>
-                        Analizado
-                      </Chip>
-                    ) : (
-                      <Chip tono="no-evaluable" icono={EyeOff}>
-                        No evaluable: {i.motivo_no_evaluable}
-                      </Chip>
-                    )}
-                    {!i.cuenta_para_tarea && i.motivo_no_cuenta && (
-                      <div className="suave">No cuenta para la tarea: {i.motivo_no_cuenta}</div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ListaIntentos avance={avance} />
             <h2>Observaciones de tu docente</h2>
             <Observaciones tarea={tarea} />
           </section>

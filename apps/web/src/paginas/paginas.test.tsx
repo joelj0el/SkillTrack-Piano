@@ -184,3 +184,40 @@ describe("detalle del ejercicio", () => {
     expect(screen.queryByRole("img", { name: /Partitura de/ })).toBeNull();
   });
 });
+
+describe("avance de la tarea", () => {
+  it("PU-web-16: la tarea muestra la meta del día y cada intento con fecha, hora y motivo", async () => {
+    servidor({
+      "/api/auth/me": { estado: 200, cuerpo: usuario("estudiante") },
+      "/api/tareas/1": { estado: 200, cuerpo: tarea(1, "2026-12-01", "En práctica") },
+      "/api/tareas/1/avance": {
+        estado: 200,
+        cuerpo: {
+          tarea_id: 1,
+          meta_por_dia: 3,
+          hoy: "2026-11-11",
+          validas_hoy: 2,
+          dias: [{ fecha: "2026-11-11", validas: 2, meta: 3 }],
+          intentos: [
+            {
+              id: 3,
+              iniciado_en: "2026-11-11T15:40:00-04:00",
+              estado: "evaluado",
+              tempo_elegido_bpm: 60,
+              tempo_medido_bpm: 55.2,
+              cuenta_para_tarea: false,
+              motivo_no_cuenta: "Tocaste a ♩≈55; tu tarea pide 60–70",
+            },
+          ],
+        },
+      },
+    });
+    abrir("/tareas/1");
+
+    expect(await screen.findByText("2 de 3 hoy")).toBeDefined();
+    expect(screen.getByText(/No cuenta: Tocaste a ♩≈55/)).toBeDefined();
+    expect(screen.getByRole("list", { name: "Intentos" }).textContent).toMatch(
+      /\d{2}\/\d{2}\/2026 \d{2}:\d{2}/,
+    );
+  });
+});

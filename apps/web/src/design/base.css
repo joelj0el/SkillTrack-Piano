@@ -944,6 +944,40 @@ details > summary::-webkit-details-marker {
   font-size: var(--texto-sm);
 }
 
+/* HU-37: meta del día con teclas que se encienden por cada repetición válida. */
+.meta-dia {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+.meta-dia-cifra {
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-fuerte);
+  line-height: var(--interlineado-titulo);
+}
+
+.meta-dia-teclas {
+  display: flex;
+  gap: var(--espacio-1);
+}
+
+.meta-dia-teclas span {
+  width: var(--espacio-8);
+  height: var(--espacio-12);
+  border: var(--borde) solid var(--color-tecla-borde);
+  border-radius: 0 0 var(--radio-sm) var(--radio-sm);
+  background: var(--color-tecla-blanca);
+}
+
+.meta-dia-teclas span.encendida {
+  border-color: var(--color-tecla-activa);
+  background: var(--color-tecla-activa);
+}
+
+.avance {
+  margin: var(--espacio-3) 0;
+}
+
 .partitura-pendiente {
   padding: var(--espacio-6);
   text-align: center;
