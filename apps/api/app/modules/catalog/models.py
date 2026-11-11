@@ -81,3 +81,15 @@ class Referencia(Base):
     # De dónde sale: campaña, rol, tomas y versiones del núcleo y del reprocesamiento (DP-05).
     origen: Mapped[dict] = mapped_column(JSONB)
     publicada_en: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ConjuntoReglas(Base):
+    """Reglas declarativas versionadas. Inmutable: un disparador lo impone."""
+
+    __tablename__ = "conjunto_reglas"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, unique=True)
+    version_taxonomia: Mapped[str] = mapped_column(String(16))
+    reglas: Mapped[list[dict]] = mapped_column(JSONB)
+    publicada_en: Mapped[datetime] = mapped_column(DateTime(timezone=True))

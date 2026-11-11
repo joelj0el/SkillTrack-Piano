@@ -110,6 +110,10 @@ def guardar_intento(
         raise pedagogia.error_de_campo(
             "referencia_id", "La referencia no existe o es de otro ejercicio."
         )
+    if datos.conjunto_reglas_id is not None and not catalogo.reglas_por_id(
+        db, datos.conjunto_reglas_id
+    ):
+        raise pedagogia.error_de_campo("conjunto_reglas_id", "El conjunto de reglas no existe.")
     tarea = db.get(Tarea, datos.tarea_id) if datos.tarea_id is not None else None
     cuenta, motivo = cuenta_para_tarea(datos, tarea)
     intento = Intento(
@@ -143,6 +147,7 @@ def guardar_intento(
             datos.secuencia_esperada.value if datos.secuencia_esperada else "provisional"
         ),
         referencia_id=datos.referencia_id,
+        conjunto_reglas_id=datos.conjunto_reglas_id,
         eventos=[e.model_dump(mode="json") for e in datos.eventos],
     )
     db.add(intento)

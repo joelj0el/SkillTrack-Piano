@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "version_taxonomia": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16
+    },
+    "reglas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {}
+      }
+    }
+  },
+  "required": [
+    "version",
+    "version_taxonomia",
+    "reglas"
+  ],
+  "additionalProperties": false,
+  "title": "ConjuntoReglas"
+}

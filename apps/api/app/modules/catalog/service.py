@@ -3,7 +3,13 @@ from sqlalchemy.orm import Session
 
 from app.contracts_gen.ejercicio import Ejercicio as EjercicioDto
 from app.contracts_gen.ejercicio import VersionEjercicio as VersionDto
-from app.modules.catalog.models import ClaseError, Ejercicio, Referencia, VersionEjercicio
+from app.modules.catalog.models import (
+    ClaseError,
+    ConjuntoReglas,
+    Ejercicio,
+    Referencia,
+    VersionEjercicio,
+)
 
 VERSION_TAXONOMIA = "v0.1"
 
@@ -119,3 +125,20 @@ def referencia_vigente(db: Session, version_ejercicio_id: int) -> Referencia | N
 def referencia_es_de(db: Session, referencia_id: int, version_ejercicio_id: int) -> bool:
     fila = db.get(Referencia, referencia_id)
     return fila is not None and fila.version_ejercicio_id == version_ejercicio_id
+
+
+def taxonomia_existe(db: Session, version_taxonomia: str) -> bool:
+    consulta = select(ClaseError.id).where(ClaseError.version_taxonomia == version_taxonomia)
+    return db.scalar(consulta.limit(1)) is not None
+
+
+def reglas_existen(db: Session, version: int) -> bool:
+    return db.scalar(select(ConjuntoReglas.id).where(ConjuntoReglas.version == version)) is not None
+
+
+def reglas_vigentes(db: Session) -> ConjuntoReglas | None:
+    return db.scalar(select(ConjuntoReglas).order_by(ConjuntoReglas.version.desc()).limit(1))
+
+
+def reglas_por_id(db: Session, conjunto_id: int) -> ConjuntoReglas | None:
+    return db.get(ConjuntoReglas, conjunto_id)

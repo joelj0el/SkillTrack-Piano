@@ -47,6 +47,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { pedir } from "../api.ts";
+import { artefactosVigentes, type ArtefactosVigentes } from "./artefactos.ts";
 import { programarClic, unir, useMicrofono, type Microfono } from "../audio/microfono.ts";
 import { almacenIndexedDb, encolar, vaciar } from "../bandeja/bandeja.ts";
 import { Cargado, NOMBRE_MANOS, useCarga } from "../componentes.tsx";
@@ -70,6 +71,7 @@ interface Contexto {
   ejercicio: Ejercicio;
   manos: Manos;
   tarea: Tarea | null;
+  artefactos: ArtefactosVigentes;
 }
 
 const ORDEN_TOQUES = [
@@ -78,6 +80,15 @@ const ORDEN_TOQUES = [
   "negrasIzquierda",
   "negrasDerecha",
 ] as const;
+
+/** Si el teléfono no deja usar la caché, se practica igual: el intento queda sin artefactos. */
+async function artefactosOVacios(versionEjercicioId: number): Promise<ArtefactosVigentes> {
+  try {
+    return await artefactosVigentes(versionEjercicioId);
+  } catch {
+    return { referencia: null, reglas: null };
+  }
+}
 
 /** Ruta /practicar/:tareaId (con tarea) o /practicar?ejercicio=EJ-01&manos=juntas (libre). */
 export function PaginaPractica() {
@@ -91,11 +102,14 @@ export function PaginaPractica() {
         `/catalogo/ejercicios/${tarea.ejercicio.codigo}`,
         Ejercicio,
       );
-      return { ejercicio, manos: tarea.manos, tarea };
+      const artefactos = await artefactosOVacios(ejercicio.version_vigente.id);
+      return { ejercicio, manos: tarea.manos, tarea, artefactos };
     }
     const codigo = busqueda.get("ejercicio") ?? "EJ-01";
     const ejercicio = await pedir("GET", `/catalogo/ejercicios/${codigo}`, Ejercicio);
-    return { ejercicio, manos: (busqueda.get("manos") as Manos | null) ?? "juntas", tarea: null };
+    const artefactos = await artefactosOVacios(ejercicio.version_vigente.id);
+    const manos = (busqueda.get("manos") as Manos | null) ?? "juntas";
+    return { ejercicio, manos, tarea: null, artefactos };
   }, [tareaId, busqueda]);
   return <Cargado carga={carga}>{(c) => <Practica contexto={c} />}</Cargado>;
 }
@@ -780,6 +794,8 @@ export function PasoEjecucion(props: {
       audio_sin_procesar:
         microfono.estado.tipo === "activo" ? microfono.estado.audioSinProcesar : null,
       secuencia_esperada: secuencia,
+      referencia_id: contexto.artefactos.referencia?.id ?? null,
+      conjunto_reglas_id: contexto.artefactos.reglas?.id ?? null,
       eventos,
     });
     const almacen = almacenIndexedDb();

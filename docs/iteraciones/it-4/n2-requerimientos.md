@@ -17,3 +17,10 @@ Las cifras salen de `research/node/src/bandas/parametros.plantilla.json`:
 - Diferencia buscada de los rasgos temporales: PRM-09 (cambio de tempo, 5 %), PRM-10 (desvío del ataque, 25 % del intervalo local) y PRM-11 (desfase entre manos, 50 ms), todas [PROVISIONAL].
 - Rasgos visuales (`altura.<dedo>`): diferencia buscada PENDIENTE; su retención no se evalúa y el script lo informa.
 - Bandas por compás: pendiente hasta que la partitura traiga el mapa de evento a compás; hoy la unidad es el evento.
+
+## HU-23 · Revisar y versionar reglas con el panel
+
+| PA         | Estado    | Motivo / prueba                                                                                                                                                         |
+| ---------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU23-01 | Cumplido  | Publicar `conjunto_reglas vN` exige una versión existente de la taxonomía; repetida, 409; inmutable; admin, docente, estudiante e investigador reciben 403 (PA-HU23-01) |
+| PA-HU23-02 | Pendiente | Herramienta del investigador (TI-HU23-02)                                                                                                                               |

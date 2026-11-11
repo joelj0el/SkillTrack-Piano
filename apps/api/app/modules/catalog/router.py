@@ -5,13 +5,16 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.contracts_gen.clase_error import ClaseError as ClaseErrorDto
+from app.contracts_gen.conjunto_reglas import ConjuntoReglas as ConjuntoReglasDto
 from app.contracts_gen.ejercicio import Ejercicio as EjercicioDto
 from app.contracts_gen.referencia import Referencia as ReferenciaDto
 from app.contracts_gen.referencia_publicada import ReferenciaPublicada
 from app.contracts_gen.referencia_vigente import ReferenciaVigente
+from app.contracts_gen.reglas_publicadas import ReglasPublicadas
+from app.contracts_gen.reglas_vigentes import ReglasVigentes
 from app.core.db import obtener_db
 from app.modules.catalog import service
-from app.modules.catalog.models import Ejercicio, Referencia, VersionEjercicio
+from app.modules.catalog.models import ConjuntoReglas, Ejercicio, Referencia, VersionEjercicio
 from app.modules.identity.deps import Superadmin
 from app.modules.institutions.deps import Ahora
 from app.modules.pedagogy.service import error_de_campo
@@ -111,4 +114,39 @@ def referencia_vigente(version_ejercicio_id: int, db: Db) -> ReferenciaVigente:
                 "origen": fila.origen,
             },
         }
+    )
+
+
+@router.post("/reglas", response_model=ReglasPublicadas, status_code=status.HTTP_201_CREATED)
+def publicar_reglas(
+    datos: ConjuntoReglasDto, _: Superadmin, db: Db, instante: Ahora
+) -> ReglasPublicadas:
+    """Publica `conjunto_reglas vN` para una versión existente de la taxonomía (PA-HU23-01)."""
+    if not service.taxonomia_existe(db, datos.version_taxonomia):
+        raise error_de_campo("version_taxonomia", "Esa versión de la taxonomía no existe.")
+    if service.reglas_existen(db, datos.version):
+        raise YA_PUBLICADA
+    fila = ConjuntoReglas(publicada_en=instante, **datos.model_dump(mode="json"))
+    db.add(fila)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise YA_PUBLICADA from None
+    return ReglasPublicadas(
+        id=fila.id,
+        version=fila.version,
+        version_taxonomia=fila.version_taxonomia,
+        publicada_en=fila.publicada_en,
+    )
+
+
+@router.get("/reglas/vigente", response_model=ReglasVigentes)
+def reglas_vigentes(db: Db) -> ReglasVigentes:
+    fila = service.reglas_vigentes(db)
+    if fila is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Sin reglas publicadas")
+    conjunto = {k: getattr(fila, k) for k in ("version", "version_taxonomia", "reglas")}
+    return ReglasVigentes.model_validate(
+        {"id": fila.id, "publicada_en": fila.publicada_en, "conjunto": conjunto}
     )

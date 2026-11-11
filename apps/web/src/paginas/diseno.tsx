@@ -244,6 +244,7 @@ const CONTEXTO = {
   ejercicio: { nombre: "Escala de Do mayor", tonalidad: "Do mayor" } as Ejercicio,
   manos: "MD" as const,
   tarea: null,
+  artefactos: { referencia: null, reglas: null },
 };
 const RESPUESTA = {
   visuales: [],
