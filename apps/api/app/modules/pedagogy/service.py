@@ -9,31 +9,46 @@ from app.contracts_gen.avance_tarea import DiaDeAvance, IntentoDeAvance
 from app.contracts_gen.tarea import Aspecto, EjercicioDeTarea
 from app.contracts_gen.tarea import Observacion as ObservacionDto
 from app.contracts_gen.tarea import Tarea as TareaDto
+from app.contracts_gen.tarea import Valoracion as ValoracionDto
 from app.core.reloj import hoy_local
 from app.modules.catalog import service as catalogo
-from app.modules.pedagogy.models import Observacion, Tarea
+from app.modules.pedagogy.models import Observacion, Tarea, ValoracionTarea
 
 
-def estado(tarea: Tarea, hoy: date, en_practica: bool = False) -> str:
-    """Estado calculado: Cancelada > Vencida > En práctica (≥ 1 intento válido) > Asignada."""
-    if tarea.cancelada_en is not None:
-        return "Cancelada"
-    if tarea.fecha_limite < hoy:
-        return "Vencida"
-    return "En práctica" if en_practica else "Asignada"
-
-
-def tareas_en_practica(db: Session, tarea_ids: list[int]) -> set[int]:
+def estados(db: Session, tarea_ids: list[int], hoy: date) -> dict[int, str]:
+    """Estado calculado en la vista v_estado_tarea (no hay columna): la API le pasa su "hoy"."""
     if not tarea_ids:
-        return set()
+        return {}
+    db.execute(text("SELECT set_config('app.hoy', :hoy, true)"), {"hoy": hoy.isoformat()})
     filas = db.execute(
-        text(
-            "SELECT DISTINCT tarea_id FROM app.v_avance_tarea"
-            " WHERE validas > 0 AND tarea_id = ANY(:ids)"
-        ),
+        text("SELECT tarea_id, estado FROM app.v_estado_tarea WHERE tarea_id = ANY(:ids)"),
         {"ids": tarea_ids},
     )
-    return set(filas.scalars())
+    return dict(filas.all())
+
+
+def ultimas_valoraciones(db: Session, tarea_ids: list[int]) -> dict[int, ValoracionTarea]:
+    if not tarea_ids:
+        return {}
+    consulta = (
+        select(ValoracionTarea)
+        .where(ValoracionTarea.tarea_id.in_(tarea_ids))
+        .order_by(ValoracionTarea.creada_en, ValoracionTarea.id)
+    )
+    # La última de cada tarea queda al final y pisa a las anteriores.
+    return {v.tarea_id: v for v in db.scalars(consulta)}
+
+
+def valoracion_dto(v: ValoracionTarea | None) -> ValoracionDto | None:
+    if v is None:
+        return None
+    return ValoracionDto(
+        id=v.id,
+        valor=v.valor,
+        docente_id=v.docente_id,
+        observacion_id=v.observacion_id,
+        creada_en=v.creada_en,
+    )
 
 
 def avance(db: Session, tarea: Tarea, hoy: date) -> AvanceDto:
@@ -112,8 +127,9 @@ def observacion_dto(db: Session, obs: Observacion) -> ObservacionDto:
 
 def tareas_dto(db: Session, tareas: list[Tarea], hoy: date) -> list[TareaDto]:
     ejercicios = catalogo.ejercicios_por_id(db, list({t.ejercicio_id for t in tareas}))
-    en_practica = tareas_en_practica(db, [t.id for t in tareas])
+    estado_de = estados(db, [t.id for t in tareas], hoy)
     observaciones = observaciones_de(db, [t.id for t in tareas])
+    valoraciones = ultimas_valoraciones(db, [t.id for t in tareas])
     return [
         TareaDto(
             id=t.id,
@@ -129,8 +145,9 @@ def tareas_dto(db: Session, tareas: list[Tarea], hoy: date) -> list[TareaDto]:
             tempo_max_bpm=t.tempo_max_bpm,
             repeticiones_por_dia=t.repeticiones_por_dia,
             fecha_limite=t.fecha_limite,
-            estado=estado(t, hoy, t.id in en_practica),
+            estado=estado_de[t.id],
             observaciones=[observacion_dto(db, o) for o in observaciones.get(t.id, [])],
+            valoracion=valoracion_dto(valoraciones.get(t.id)),
         )
         for t in tareas
     ]

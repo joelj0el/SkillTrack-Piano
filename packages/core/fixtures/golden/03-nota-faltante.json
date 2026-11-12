@@ -1,0 +1,168 @@
+{
+  "origen": "sintetico",
+  "generado_por": "escrito a mano para PA-HU06-01; no viene de ninguna grabación",
+  "reglas": "tools/catalogo/conjunto_reglas.v1.json",
+  "bandas_uniformes": {
+    "tecla.zona": [0.2, 0.6],
+    "ataque.desvio_pct": [-15, 15],
+    "desfase_manos.ms": [0, 80],
+    "cambio_tempo.pct": [-10, 10]
+  },
+  "nombre": "03-nota-faltante",
+  "descripcion": "Falta la 6.ª nota",
+  "modo": "VA",
+  "cambio_tempo_pct": 2,
+  "eventos": [
+    {
+      "idx": 0,
+      "mano": "MD",
+      "estado": "evaluado",
+      "ataque_ms": 0,
+      "modalidad": "VA",
+      "nota": {
+        "estado": "correcta"
+      },
+      "dedo": {
+        "estado": "correcto"
+      },
+      "desfase_manos": null,
+      "tecla": {
+        "zona": 0.4
+      },
+      "rasgos": {}
+    },
+    {
+      "idx": 1,
+      "mano": "MD",
+      "estado": "evaluado",
+      "ataque_ms": 250,
+      "modalidad": "VA",
+      "nota": {
+        "estado": "correcta"
+      },
+      "dedo": {
+        "estado": "correcto"
+      },
+      "desfase_manos": null,
+      "tecla": {
+        "zona": 0.4
+      },
+      "rasgos": {}
+    },
+    {
+      "idx": 2,
+      "mano": "MD",
+      "estado": "evaluado",
+      "ataque_ms": 500,
+      "modalidad": "VA",
+      "nota": {
+        "estado": "correcta"
+      },
+      "dedo": {
+        "estado": "correcto"
+      },
+      "desfase_manos": null,
+      "tecla": {
+        "zona": 0.4
+      },
+      "rasgos": {}
+    },
+    {
+      "idx": 3,
+      "mano": "MD",
+      "estado": "evaluado",
+      "ataque_ms": 750,
+      "modalidad": "VA",
+      "nota": {
+        "estado": "correcta"
+      },
+      "dedo": {
+        "estado": "correcto"
+      },
+      "desfase_manos": null,
+      "tecla": {
+        "zona": 0.4
+      },
+      "rasgos": {}
+    },
+    {
+      "idx": 4,
+      "mano": "MD",
+      "estado": "evaluado",
+      "ataque_ms": 1000,
+      "modalidad": "VA",
+      "nota": {
+        "estado": "correcta"
+      },
+      "dedo": {
+        "estado": "correcto"
+      },
+      "desfase_manos": null,
+      "tecla": {
+        "zona": 0.4
+      },
+      "rasgos": {}
+    },
+    {
+      "idx": 5,
+      "mano": "MD",
+      "estado": "evaluado",
+      "ataque_ms": 1250,
+      "modalidad": "VA",
+      "nota": {
+        "estado": "faltante"
+      },
+      "dedo": {
+        "estado": "correcto"
+      },
+      "desfase_manos": null,
+      "tecla": {
+        "zona": 0.4
+      },
+      "rasgos": {}
+    },
+    {
+      "idx": 6,
+      "mano": "MD",
+      "estado": "evaluado",
+      "ataque_ms": 1500,
+      "modalidad": "VA",
+      "nota": {
+        "estado": "correcta"
+      },
+      "dedo": {
+        "estado": "correcto"
+      },
+      "desfase_manos": null,
+      "tecla": {
+        "zona": 0.4
+      },
+      "rasgos": {}
+    },
+    {
+      "idx": 7,
+      "mano": "MD",
+      "estado": "evaluado",
+      "ataque_ms": 1750,
+      "modalidad": "VA",
+      "nota": {
+        "estado": "correcta"
+      },
+      "dedo": {
+        "estado": "correcto"
+      },
+      "desfase_manos": null,
+      "tecla": {
+        "zona": 0.4
+      },
+      "rasgos": {}
+    }
+  ],
+  "esperado": {
+    "clases": ["ER-A"],
+    "indicadores": ["IND-A1"],
+    "eventos": {
+      "IND-A1": [5]
+    }
+  }
+}

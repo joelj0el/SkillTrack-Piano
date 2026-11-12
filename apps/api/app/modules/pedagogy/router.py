@@ -9,6 +9,7 @@ from app.contracts_gen.observacion_nueva import ObservacionNueva
 from app.contracts_gen.tarea import Tarea as TareaDto
 from app.contracts_gen.tarea_cambio import TareaCambio
 from app.contracts_gen.tarea_nueva import TareaNueva
+from app.contracts_gen.valoracion_nueva import ValoracionNueva
 from app.core.reloj import hoy_local
 from app.modules.audit import service as auditoria
 from app.modules.catalog import service as catalogo
@@ -17,7 +18,7 @@ from app.modules.identity.models import Usuario
 from app.modules.institutions import service as instituciones
 from app.modules.institutions.deps import PROHIBIDO, Ahora, Db, EstudianteAccesible
 from app.modules.pedagogy import service
-from app.modules.pedagogy.models import Observacion, Tarea
+from app.modules.pedagogy.models import Observacion, Tarea, ValoracionTarea
 
 router = APIRouter(tags=["pedagogy"])
 
@@ -143,6 +144,64 @@ def crear_observacion(
     db.add(observacion)
     db.commit()
     return ObservacionDto.model_validate(service.observacion_dto(db, observacion).model_dump())
+
+
+@router.post(
+    "/tareas/{tarea_id}/valoracion", response_model=TareaDto, status_code=status.HTTP_201_CREATED
+)
+def valorar_tarea(
+    tarea_id: int, datos: ValoracionNueva, docente: UsuarioEnSesion, db: Db, instante: Ahora
+) -> TareaDto:
+    """HU-38 (DP-17): solo el docente asignado; "Por repetir" exige observación con aspecto."""
+    hoy = hoy_local(instante)
+    tarea = _tarea_del_docente(db, tarea_id, docente, instante)
+    if tarea.cancelada_en is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "La tarea está cancelada")
+    por_repetir = datos.valor.value == "por_repetir"
+    obs = datos.observacion
+    if por_repetir and obs is None:
+        raise service.error_de_campo(
+            "observacion", "Por repetir exige una observación con su aspecto."
+        )
+    if datos.fecha_limite is not None:
+        if not por_repetir:
+            raise service.error_de_campo(
+                "fecha_limite", "El plazo nuevo solo aplica a Por repetir."
+            )
+        service.validar_condiciones(
+            tarea.tempo_min_bpm, tarea.tempo_max_bpm, datos.fecha_limite, hoy
+        )
+    observacion = None
+    if obs is not None:
+        texto = obs.texto.strip()
+        if not texto:
+            raise service.error_de_campo("observacion", "La observación no puede estar vacía.")
+        if not catalogo.clase_error_por_id(db, obs.clase_error_id):
+            raise service.error_de_campo("observacion", "El aspecto no existe.")
+        observacion = Observacion(
+            docente_id=docente.id,
+            estudiante_id=tarea.estudiante_id,
+            tarea_id=tarea.id,
+            clase_error_id=obs.clase_error_id,
+            texto=texto,
+            creada_en=instante,
+        )
+        db.add(observacion)
+        db.flush()
+    if datos.fecha_limite is not None:
+        tarea.fecha_limite = datos.fecha_limite
+    db.add(
+        ValoracionTarea(
+            tarea_id=tarea.id,
+            docente_id=docente.id,
+            valor=datos.valor.value,
+            observacion_id=observacion.id if observacion else None,
+            creada_en=instante,
+        )
+    )
+    service.marcar_actualizada(tarea, instante)
+    db.commit()
+    return service.tareas_dto(db, [tarea], hoy)[0]
 
 
 def _ver_tarea(db: Session, tarea: Tarea | None, usuario: Usuario, instante: datetime) -> Tarea:

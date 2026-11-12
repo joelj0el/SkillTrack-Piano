@@ -1,0 +1,125 @@
+import json
+from pathlib import Path
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
+from sqlalchemy.orm import Session
+
+from tests import escenario, fabricas
+from tests.conftest import como
+from tests.test_pa_hu08 import resultado
+
+# La plantilla v1 del conjunto de reglas (los 12 indicadores; mensajes pendientes del panel).
+PLANTILLA = Path(__file__).resolve().parents[3] / "tools" / "catalogo" / "conjunto_reglas.v1.json"
+
+
+def conjunto(version: int, **cambios) -> dict:
+    datos = json.loads(PLANTILLA.read_text(encoding="utf-8"))
+    return {**datos, "version": version, **cambios}
+
+
+def test_pa_hu23_01_publicar_reglas_exige_la_version_de_la_taxonomia_y_es_inmutable(
+    cliente: TestClient, db: Session
+):
+    escenario.crear(db)
+    como(cliente, fabricas.usuario(db, "super", superadmin=True))
+
+    sin_taxonomia = conjunto(1)
+    del sin_taxonomia["version_taxonomia"]
+    assert cliente.post("/api/catalogo/reglas", json=sin_taxonomia).status_code == 422
+    desconocida = cliente.post("/api/catalogo/reglas", json=conjunto(1, version_taxonomia="v9"))
+    assert desconocida.status_code == 422
+    assert desconocida.json()["detail"][0]["loc"] == ["body", "version_taxonomia"]
+
+    r = cliente.post("/api/catalogo/reglas", json=conjunto(1))
+    assert r.status_code == 201, r.text
+    assert (r.json()["version"], r.json()["version_taxonomia"]) == (1, "v0.1")
+    assert (
+        cliente.post("/api/catalogo/reglas", json=conjunto(1, version_taxonomia="v0.1")).status_code
+        == 409
+    )
+    with pytest.raises(DBAPIError, match="inmutable"):
+        db.execute(text("UPDATE app.conjunto_reglas SET version_taxonomia = 'v0.2'"))
+    db.rollback()
+
+
+def test_pa_hu23_01_solo_el_superadministrador_publica_reglas_403_para_los_demas_roles(
+    cliente: TestClient, db: Session
+):
+    e = escenario.crear(db)
+    investigador = fabricas.usuario(db, "investigador.a", rol="investigador", inst=e.inst_a)
+    for usuario in (e.admin_a, e.docente_a, e.estudiante_a, investigador):
+        r = como(cliente, usuario).post("/api/catalogo/reglas", json=conjunto(1))
+        assert r.status_code == 403, usuario.username
+    assert db.scalar(text("SELECT count(*) FROM app.conjunto_reglas")) == 0
+
+
+def test_pu_catalog_12_el_cliente_lee_las_reglas_vigentes(cliente: TestClient, db: Session):
+    e = escenario.crear(db)
+    como(cliente, e.estudiante_a)
+    assert cliente.get("/api/catalogo/reglas/vigente").status_code == 404
+
+    como(cliente, fabricas.usuario(db, "super", superadmin=True))
+    ids = [cliente.post("/api/catalogo/reglas", json=conjunto(n)).json()["id"] for n in (1, 2)]
+    vigente = como(cliente, e.estudiante_a).get("/api/catalogo/reglas/vigente")
+    assert vigente.status_code == 200, vigente.text
+    assert vigente.json()["id"] == ids[1]
+    assert vigente.json()["conjunto"] == conjunto(2)
+
+
+def test_pu_attempts_08_el_intento_registra_el_conjunto_de_reglas_con_clave_foranea(
+    cliente: TestClient, db: Session
+):
+    e = escenario.crear(db)
+    como(cliente, fabricas.usuario(db, "super", superadmin=True))
+    reglas_id = cliente.post("/api/catalogo/reglas", json=conjunto(1)).json()["id"]
+
+    como(cliente, e.estudiante_a)
+    ok = cliente.post("/api/intentos", json=resultado(conjunto_reglas_id=reglas_id))
+    assert ok.status_code == 201, ok.text
+    assert ok.json()["conjunto_reglas_id"] == reglas_id
+    malo = cliente.post("/api/intentos", json=resultado(conjunto_reglas_id=reglas_id + 50))
+    assert malo.status_code == 422
+    with pytest.raises(DBAPIError):
+        db.execute(text("UPDATE app.intento SET conjunto_reglas_id = 9999"))
+    db.rollback()
+
+
+def test_pu_catalog_13_el_conjunto_declara_los_12_indicadores_y_no_regla_lo_no_evaluable(
+    cliente: TestClient, db: Session
+):
+    escenario.crear(db)
+    como(cliente, fabricas.usuario(db, "super", superadmin=True))
+    falta = conjunto(1)
+    del falta["indicadores"]["IND-F4"]
+    r = cliente.post("/api/catalogo/reglas", json=falta)
+    assert r.status_code == 422
+    assert r.json()["detail"][0]["loc"] == ["body", "indicadores", "IND-F4"]
+
+    regla_de_e1 = conjunto(1)
+    regla_de_e1["reglas"].append(
+        {**regla_de_e1["reglas"][0], "id": "R-E1-01", "indicador": "IND-E1"}
+    )
+    r = cliente.post("/api/catalogo/reglas", json=regla_de_e1)
+    assert r.status_code == 422
+    assert r.json()["detail"][0]["msg"] == "Indicador no evaluable por diseño"
+
+
+def test_pu_attempts_09_el_intento_guarda_su_calificacion_por_variable(
+    cliente: TestClient, db: Session
+):
+    e = escenario.crear(db)
+    como(cliente, e.estudiante_a)
+    calificacion = [
+        {"clase": "ER-A", "nivel": "logrado", "pct": 95.0},
+        {"clase": "ER-E", "nivel": "no-evaluado", "pct": None},
+    ]
+    r = cliente.post("/api/intentos", json=resultado(calificacion=calificacion))
+    assert r.status_code == 201, r.text
+    [guardado] = cliente.get("/api/mis-intentos").json()
+    assert guardado["calificacion"] == calificacion
+    assert guardado["version_ejercicio_id"] == 1
+    # Un intento que quedó en cola sin calificación se guarda con null.
+    assert cliente.post("/api/intentos", json=resultado()).json()["calificacion"] is None

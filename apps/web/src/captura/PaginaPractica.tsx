@@ -31,27 +31,24 @@ import {
   type NotaEsperada,
   type SecuenciaEsperada,
   type ToquesCalibracion,
+  calificarVariables,
+  CLASES,
+  diagnosticar,
+  type CalificacionVariable,
+  type ResultadoDiagnostico,
 } from "@skilltrack/core";
-import {
-  Ban,
-  Check,
-  Circle,
-  CircleHelp,
-  Minus,
-  Mic,
-  RefreshCw,
-  RotateCcw,
-  ThumbsUp,
-  X,
-} from "lucide-react";
+import { Ban, Check, Circle, Mic, RefreshCw, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Link, useParams, useSearchParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
+import { indicadoresDeficientes } from "./resultados.ts";
 import { pedir } from "../api.ts";
+import { artefactosVigentes, type ArtefactosVigentes } from "./artefactos.ts";
 import { programarClic, unir, useMicrofono, type Microfono } from "../audio/microfono.ts";
 import { almacenIndexedDb, encolar, vaciar } from "../bandeja/bandeja.ts";
 import { Cargado, NOMBRE_MANOS, useCarga } from "../componentes.tsx";
-import { Boton, Chip, Esqueleto, EstadoVista, PaginaCabecera } from "../ui/base.tsx";
+import { Boton, Esqueleto, EstadoVista, PaginaCabecera } from "../ui/base.tsx";
 import { useAvanceAutomatico } from "./avance.ts";
+import { PantallaResultados } from "./PantallaResultados.tsx";
 import { claveCalibracion, guardarCalibracion, leerCalibracion } from "./calibracion.ts";
 import { colorDeToken } from "./camara.ts";
 import { duracionEsperada, transicion, type Estado, type Plan } from "./estado.ts";
@@ -70,6 +67,7 @@ interface Contexto {
   ejercicio: Ejercicio;
   manos: Manos;
   tarea: Tarea | null;
+  artefactos: ArtefactosVigentes;
 }
 
 const ORDEN_TOQUES = [
@@ -78,6 +76,15 @@ const ORDEN_TOQUES = [
   "negrasIzquierda",
   "negrasDerecha",
 ] as const;
+
+/** Si el teléfono no deja usar la caché, se practica igual: el intento queda sin artefactos. */
+async function artefactosOVacios(versionEjercicioId: number): Promise<ArtefactosVigentes> {
+  try {
+    return await artefactosVigentes(versionEjercicioId);
+  } catch {
+    return { referencia: null, reglas: null };
+  }
+}
 
 /** Ruta /practicar/:tareaId (con tarea) o /practicar?ejercicio=EJ-01&manos=juntas (libre). */
 export function PaginaPractica() {
@@ -91,11 +98,14 @@ export function PaginaPractica() {
         `/catalogo/ejercicios/${tarea.ejercicio.codigo}`,
         Ejercicio,
       );
-      return { ejercicio, manos: tarea.manos, tarea };
+      const artefactos = await artefactosOVacios(ejercicio.version_vigente.id);
+      return { ejercicio, manos: tarea.manos, tarea, artefactos };
     }
     const codigo = busqueda.get("ejercicio") ?? "EJ-01";
     const ejercicio = await pedir("GET", `/catalogo/ejercicios/${codigo}`, Ejercicio);
-    return { ejercicio, manos: (busqueda.get("manos") as Manos | null) ?? "juntas", tarea: null };
+    const artefactos = await artefactosOVacios(ejercicio.version_vigente.id);
+    const manos = (busqueda.get("manos") as Manos | null) ?? "juntas";
+    return { ejercicio, manos, tarea: null, artefactos };
   }, [tareaId, busqueda]);
   return <Cargado carga={carga}>{(c) => <Practica contexto={c} />}</Cargado>;
 }
@@ -585,10 +595,14 @@ export function PasoEjecucion(props: {
   const [latido, setLatido] = useState(false);
   const [respuesta, setRespuesta] = useState<RespuestaAnalisis | null>(null);
   const [guardado, setGuardado] = useState<string | null>(null);
+  const [final, setFinal] = useState<Final | null>(null);
   const series = useRef<Partial<Record<"MI" | "MD", MuestraMano[]>>>({});
   const inicio = useRef(0);
   const relojAudio = useRef<{ ctx: number; rel: number } | null>(null);
   const temporizadores = useRef<number[]>([]);
+  // PRM-03: el Worker del análisis se crea durante el conteo, así su módulo ya está cargado al
+  // terminar de tocar.
+  const trabajadorListo = useRef<Worker | null>(null);
   const conAudio = !soloVision && microfono.estado.tipo === "activo";
 
   const porMano = contexto.manos === "juntas" ? esperadas.length / 2 : esperadas.length;
@@ -606,6 +620,7 @@ export function PasoEjecucion(props: {
     series.current = {};
     setRespuesta(null);
     setGuardado(null);
+    setFinal(null);
     temporizadores.current.forEach(clearTimeout);
     temporizadores.current = [];
     inicio.current = performance.now();
@@ -700,6 +715,17 @@ export function PasoEjecucion(props: {
     return () => cancelAnimationFrame(cuadro);
   }, [estado?.fase]);
 
+  useEffect(() => {
+    if (estado?.fase === "conteo" && !trabajadorListo.current) {
+      trabajadorListo.current = crearTrabajador();
+    }
+    if (estado?.fase === "cancelado" || estado?.fase === "no-evaluable") {
+      trabajadorListo.current?.terminate();
+      trabajadorListo.current = null;
+    }
+  }, [estado?.fase]);
+  useEffect(() => () => trabajadorListo.current?.terminate(), []);
+
   // "Analizando": el núcleo corre en un Web Worker con la imagen y el sonido ya convertidos en
   // números dentro del teléfono.
   useEffect(() => {
@@ -714,9 +740,8 @@ export function PasoEjecucion(props: {
         t0: relojAudio.current.rel + (t0 - relojAudio.current.ctx),
       };
     }
-    const trabajador = new Worker(new URL("./analisis.worker.ts", import.meta.url), {
-      type: "module",
-    });
+    const trabajador = trabajadorListo.current ?? crearTrabajador();
+    trabajadorListo.current = null;
     trabajador.onmessage = (e: MessageEvent<RespuestaAnalisis>) => {
       setRespuesta(e.data);
       trabajador.terminate();
@@ -751,6 +776,14 @@ export function PasoEjecucion(props: {
             1000,
         ) / 10
       : null;
+    const cambioTempoPct = acustico?.tempo ? Math.round(acustico.tempo.cambioPct * 10) / 10 : null;
+    const { diagnostico, variables } = diagnosticarIntento(
+      eventos,
+      cambioTempoPct,
+      contexto.artefactos,
+      acustico ? "VA" : "V",
+      ok,
+    );
     const resultado = ResultadoIntento.parse({
       version: 2,
       client_uuid: crypto.randomUUID(),
@@ -776,12 +809,17 @@ export function PasoEjecucion(props: {
       pct_digitacion_correcta: pctDigitacion,
       tempo_medido_bpm: acustico?.tempo ? Math.round(acustico.tempo.tempoMedido * 10) / 10 : null,
       referencia_temporal: acustico?.tempo?.referencia ?? null,
-      cambio_tempo_pct: acustico?.tempo ? Math.round(acustico.tempo.cambioPct * 10) / 10 : null,
+      cambio_tempo_pct: cambioTempoPct,
       audio_sin_procesar:
         microfono.estado.tipo === "activo" ? microfono.estado.audioSinProcesar : null,
       secuencia_esperada: secuencia,
+      referencia_id: contexto.artefactos.referencia?.id ?? null,
+      conjunto_reglas_id: contexto.artefactos.reglas?.id ?? null,
+      calificacion: variables.map(({ clase, nivel, pct }) => ({ clase, nivel, pct })),
+      indicadores_deficientes: indicadoresDeficientes(diagnostico, ok),
       eventos,
     });
+    setFinal({ resultado, diagnostico, variables });
     const almacen = almacenIndexedDb();
     void encolar(almacen, resultado)
       .then(() => vaciar(almacen))
@@ -885,16 +923,64 @@ export function PasoEjecucion(props: {
       </EstadoVista>
     );
   }
+  if (!respuesta || !final) {
+    return (
+      <>
+        <h2 data-fase="analizando">Analizando…</h2>
+        <Esqueleto tarjetas={1} />
+      </>
+    );
+  }
   return (
-    <Resultado
-      estado={estado}
-      respuesta={respuesta}
+    <PantallaResultados
+      resultado={final.resultado}
+      eventos={respuesta.eventos}
+      diagnostico={final.diagnostico}
+      variables={final.variables}
+      tarea={contexto.tarea}
       guardado={guardado}
-      contexto={contexto}
-      esperadas={esperadas}
-      otro={() => setEstado(null)}
+      duracionAnalisisMs={respuesta.duracionAnalisisMs}
+      reintentar={empezar}
     />
   );
+}
+
+function crearTrabajador(): Worker {
+  return new Worker(new URL("./analisis.worker.ts", import.meta.url), { type: "module" });
+}
+
+interface Final {
+  resultado: ResultadoIntento;
+  diagnostico: ResultadoDiagnostico | null;
+  variables: CalificacionVariable[];
+}
+
+/** E12–E13 y PRM-22 con la referencia y las reglas vigentes que se descargaron al abrir la tarea. */
+export function diagnosticarIntento(
+  eventos: RespuestaAnalisis["eventos"],
+  cambioTempoPct: number | null,
+  artefactos: ArtefactosVigentes,
+  modo: "V" | "VA",
+  evaluable: boolean,
+): { diagnostico: ResultadoDiagnostico | null; variables: CalificacionVariable[] } {
+  const sinCalificar = (motivo: string): CalificacionVariable[] =>
+    CLASES.map((clase) => ({ clase, nivel: "no-evaluado", pct: null, evaluadas: 0, motivo }));
+  const reglas = artefactos.reglas?.conjunto;
+  if (!reglas) return { diagnostico: null, variables: sinCalificar("Sin reglas publicadas") };
+  const referencia = artefactos.referencia?.referencia;
+  const diagnostico = diagnosticar({
+    eventos,
+    cambioTempoPct,
+    referencia: referencia ? { version: referencia.version, bandas: referencia.bandas } : null,
+    reglas,
+    modo,
+  });
+  return {
+    diagnostico,
+    variables: evaluable
+      ? calificarVariables(diagnostico, reglas)
+      : sinCalificar("Intento no evaluable: no hay datos suficientes"),
+  };
 }
 
 const NOTAS_CONTEO = [1, 2, 3, 4];
@@ -903,7 +989,7 @@ const NOTAS_CONTEO = [1, 2, 3, 4];
 export function VistaConteo({ pulso, tempo }: { pulso: number; tempo: number }) {
   const estilo = { "--pulso": `${60 / tempo}s` } as CSSProperties;
   return (
-    <div className="conteo-escena" style={estilo}>
+    <div className="conteo-escena" style={estilo} data-tempo={tempo}>
       <p className="conteo" aria-live="assertive" data-pulso={pulso}>
         <span key={pulso} className="conteo-numero">
           {pulso || "…"}
@@ -930,170 +1016,6 @@ export function VistaTocando({ latido, conMetronomo }: { latido: boolean; conMet
         Toca el ejercicio. Al terminar, quédate quieto: el análisis empieza solo.
       </p>
     </>
-  );
-}
-
-const ESTADO_NOTA = {
-  correcta: { tono: "correcto", icono: Check, texto: "Correcta" },
-  incorrecta: { tono: "nota", icono: X, texto: "Incorrecta" },
-  dudosa: { tono: "no-evaluable", icono: CircleHelp, texto: "Dudosa" },
-  faltante: { tono: "no-evaluable", icono: Minus, texto: "Faltante" },
-} as const;
-const ESTADO_TEMPO = {
-  estable: "Tempo estable",
-  aceleraste: "Cambio de tempo: aceleraste",
-  frenaste: "Cambio de tempo: frenaste",
-} as const;
-
-export function Resultado(props: {
-  estado: Estado;
-  respuesta: RespuestaAnalisis | null;
-  guardado: string | null;
-  contexto: Contexto;
-  esperadas: NotaEsperada[];
-  otro: () => void;
-}) {
-  const { estado, respuesta, guardado, contexto, esperadas } = props;
-  if (!respuesta) {
-    return (
-      <>
-        <h2 data-fase="analizando">Analizando…</h2>
-        <Esqueleto tarjetas={1} />
-      </>
-    );
-  }
-  const acustico = respuesta.acustico;
-  const mano = esperadas.some((n) => n.mano === "MD") ? "MD" : "MI";
-  const porInstante = esperadas.filter((n) => n.mano === mano);
-  const tempo = acustico?.tempo ?? null;
-  const tarea = contexto.tarea;
-  const medido = tempo ? Math.round(tempo.tempoMedido) : null;
-  const fueraDeRango =
-    tarea && medido !== null && (medido < tarea.tempo_min_bpm || medido > tarea.tempo_max_bpm)
-      ? `Tocaste a ♩≈${medido}; tu tarea pide ${tarea.tempo_min_bpm}–${tarea.tempo_max_bpm}`
-      : null;
-  return (
-    <section aria-label="Resultado provisional">
-      <h2 data-fase="resultado">Resultado provisional</h2>
-      <p className="suave">
-        {estado.fase === "analizando" && estado.incompleta && "Ejecución incompleta. "}
-        Análisis en {Math.round(respuesta.duracionAnalisisMs)} ms ·{" "}
-        <span data-guardado={guardado ?? "guardando"}>{guardado ?? "Guardando…"}</span>
-        {tarea && (
-          <>
-            {" "}
-            · <Link to={`/tareas/${tarea.id}`}>Volver a la tarea</Link>
-          </>
-        )}
-      </p>
-      {acustico ? (
-        <>
-          <div className="tarjeta" data-tempo={tempo?.estado ?? "sin-datos"}>
-            <h3>Ritmo</h3>
-            {tempo ? (
-              <>
-                <p>
-                  Tempo inicial ♩≈{Math.round(tempo.tempoInicial)} · final ♩≈
-                  {Math.round(tempo.tempoFinal)} ({tempo.cambioPct > 0 ? "+" : ""}
-                  {tempo.cambioPct.toFixed(1)} %): <strong>{ESTADO_TEMPO[tempo.estado]}</strong>
-                </p>
-                <p className="suave">
-                  Referencia:{" "}
-                  {tempo.referencia === "tempo_elegido"
-                    ? `tempo elegido (♩ = ${Math.round(tempo.tempoReferencia)})`
-                    : "tempo de los primeros 4 pulsos"}
-                  {" · "}Notas irregulares (tropiezo o pausa): {tempo.tropiezos.length}
-                </p>
-                {fueraDeRango && (
-                  <p className="aviso">{fueraDeRango}. Este intento no cuenta para la tarea.</p>
-                )}
-              </>
-            ) : (
-              <p>Muy pocas notas oídas para estimar el tempo.</p>
-            )}
-          </div>
-          <div className="tabla-contenedor">
-            <table className="tabla" aria-label="Notas">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nota esperada</th>
-                  <th>Oída</th>
-                  <th>Mano y dedo (visión)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {acustico.notas.esperadas.map((n, i) => {
-                  const indiceAtaque =
-                    "t" in n ? acustico.ataques.findIndex((t) => Math.abs(t - n.t) < 1e-6) : -1;
-                  const fusion = indiceAtaque >= 0 ? acustico.fusion[indiceAtaque] : undefined;
-                  const irregular = tempo?.tropiezos.includes(indiceAtaque) ?? false;
-                  return (
-                    <tr key={i} data-nota-audio={n.estado}>
-                      <td>{i + 1}</td>
-                      <td>{nombreNota(porInstante[i]!.midi)}</td>
-                      <td>
-                        <Chip tono={ESTADO_NOTA[n.estado].tono} icono={ESTADO_NOTA[n.estado].icono}>
-                          {ESTADO_NOTA[n.estado].texto}
-                        </Chip>
-                        {n.estado === "incorrecta" &&
-                          ` (oída: ${nombreNota(60 + n.claseOida).slice(0, -1)})`}
-                        {irregular && " · tropiezo o pausa"}
-                      </td>
-                      <td>
-                        {fusion?.modalidad === "VA"
-                          ? `${fusion.mano === "MI" ? "Izquierda" : "Derecha"} · ${fusion.dedo}`
-                          : n.estado === "faltante"
-                            ? "—"
-                            : "sin evento visual"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <p className="suave" data-extras={acustico.notas.extras.length}>
-            Notas extra: {acustico.notas.extras.length} · Digitación: no evaluable (pendiente de
-            transcripción).
-          </p>
-        </>
-      ) : (
-        <p className="aviso">Modo solo visión: las notas y el ritmo no fueron evaluados.</p>
-      )}
-      <details>
-        <summary>Detalle visual por mano (tecla y dedo detectados)</summary>
-        <div className="tabla-contenedor">
-          <table className="tabla" aria-label="Notas por mano">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Mano</th>
-                <th>Nota esperada</th>
-                <th>Tecla y dedo detectados</th>
-              </tr>
-            </thead>
-            <tbody>
-              {respuesta.notas.map((n) => (
-                <tr key={n.idx} data-nota={n.resultado.estado}>
-                  <td>{n.idx + 1}</td>
-                  <td>{n.mano === "MI" ? "Izquierda" : "Derecha"}</td>
-                  <td>{nombreNota(n.midiEsperado)}</td>
-                  <td>
-                    {n.resultado.estado === "detectada"
-                      ? `${nombreNota(n.midiEsperado)} · ${n.resultado.dedo}`
-                      : `No evaluable: ${n.resultado.motivo}`}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
-      <Boton icono={ThumbsUp} onClick={props.otro}>
-        Otro intento
-      </Boton>
-    </section>
   );
 }
 

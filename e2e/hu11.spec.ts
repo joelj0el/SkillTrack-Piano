@@ -1,12 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { CLAVE_NUEVA, crearTareaApi, entrar, parDocenteEstudiante } from "./ayuda.ts";
-import {
-  escena,
-  intentoCompleto,
-  registrarPeticiones,
-  simularDispositivos,
-  verificarPrivacidad,
-} from "./intento-simulado.ts";
+import { escena, intentoCompleto, simularDispositivos } from "./intento-simulado.ts";
+import { registrarPeticiones, verificarPrivacidad } from "./privacidad.ts";
 
 test.use({
   launchOptions: {
@@ -33,7 +28,7 @@ async function practicarJuntas(page: import("@playwright/test").Page) {
   // La escala más larga del repertorio: 2 octavas a manos juntas (29 instantes, 58 eventos).
   await simularDispositivos(page, escena(57));
   await entrar(page, estudiante, CLAVE_NUEVA);
-  const peticiones = await registrarPeticiones(page);
+  const peticiones = registrarPeticiones(page.context());
   const cuerpo = await intentoCompleto(page, tareaId);
   return { cuerpo, peticiones, eventos: cuerpo.eventos as Evento[] };
 }
@@ -68,6 +63,7 @@ test("PA-HU11-05: un intento completo con audio no envía medios ni a otro orige
   test.setTimeout(180_000);
   const { cuerpo, peticiones } = await practicarJuntas(page);
 
-  await verificarPrivacidad(page, peticiones);
+  expect(peticiones.length).toBeGreaterThan(0);
+  verificarPrivacidad(peticiones, new URL(page.url()).origin);
   expect(Buffer.byteLength(JSON.stringify(cuerpo.eventos))).toBeLessThanOrEqual(256 * 1024);
 });

@@ -41,6 +41,28 @@ class Tarea(Base):
     )
 
 
+class ValoracionTarea(Base):
+    """HU-38: historial de valoraciones; la última decide si la tarea queda Revisada."""
+
+    __tablename__ = "valoracion_tarea"
+    __table_args__ = (
+        CheckConstraint("valor IN ('lograda', 'por_repetir')", name="valor_valido"),
+        CheckConstraint(
+            "valor = 'lograda' OR observacion_id IS NOT NULL", name="por_repetir_con_observacion"
+        ),
+        Index("ix_valoracion_tarea_fecha", "tarea_id", "creada_en"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tarea_id: Mapped[int] = mapped_column(ForeignKey("tarea.id", ondelete="CASCADE"))
+    docente_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"))
+    valor: Mapped[str] = mapped_column(String(12))
+    observacion_id: Mapped[int | None] = mapped_column(
+        ForeignKey("observacion.id", ondelete="SET NULL")
+    )
+    creada_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Observacion(Base):
     __tablename__ = "observacion"
     __table_args__ = (

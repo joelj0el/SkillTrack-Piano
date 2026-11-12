@@ -1,5 +1,5 @@
-import type { Ejercicio } from "@skilltrack/contracts";
-import { secuenciaEscala, type RespuestaAnalisis } from "@skilltrack/core";
+import type { Ejercicio, ResultadoIntento } from "@skilltrack/contracts";
+import { calificarVariables, diagnosticar, secuenciaEscala } from "@skilltrack/core";
 import { Check, CircleHelp, Hand, Music, Plus, Timer, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { Navigate, useParams } from "react-router";
@@ -9,11 +9,11 @@ import {
   PasoEjecucion,
   PasoEncuadre,
   PasoMicrofono,
-  Resultado,
   VistaConteo,
   VistaTocando,
 } from "../captura/PaginaPractica.tsx";
-import type { Estado } from "../captura/estado.ts";
+import { PantallaResultados } from "../captura/PantallaResultados.tsx";
+import { BANDAS_DE_EJEMPLO, INTENTO_EJEMPLO, REGLAS_DE_EJEMPLO } from "../investigacion/ejemplo.ts";
 import { MarcoPractica, type Vista } from "../captura/Practica.tsx";
 import {
   Boton,
@@ -244,41 +244,27 @@ const CONTEXTO = {
   ejercicio: { nombre: "Escala de Do mayor", tonalidad: "Do mayor" } as Ejercicio,
   manos: "MD" as const,
   tarea: null,
+  artefactos: { referencia: null, reglas: null },
 };
-const RESPUESTA = {
-  visuales: [],
-  duracionAnalisisMs: 12,
-  notas: ESPERADAS.map((n) => ({
-    idx: n.idx,
-    mano: n.mano,
-    midiEsperado: n.midi,
-    resultado: { estado: "detectada", dedo: "indice", t: n.idx },
-  })),
-  acustico: {
-    ataques: [0, 1, 2],
-    fusion: [],
-    tempo: {
-      tempoInicial: 60,
-      tempoFinal: 62,
-      tempoMedido: 61,
-      cambioPct: 3.3,
-      estado: "estable",
-      referencia: "tempo_elegido",
-      tempoReferencia: 60,
-      tropiezos: [],
-    },
-    notas: {
-      extras: [],
-      esperadas: [
-        { estado: "correcta", t: 0 },
-        { estado: "incorrecta", t: 1, claseOida: 4 },
-        { estado: "dudosa", t: 2 },
-        { estado: "faltante" },
-      ],
-    },
-  },
-} as unknown as RespuestaAnalisis;
-const ANALIZANDO = { fase: "analizando", incompleta: false } as unknown as Estado;
+// Resultado de EJEMPLO (sintético): el intento de la herramienta del investigador.
+const DIAGNOSTICO = diagnosticar({
+  eventos: INTENTO_EJEMPLO.eventos,
+  cambioTempoPct: INTENTO_EJEMPLO.cambio_tempo_pct,
+  referencia: { version: 1, bandas: BANDAS_DE_EJEMPLO },
+  reglas: REGLAS_DE_EJEMPLO,
+  modo: "VA",
+});
+const RESULTADO = {
+  client_uuid: "00000000-0000-4000-8000-000000000000",
+  version_ejercicio_id: 1,
+  manos: "MD",
+  estado: "evaluado",
+  motivo_no_evaluable: null,
+  tempo_elegido_bpm: 60,
+  tempo_medido_bpm: 60.4,
+  modo_metronomo: "sin",
+  pct_eventos_evaluables: 100,
+} as unknown as ResultadoIntento;
 
 function panelDe(nombre: string) {
   const sinAccion = () => undefined;
@@ -332,15 +318,23 @@ function panelDe(nombre: string) {
         </>
       );
     case "analizando":
+      return (
+        <>
+          <h2 data-fase="analizando">Analizando…</h2>
+          <Esqueleto tarjetas={1} />
+        </>
+      );
     case "resultado":
       return (
-        <Resultado
-          estado={ANALIZANDO}
-          respuesta={nombre === "resultado" ? RESPUESTA : null}
-          guardado="Guardado"
-          contexto={CONTEXTO}
-          esperadas={ESPERADAS}
-          otro={sinAccion}
+        <PantallaResultados
+          resultado={RESULTADO}
+          eventos={INTENTO_EJEMPLO.eventos}
+          diagnostico={DIAGNOSTICO}
+          variables={calificarVariables(DIAGNOSTICO, REGLAS_DE_EJEMPLO)}
+          tarea={null}
+          guardado="Pendiente de guardar"
+          duracionAnalisisMs={12}
+          reintentar={sinAccion}
         />
       );
     case "no-evaluable":

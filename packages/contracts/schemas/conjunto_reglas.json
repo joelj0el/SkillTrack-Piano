@@ -1,0 +1,336 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "version_taxonomia": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16
+    },
+    "indicadores": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": [
+          "IND-A1",
+          "IND-B1",
+          "IND-B2",
+          "IND-B3",
+          "IND-C1",
+          "IND-D1",
+          "IND-D2",
+          "IND-E1",
+          "IND-F1",
+          "IND-F2",
+          "IND-F3",
+          "IND-F4"
+        ],
+        "title": "CodigoIndicador"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "clase": {
+                "type": "string",
+                "enum": [
+                  "ER-A",
+                  "ER-B",
+                  "ER-C",
+                  "ER-D",
+                  "ER-E",
+                  "ER-F"
+                ],
+                "title": "CodigoClase"
+              },
+              "evaluable": {
+                "type": "boolean",
+                "const": true
+              },
+              "motivo_no_evaluable": {
+                "type": "null"
+              },
+              "mensaje": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "clase",
+              "evaluable",
+              "motivo_no_evaluable",
+              "mensaje"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "clase": {
+                "type": "string",
+                "enum": [
+                  "ER-A",
+                  "ER-B",
+                  "ER-C",
+                  "ER-D",
+                  "ER-E",
+                  "ER-F"
+                ],
+                "title": "CodigoClase"
+              },
+              "evaluable": {
+                "type": "boolean",
+                "const": false
+              },
+              "motivo_no_evaluable": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mensaje": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "clase",
+              "evaluable",
+              "motivo_no_evaluable",
+              "mensaje"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "required": [
+        "IND-A1",
+        "IND-B1",
+        "IND-B2",
+        "IND-B3",
+        "IND-C1",
+        "IND-D1",
+        "IND-D2",
+        "IND-E1",
+        "IND-F1",
+        "IND-F2",
+        "IND-F3",
+        "IND-F4"
+      ]
+    },
+    "reglas": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^R-[A-Z0-9-]+$"
+              },
+              "indicador": {
+                "type": "string",
+                "enum": [
+                  "IND-A1",
+                  "IND-B1",
+                  "IND-B2",
+                  "IND-B3",
+                  "IND-C1",
+                  "IND-D1",
+                  "IND-D2",
+                  "IND-E1",
+                  "IND-F1",
+                  "IND-F2",
+                  "IND-F3",
+                  "IND-F4"
+                ],
+                "title": "CodigoIndicador"
+              },
+              "modalidad": {
+                "type": "string",
+                "enum": [
+                  "V",
+                  "A",
+                  "VA"
+                ],
+                "title": "ModalidadRegla"
+              },
+              "alcance": {
+                "type": "string",
+                "const": "evento"
+              },
+              "condicion": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "tipo": {
+                        "type": "string",
+                        "const": "fuera_de_banda"
+                      },
+                      "rasgo": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                      },
+                      "lado": {
+                        "type": "string",
+                        "enum": [
+                          "encima",
+                          "debajo",
+                          "cualquiera"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "tipo",
+                      "rasgo",
+                      "lado"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "tipo": {
+                        "type": "string",
+                        "const": "estado"
+                      },
+                      "dato": {
+                        "type": "string",
+                        "enum": [
+                          "nota",
+                          "dedo",
+                          "desfase_manos"
+                        ]
+                      },
+                      "valores": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    },
+                    "required": [
+                      "tipo",
+                      "dato",
+                      "valores"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "minimo_eventos": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "id",
+              "indicador",
+              "modalidad",
+              "alcance",
+              "condicion",
+              "minimo_eventos"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^R-[A-Z0-9-]+$"
+              },
+              "indicador": {
+                "type": "string",
+                "enum": [
+                  "IND-A1",
+                  "IND-B1",
+                  "IND-B2",
+                  "IND-B3",
+                  "IND-C1",
+                  "IND-D1",
+                  "IND-D2",
+                  "IND-E1",
+                  "IND-F1",
+                  "IND-F2",
+                  "IND-F3",
+                  "IND-F4"
+                ],
+                "title": "CodigoIndicador"
+              },
+              "modalidad": {
+                "type": "string",
+                "enum": [
+                  "V",
+                  "A",
+                  "VA"
+                ],
+                "title": "ModalidadRegla"
+              },
+              "alcance": {
+                "type": "string",
+                "const": "intento"
+              },
+              "condicion": {
+                "type": "object",
+                "properties": {
+                  "tipo": {
+                    "type": "string",
+                    "const": "fuera_de_banda"
+                  },
+                  "rasgo": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40
+                  },
+                  "lado": {
+                    "type": "string",
+                    "enum": [
+                      "encima",
+                      "debajo",
+                      "cualquiera"
+                    ]
+                  }
+                },
+                "required": [
+                  "tipo",
+                  "rasgo",
+                  "lado"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "indicador",
+              "modalidad",
+              "alcance",
+              "condicion"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "title": "Regla"
+      }
+    }
+  },
+  "required": [
+    "version",
+    "version_taxonomia",
+    "indicadores",
+    "reglas"
+  ],
+  "additionalProperties": false,
+  "title": "ConjuntoReglas"
+}

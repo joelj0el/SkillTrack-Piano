@@ -6,7 +6,7 @@ from __future__ import annotations
 from enum import StrEnum
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, conint
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, confloat, conint
 
 
 class Estado(StrEnum):
@@ -30,6 +30,46 @@ class SecuenciaEsperada(StrEnum):
     provisional = "provisional"
 
 
+class CodigoClase(StrEnum):
+    ER_A = "ER-A"
+    ER_B = "ER-B"
+    ER_C = "ER-C"
+    ER_D = "ER-D"
+    ER_E = "ER-E"
+    ER_F = "ER-F"
+
+
+class Nivel(StrEnum):
+    logrado = "logrado"
+    en_desarrollo = "en-desarrollo"
+    por_mejorar = "por-mejorar"
+    no_evaluado = "no-evaluado"
+
+
+class CalificacionVariable(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    clase: CodigoClase = Field(..., title="CodigoClase")
+    nivel: Nivel
+    pct: confloat(ge=0.0, le=100.0) | None
+
+
+class CodigoIndicador(StrEnum):
+    IND_A1 = "IND-A1"
+    IND_B1 = "IND-B1"
+    IND_B2 = "IND-B2"
+    IND_B3 = "IND-B3"
+    IND_C1 = "IND-C1"
+    IND_D1 = "IND-D1"
+    IND_D2 = "IND-D2"
+    IND_E1 = "IND-E1"
+    IND_F1 = "IND-F1"
+    IND_F2 = "IND-F2"
+    IND_F3 = "IND-F3"
+    IND_F4 = "IND-F4"
+
+
 class IntentoGuardado(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -50,4 +90,9 @@ class IntentoGuardado(BaseModel):
     tempo_elegido_bpm: conint(ge=-9007199254740991, le=9007199254740991) | None
     tempo_medido_bpm: float | None
     secuencia_esperada: SecuenciaEsperada
+    referencia_id: conint(le=9007199254740991, gt=0) | None
+    conjunto_reglas_id: conint(le=9007199254740991, gt=0) | None
+    version_ejercicio_id: conint(le=9007199254740991, gt=0)
+    calificacion: list[CalificacionVariable] | None
+    indicadores_deficientes: list[CodigoIndicador] | None
     iniciado_en: AwareDatetime

@@ -1420,3 +1420,29 @@ details > summary::-webkit-details-marker {
 form + .lista {
   margin-top: var(--espacio-3);
 }
+
+/* P-42: resultados en bloques, en el orden del panel. */
+.resultados > section + section {
+  margin-top: var(--espacio-6);
+}
+
+/* Nota por nota: familia de estado con icono y texto; al tocar, el detalle. */
+.notas-linea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  padding: 0;
+  list-style: none;
+}
+
+.nota-boton {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espacio-1);
+  min-height: var(--alto-toque);
+}
+
+.nota-boton[aria-expanded="true"] {
+  outline: var(--borde-foco) solid var(--color-foco);
+}

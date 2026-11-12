@@ -1,7 +1,6 @@
-import { expect, test, type Request } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { CLAVE_NUEVA, entrar, parDocenteEstudiante } from "./ayuda.ts";
-
-const TIPOS_DE_MEDIOS = /^(image|video|audio)\/|multipart\//i;
+import { registrarPeticiones, verificarPrivacidad } from "./privacidad.ts";
 
 // La cámara simulada de Chromium muestra un patrón de prueba sin manos: el detector debe cargar,
 // procesar fotogramas y NO dar verde. Que detecte manos reales se verifica con la webcam.
@@ -12,8 +11,7 @@ test("PU-web-11: el detector autoalojado carga, procesa la cámara y sin manos n
   const { estudiante } = await parDocenteEstudiante();
   await entrar(page, estudiante, CLAVE_NUEVA);
   await context.grantPermissions(["camera"]);
-  const peticiones: Request[] = [];
-  page.on("request", (r) => peticiones.push(r));
+  const peticiones = registrarPeticiones(page);
 
   await page.goto("/practicar?ejercicio=EJ-03&manos=juntas");
 
@@ -33,11 +31,5 @@ test("PU-web-11: el detector autoalojado carga, procesa la cámara y sin manos n
   await expect(page.getByRole("heading", { name: "1. Coloca el teléfono" })).toBeVisible();
   await expect(page.locator("[data-cuenta-atras]")).toHaveAttribute("data-cuenta-atras", "espera");
 
-  const origen = new URL(page.url()).origin;
-  for (const r of peticiones) {
-    const tipo = (await r.allHeaders())["content-type"] ?? "";
-    expect(tipo, r.url()).not.toMatch(TIPOS_DE_MEDIOS);
-    expect(r.postDataBuffer()?.length ?? 0, r.url()).toBeLessThanOrEqual(256 * 1024);
-    expect(new URL(r.url()).origin, r.url()).toBe(origen);
-  }
+  verificarPrivacidad(peticiones, new URL(page.url()).origin);
 });

@@ -8,7 +8,7 @@
  * - el detector de la mano por uno simulado: cada índice baja sobre la tecla de su nota.
  * Todo lo demás es la app real: calibración, conteo, análisis en el teléfono y envío del intento.
  */
-import { expect, type Page, type Request } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 const ANCHO = 640;
 const ALTO = 360;
@@ -37,15 +37,18 @@ export interface Escena {
   instantes: { t: number; midis: [number, number]; x: [number, number] }[];
 }
 
-/** Escala a manos juntas en octava, con la mano izquierda una octava abajo, a `bpm`. */
-export function escena(bpm: number): Escena {
+/**
+ * Escala a manos juntas en octava, con la mano izquierda una octava abajo, a `bpm`.
+ * `retrasos`: ms de retraso de algunos instantes (un tropiezo), en el audio y en la imagen.
+ */
+export function escena(bpm: number, retrasos: Record<number, number> = {}): Escena {
   const intervalo = 60 / (bpm * 4);
   const izquierda = escala(48);
   const derecha = escala(60);
   return {
     intervalo,
     instantes: derecha.map((md, k) => ({
-      t: k * intervalo,
+      t: k * intervalo + (retrasos[k] ?? 0) / 1000,
       midis: [izquierda[k]!, md],
       x: [centroDe(izquierda[k]!) / ANCHO, centroDe(md) / ANCHO],
     })),
@@ -94,12 +97,13 @@ function instalar(e: Escena & { ancho: number; alto: number; frente: number; neg
   };
 
   let inicio: number | null = null;
-  const w = window as unknown as { __tocarEscala: () => void };
-  w.__tocarEscala = () => {
+  const w = window as unknown as { __tocarEscala: (hasta?: number) => void };
+  // `hasta`: cuántos instantes suenan (una ejecución incompleta).
+  w.__tocarEscala = (hasta = e.instantes.length) => {
     if (!audio || !destino) throw new Error("El micrófono simulado no está activo");
     const base = audio.currentTime + 0.05;
     inicio = performance.now() + 50;
-    for (const { t, midis } of e.instantes) {
+    for (const { t, midis } of e.instantes.slice(0, hasta)) {
       for (const midi of midis) {
         const f = 440 * 2 ** ((midi - 69) / 12);
         for (const [armonico, peso] of [
@@ -170,13 +174,6 @@ async function tocar(page: Page, x: number, y: number): Promise<void> {
   await page.mouse.click(ox + x * escala, oy + y * escala);
 }
 
-/** Todas las peticiones que salieron del contexto mientras dura `accion`. */
-export async function registrarPeticiones(page: Page): Promise<Request[]> {
-  const peticiones: Request[] = [];
-  page.context().on("request", (r) => peticiones.push(r));
-  return peticiones;
-}
-
 /**
  * Recorre la práctica real: encuadre, micrófono, calibración, conteo, ejecución y resultado.
  * Devuelve el cuerpo del intento enviado al servidor.
@@ -184,6 +181,7 @@ export async function registrarPeticiones(page: Page): Promise<Request[]> {
 export async function intentoCompleto(
   page: Page,
   tareaId: number,
+  opciones: { tocarHasta?: number } = {},
 ): Promise<Record<string, unknown>> {
   await page.goto(`/practicar/${tareaId}`);
   await expect(page.getByRole("heading", { name: "2. Prueba de micrófono" })).toBeVisible({
@@ -206,25 +204,14 @@ export async function intentoCompleto(
     { timeout: 90_000 },
   );
   await expect(page.locator("[data-fase=tocando]")).toBeVisible({ timeout: 30_000 });
-  await page.evaluate(() => (window as unknown as { __tocarEscala: () => void }).__tocarEscala());
+  await page.evaluate(
+    (hasta) => (window as unknown as { __tocarEscala: (h?: number) => void }).__tocarEscala(hasta),
+    opciones.tocarHasta,
+  );
   await expect(page.locator("[data-fase=resultado]")).toBeVisible({ timeout: 40_000 });
   const cuerpo = (await envio).postDataJSON() as Record<string, unknown>;
   await expect(page.locator("[data-guardado]")).toHaveAttribute("data-guardado", "Guardado", {
     timeout: 30_000,
   });
   return cuerpo;
-}
-
-const MEDIOS = /^(image|video|audio)\/|multipart\//i;
-
-/** Ninguna petición con medios ni multipart, ningún cuerpo > 256 KB ni otro origen. */
-export async function verificarPrivacidad(page: Page, peticiones: Request[]): Promise<void> {
-  const origen = new URL(page.url()).origin;
-  expect(peticiones.length).toBeGreaterThan(0);
-  for (const r of peticiones) {
-    const tipo = (await r.allHeaders())["content-type"] ?? "";
-    expect(tipo, r.url()).not.toMatch(MEDIOS);
-    expect(r.postDataBuffer()?.length ?? 0, r.url()).toBeLessThanOrEqual(256 * 1024);
-    expect(new URL(r.url()).origin, r.url()).toBe(origen);
-  }
 }

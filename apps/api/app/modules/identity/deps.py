@@ -31,3 +31,13 @@ def exigir_sesion(
 
 
 UsuarioEnSesion = Annotated[Usuario, Depends(exigir_sesion)]
+
+
+def exigir_superadmin(usuario: UsuarioEnSesion) -> Usuario:
+    """Publicar artefactos del catálogo (referencia, reglas) es solo del superadministrador."""
+    if not usuario.superadmin:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo el superadministrador")
+    return usuario
+
+
+Superadmin = Annotated[Usuario, Depends(exigir_superadmin)]

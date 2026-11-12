@@ -114,4 +114,14 @@ describe("ResultadoIntento v2", () => {
       con({ nota: { estado: "sin-dato", midi: null, clase_oida: null, modalidad: null } }),
     ).toBe(true);
   });
+
+  it("PU-contracts-28: los indicadores deficientes son opcionales y solo admiten códigos de la taxonomía", () => {
+    const con = (indicadores: unknown) =>
+      ResultadoIntento.safeParse({ ...RESULTADO, indicadores_deficientes: indicadores }).success;
+    expect(ResultadoIntento.safeParse(RESULTADO).success).toBe(true);
+    expect(con(["IND-A1", "IND-B2"])).toBe(true);
+    expect(con(null)).toBe(true);
+    expect(con(["IND-Z9"])).toBe(false);
+    expect(con(["IND-A1", "IND-A1"])).toBe(false);
+  });
 });

@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "version_taxonomia": "v0.1",
+  "indicadores": {
+    "IND-A1": {
+      "clase": "ER-A",
+      "evaluable": true,
+      "motivo_no_evaluable": null,
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-B1": {
+      "clase": "ER-B",
+      "evaluable": true,
+      "motivo_no_evaluable": null,
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-B2": {
+      "clase": "ER-B",
+      "evaluable": true,
+      "motivo_no_evaluable": null,
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-B3": {
+      "clase": "ER-B",
+      "evaluable": true,
+      "motivo_no_evaluable": null,
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-C1": {
+      "clase": "ER-C",
+      "evaluable": true,
+      "motivo_no_evaluable": null,
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-D1": {
+      "clase": "ER-D",
+      "evaluable": true,
+      "motivo_no_evaluable": null,
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-D2": {
+      "clase": "ER-D",
+      "evaluable": true,
+      "motivo_no_evaluable": null,
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-E1": {
+      "clase": "ER-E",
+      "evaluable": false,
+      "motivo_no_evaluable": "No evaluable por diseño: la flexión del dedo que toca no se registra por evento y su observabilidad es incierta hasta S1",
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-F1": {
+      "clase": "ER-F",
+      "evaluable": false,
+      "motivo_no_evaluable": "No evaluable por diseño: el núcleo no mide el desplazamiento lateral de la muñeca y su observabilidad es incierta hasta S1",
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-F2": {
+      "clase": "ER-F",
+      "evaluable": false,
+      "motivo_no_evaluable": "No evaluable por diseño: el núcleo no registra la longitud aparente de los dedos libres",
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-F3": {
+      "clase": "ER-F",
+      "evaluable": false,
+      "motivo_no_evaluable": "No evaluable por diseño: el núcleo no registra la extensión de los dedos libres y su observabilidad es incierta hasta S1",
+      "mensaje": "pendiente de aprobación del panel"
+    },
+    "IND-F4": {
+      "clase": "ER-F",
+      "evaluable": false,
+      "motivo_no_evaluable": "No evaluable por diseño: el núcleo no registra el ángulo pulgar–índice por evento",
+      "mensaje": "pendiente de aprobación del panel"
+    }
+  },
+  "reglas": [
+    {
+      "id": "R-A1-01",
+      "indicador": "IND-A1",
+      "alcance": "evento",
+      "modalidad": "A",
+      "condicion": { "tipo": "estado", "dato": "nota", "valores": ["incorrecta", "faltante"] },
+      "minimo_eventos": 1
+    },
+    {
+      "id": "R-B1-01",
+      "indicador": "IND-B1",
+      "alcance": "intento",
+      "modalidad": "A",
+      "condicion": { "tipo": "fuera_de_banda", "rasgo": "cambio_tempo.pct", "lado": "cualquiera" }
+    },
+    {
+      "id": "R-B2-01",
+      "indicador": "IND-B2",
+      "alcance": "evento",
+      "modalidad": "A",
+      "condicion": { "tipo": "fuera_de_banda", "rasgo": "ataque.desvio_pct", "lado": "cualquiera" },
+      "minimo_eventos": 1
+    },
+    {
+      "id": "R-B3-01",
+      "indicador": "IND-B3",
+      "alcance": "evento",
+      "modalidad": "VA",
+      "condicion": { "tipo": "fuera_de_banda", "rasgo": "desfase_manos.ms", "lado": "encima" },
+      "minimo_eventos": 1
+    },
+    {
+      "id": "R-B3-02",
+      "indicador": "IND-B3",
+      "alcance": "evento",
+      "modalidad": "VA",
+      "condicion": { "tipo": "estado", "dato": "desfase_manos", "valores": ["una-nota-atras"] },
+      "minimo_eventos": 1
+    },
+    {
+      "id": "R-C1-01",
+      "indicador": "IND-C1",
+      "alcance": "evento",
+      "modalidad": "V",
+      "condicion": { "tipo": "estado", "dato": "dedo", "valores": ["incorrecto"] },
+      "minimo_eventos": 1
+    },
+    {
+      "id": "R-D1-01",
+      "indicador": "IND-D1",
+      "alcance": "evento",
+      "modalidad": "V",
+      "condicion": { "tipo": "fuera_de_banda", "rasgo": "tecla.zona", "lado": "encima" },
+      "minimo_eventos": 1
+    },
+    {
+      "id": "R-D2-01",
+      "indicador": "IND-D2",
+      "alcance": "evento",
+      "modalidad": "V",
+      "condicion": { "tipo": "fuera_de_banda", "rasgo": "tecla.zona", "lado": "debajo" },
+      "minimo_eventos": 1
+    }
+  ]
+}

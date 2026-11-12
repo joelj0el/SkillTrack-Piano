@@ -1,11 +1,20 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.contracts_gen.conjunto_reglas import CodigoIndicador
 from app.contracts_gen.ejercicio import Ejercicio as EjercicioDto
 from app.contracts_gen.ejercicio import VersionEjercicio as VersionDto
-from app.modules.catalog.models import ClaseError, Ejercicio, VersionEjercicio
+from app.modules.catalog.models import (
+    ClaseError,
+    ConjuntoReglas,
+    Ejercicio,
+    Referencia,
+    VersionEjercicio,
+)
 
 VERSION_TAXONOMIA = "v0.1"
+# Los 12 indicadores de la taxonomía, del contrato generado.
+CODIGOS_INDICADOR = tuple(c.value for c in CodigoIndicador)
 
 
 def ejercicios_vigentes(db: Session) -> list[tuple[Ejercicio, VersionEjercicio]]:
@@ -81,3 +90,81 @@ def ejercicio_dto(ejercicio: Ejercicio, version: VersionEjercicio) -> EjercicioD
 
 def version_existe(db: Session, version_id: int) -> bool:
     return db.get(VersionEjercicio, version_id) is not None
+
+
+def version_por_codigo(db: Session, version_ejercicio: str) -> VersionEjercicio | None:
+    """'EJ-01@1' → la versión 1 del EJ-01 (así la nombran los artefactos de investigación)."""
+    codigo, _, numero = version_ejercicio.partition("@")
+    if not numero.isdigit():
+        return None
+    return db.scalar(
+        select(VersionEjercicio)
+        .join(Ejercicio, Ejercicio.id == VersionEjercicio.ejercicio_id)
+        .where(Ejercicio.codigo == codigo, VersionEjercicio.version == int(numero))
+    )
+
+
+def referencia_existe(db: Session, version_ejercicio_id: int, version: int) -> bool:
+    return (
+        db.scalar(
+            select(Referencia.id).where(
+                Referencia.version_ejercicio_id == version_ejercicio_id,
+                Referencia.version == version,
+            )
+        )
+        is not None
+    )
+
+
+def referencia_vigente(db: Session, version_ejercicio_id: int) -> Referencia | None:
+    return db.scalar(
+        select(Referencia)
+        .where(Referencia.version_ejercicio_id == version_ejercicio_id)
+        .order_by(Referencia.version.desc())
+        .limit(1)
+    )
+
+
+def referencia_es_de(db: Session, referencia_id: int, version_ejercicio_id: int) -> bool:
+    fila = db.get(Referencia, referencia_id)
+    return fila is not None and fila.version_ejercicio_id == version_ejercicio_id
+
+
+def taxonomia_existe(db: Session, version_taxonomia: str) -> bool:
+    consulta = select(ClaseError.id).where(ClaseError.version_taxonomia == version_taxonomia)
+    return db.scalar(consulta.limit(1)) is not None
+
+
+def reglas_existen(db: Session, version: int) -> bool:
+    return db.scalar(select(ConjuntoReglas.id).where(ConjuntoReglas.version == version)) is not None
+
+
+def reglas_vigentes(db: Session) -> ConjuntoReglas | None:
+    return db.scalar(select(ConjuntoReglas).order_by(ConjuntoReglas.version.desc()).limit(1))
+
+
+def reglas_por_id(db: Session, conjunto_id: int) -> ConjuntoReglas | None:
+    return db.get(ConjuntoReglas, conjunto_id)
+
+
+def problemas_del_conjunto(datos: dict) -> list[tuple[list[str | int], str]]:
+    """Lo que el modelo generado no expresa: los 12 indicadores y las referencias cruzadas."""
+    problemas: list[tuple[list[str | int], str]] = []
+    indicadores: dict = datos["indicadores"]
+    for codigo in CODIGOS_INDICADOR:
+        if codigo not in indicadores:
+            problemas.append((["indicadores", codigo], f"Falta {codigo}"))
+    for codigo, conf in indicadores.items():
+        if conf["clase"] != f"ER-{codigo[4]}":
+            problemas.append((["indicadores", codigo, "clase"], f"{codigo} no es de esa clase"))
+        if conf["evaluable"] and not any(r["indicador"] == codigo for r in datos["reglas"]):
+            problemas.append((["indicadores", codigo], f"{codigo} es evaluable sin reglas"))
+    vistos: set[str] = set()
+    for i, regla in enumerate(datos["reglas"]):
+        if regla["id"] in vistos:
+            problemas.append((["reglas", i, "id"], f"{regla['id']} repetida"))
+        vistos.add(regla["id"])
+        conf = indicadores.get(regla["indicador"])
+        if conf is not None and not conf["evaluable"]:
+            problemas.append((["reglas", i, "indicador"], "Indicador no evaluable por diseño"))
+    return problemas

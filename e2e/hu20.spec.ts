@@ -1,7 +1,6 @@
-import { expect, test, type Request } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { CLAVE_NUEVA, entrar, parDocenteEstudiante } from "./ayuda.ts";
-
-const TIPOS_DE_MEDIOS = /^(image|video|audio)\/|multipart\//i;
+import { registrarPeticiones, verificarPrivacidad } from "./privacidad.ts";
 
 test("PU-web-12: con micrófono simulado se mide el nivel, se completa la prueba y no sale audio", async ({
   page,
@@ -10,8 +9,7 @@ test("PU-web-12: con micrófono simulado se mide el nivel, se completa la prueba
   const { estudiante } = await parDocenteEstudiante();
   await entrar(page, estudiante, CLAVE_NUEVA);
   await context.grantPermissions(["microphone"]);
-  const peticiones: Request[] = [];
-  page.on("request", (r) => peticiones.push(r));
+  const peticiones = registrarPeticiones(page);
 
   await page.goto("/microfono");
   await page.getByRole("button", { name: "Probar el micrófono" }).click();
@@ -23,13 +21,7 @@ test("PU-web-12: con micrófono simulado se mide el nivel, se completa la prueba
     .toBeGreaterThan(-90);
   await expect(page.locator("[data-semaforo-audio]")).toBeVisible({ timeout: 15_000 });
 
-  const origen = new URL(page.url()).origin;
-  for (const r of peticiones) {
-    const tipo = (await r.allHeaders())["content-type"] ?? "";
-    expect(tipo, r.url()).not.toMatch(TIPOS_DE_MEDIOS);
-    expect(r.postDataBuffer()?.length ?? 0, r.url()).toBeLessThanOrEqual(256 * 1024);
-    expect(new URL(r.url()).origin, r.url()).toBe(origen);
-  }
+  verificarPrivacidad(peticiones, new URL(page.url()).origin);
 });
 
 test("PA-HU20-03: sin permiso de micrófono se ofrece el modo solo visión", async ({

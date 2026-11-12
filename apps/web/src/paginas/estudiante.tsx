@@ -3,6 +3,7 @@ import {
   Ban,
   Calendar,
   Check,
+  CircleCheck,
   Clock,
   EyeOff,
   Hand,
@@ -21,8 +22,11 @@ const ESTADO_TAREA = {
   Asignada: { tono: "neutro", icono: Clock },
   "En práctica": { tono: "correcto", icono: Repeat },
   Vencida: { tono: "tiempo", icono: TriangleAlert },
+  Revisada: { tono: "correcto", icono: CircleCheck },
   Cancelada: { tono: "no-evaluable", icono: Ban },
 } as const;
+
+export const VALOR_TAREA = { lograda: "Lograda", por_repetir: "Por repetir" } as const;
 
 export function ResumenTarea({ tarea, enlace }: { tarea: Tarea; enlace?: string }) {
   const contenido = (
@@ -48,6 +52,12 @@ export function ResumenTarea({ tarea, enlace }: { tarea: Tarea; enlace?: string 
           Repeticiones por día: {tarea.repeticiones_por_dia}
         </div>
       </div>
+      {tarea.valoracion && (
+        <p className="suave" data-valoracion={tarea.valoracion.valor}>
+          Valoración del docente: {VALOR_TAREA[tarea.valoracion.valor]} ·{" "}
+          {fechaLegible(tarea.valoracion.creada_en)}
+        </p>
+      )}
       <div className="tarjeta-pie">
         <Chip {...ESTADO_TAREA[tarea.estado]} data-estado={tarea.estado}>
           {tarea.estado}
@@ -134,7 +144,7 @@ export function MisTareas() {
   );
 }
 
-function fechaHora(iso: string): string {
+export function fechaHora(iso: string): string {
   const fecha = new Date(iso);
   const dos = (n: number) => String(n).padStart(2, "0");
   return `${dos(fecha.getDate())}/${dos(fecha.getMonth() + 1)}/${fecha.getFullYear()} ${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;

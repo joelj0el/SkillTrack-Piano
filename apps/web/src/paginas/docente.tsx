@@ -3,6 +3,7 @@ import {
   ClaseError,
   Ejercicio,
   EstudianteResumen,
+  IntentoGuardado,
   LONGITUD_MAXIMA_OBSERVACION,
   REPETICIONES_MAX,
   REPETICIONES_MIN,
@@ -10,15 +11,23 @@ import {
   TEMPO_DOCENTE_MIN,
   TEMPO_SUGERIDO,
   Tarea,
+  type ValorTarea,
 } from "@skilltrack/contracts";
-import { Ban, ClipboardPlus, MessageSquarePlus, Save } from "lucide-react";
+import { Ban, ClipboardCheck, ClipboardPlus, MessageSquarePlus, Save } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import { z } from "zod";
 import { ErrorApi, pedir } from "../api.ts";
 import { Cargado, NOMBRE_MANOS, fechaLegible, useCarga } from "../componentes.tsx";
 import { Boton, EstadoVista, PaginaCabecera, useAviso } from "../ui/base.tsx";
-import { ListaIntentos, Observaciones, ResumenTarea } from "./estudiante.tsx";
+import { NOMBRE_INDICADOR, NOMBRE_NIVEL, NOMBRE_VARIABLE } from "../captura/resultados.ts";
+import {
+  ListaIntentos,
+  Observaciones,
+  ResumenTarea,
+  VALOR_TAREA,
+  fechaHora,
+} from "./estudiante.tsx";
 
 /** HU-37: por cada día desde la asignación, las repeticiones válidas frente a la meta. */
 function AvanceDeTarea({ tareaId }: { tareaId: number }) {
@@ -54,6 +63,98 @@ function AvanceDeTarea({ tareaId }: { tareaId: number }) {
             </table>
           </div>
           <ListaIntentos avance={avance} />
+        </details>
+      )}
+    </Cargado>
+  );
+}
+
+const METRONOMO = { con: "Con metrónomo", sin: "Sin metrónomo" } as const;
+
+function tempoDe(i: IntentoGuardado): string {
+  const medido = i.tempo_medido_bpm === null ? "—" : Math.round(i.tempo_medido_bpm);
+  return `♩ elegido = ${i.tempo_elegido_bpm ?? "—"} · medido ≈ ${medido}`;
+}
+
+function CalificacionDe({ intento }: { intento: IntentoGuardado }) {
+  if (intento.estado === "no_evaluable") {
+    return <>No evaluable: {intento.motivo_no_evaluable ?? "sin motivo registrado"}</>;
+  }
+  if (!intento.calificacion) return <>Sin calificación</>;
+  return (
+    <ul>
+      {intento.calificacion.map((c) => (
+        <li key={c.clase} data-variable={c.clase}>
+          {`${NOMBRE_VARIABLE[c.clase]}: ${NOMBRE_NIVEL[c.nivel]}${c.pct === null ? "" : ` (${c.pct} %)`}`}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function IndicadoresDe({ intento }: { intento: IntentoGuardado }) {
+  const codigos = intento.indicadores_deficientes;
+  if (codigos === null) return <>—</>;
+  if (codigos.length === 0) return <>Ninguno</>;
+  return (
+    <ul>
+      {codigos.map((c) => (
+        <li key={c} data-indicador={c}>
+          {NOMBRE_INDICADOR[c] ?? c}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** HU-30: cada intento de la tarea, con su calificación por variable y los indicadores detectados. */
+function IntentosDeTarea({ tareaId }: { tareaId: number }) {
+  const { carga } = useCarga(
+    () => pedir("GET", `/tareas/${tareaId}/intentos`, z.array(IntentoGuardado)),
+    [tareaId],
+  );
+  return (
+    <Cargado carga={carga}>
+      {(intentos) => (
+        <details className="avance">
+          <summary>Intentos ({intentos.length})</summary>
+          {intentos.length === 0 ? (
+            <p className="suave">Todavía no hay intentos de esta tarea.</p>
+          ) : (
+            <div
+              className="tabla-contenedor"
+              tabIndex={0}
+              role="region"
+              aria-label={`Tabla de intentos de la tarea ${tareaId}`}
+            >
+              <table className="tabla" aria-label={`Intentos de la tarea ${tareaId}`}>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Tempo</th>
+                    <th>Metrónomo</th>
+                    <th>Calificación por variable</th>
+                    <th>Indicadores deficientes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {intentos.map((i) => (
+                    <tr key={i.id} data-intento={i.id}>
+                      <td>{fechaHora(i.iniciado_en)}</td>
+                      <td>{tempoDe(i)}</td>
+                      <td>{i.modo_metronomo ? METRONOMO[i.modo_metronomo] : "—"}</td>
+                      <td>
+                        <CalificacionDe intento={i} />
+                      </td>
+                      <td>
+                        <IndicadoresDe intento={i} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </details>
       )}
     </Cargado>
@@ -373,6 +474,96 @@ function NuevaObservacion({
   );
 }
 
+/** HU-38 (DP-17): Lograda deja la tarea Revisada; Por repetir la devuelve a En práctica. */
+function ValorarTarea({
+  tarea,
+  aspectos,
+  alGuardar,
+}: {
+  tarea: Tarea;
+  aspectos: ClaseError[];
+  alGuardar: () => void;
+}) {
+  const [valor, setValor] = useState<ValorTarea>("lograda");
+  const [errores, setErrores] = useState<Record<string, string> | string | null>(null);
+  const avisar = useAviso();
+  const porRepetir = valor === "por_repetir";
+
+  async function enviar(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const datos = new FormData(evento.currentTarget);
+    const plazo = String(datos.get("fecha_limite") ?? "");
+    try {
+      await pedir("POST", `/tareas/${tarea.id}/valoracion`, Tarea, {
+        valor,
+        observacion: porRepetir
+          ? { clase_error_id: numero(datos, "clase_error_id"), texto: String(datos.get("texto")) }
+          : null,
+        fecha_limite: porRepetir && plazo ? plazo : null,
+      });
+      setErrores(null);
+      avisar("Valoración registrada");
+      alGuardar();
+    } catch (e) {
+      setErrores(erroresDe(e));
+    }
+  }
+
+  return (
+    <details>
+      <summary>Valorar la tarea</summary>
+      <form aria-label={`Valoración de la tarea ${tarea.id}`} onSubmit={(e) => void enviar(e)}>
+        <label>
+          Valoración
+          <select
+            name="valor"
+            value={valor}
+            onChange={(e) => setValor(e.currentTarget.value as ValorTarea)}
+          >
+            <option value="lograda">{VALOR_TAREA.lograda}</option>
+            <option value="por_repetir">{VALOR_TAREA.por_repetir}</option>
+          </select>
+        </label>
+        {porRepetir && (
+          <>
+            <label>
+              Aspecto a repetir
+              <select name="clase_error_id" defaultValue="" required>
+                <option value="" disabled>
+                  Elige un aspecto
+                </option>
+                {aspectos.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.nombre_pedagogico}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Observación
+              <textarea
+                name="texto"
+                rows={3}
+                maxLength={LONGITUD_MAXIMA_OBSERVACION}
+                placeholder="Repite…, tratando de…, para que…"
+                required
+              />
+            </label>
+            <label>
+              Plazo nuevo (opcional)
+              <input name="fecha_limite" type="date" min={hoyIso()} />
+            </label>
+          </>
+        )}
+        <Errores errores={errores} />
+        <Boton type="submit" icono={ClipboardCheck}>
+          Guardar valoración
+        </Boton>
+      </form>
+    </details>
+  );
+}
+
 export function DetalleEstudiante() {
   const { id } = useParams();
   const estudianteId = Number(id);
@@ -406,6 +597,7 @@ export function DetalleEstudiante() {
               <li key={t.id} className="tarjeta" data-tarea={t.id}>
                 <ResumenTarea tarea={t} />
                 <AvanceDeTarea tareaId={t.id} />
+                <IntentosDeTarea tareaId={t.id} />
                 {t.estado !== "Cancelada" && (
                   <>
                     <EditarTarea tarea={t} alGuardar={() => void recargar()} />
@@ -414,6 +606,7 @@ export function DetalleEstudiante() {
                       aspectos={aspectos}
                       alGuardar={() => void recargar()}
                     />
+                    <ValorarTarea tarea={t} aspectos={aspectos} alGuardar={() => void recargar()} />
                   </>
                 )}
                 <Observaciones tarea={t} />

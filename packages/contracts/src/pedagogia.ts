@@ -34,7 +34,8 @@ export const TareaCambio = z
 export type TareaCambio = z.infer<typeof TareaCambio>;
 
 // Asignada → En práctica (≥ 1 intento válido) → Vencida (plazo cumplido); Cancelada por el docente.
-export const EstadoTarea = z.enum(["Asignada", "En práctica", "Vencida", "Cancelada"]);
+// HU-38: "Lograda" la deja Revisada; "Por repetir" la devuelve a En práctica.
+export const EstadoTarea = z.enum(["Asignada", "En práctica", "Vencida", "Revisada", "Cancelada"]);
 export type EstadoTarea = z.infer<typeof EstadoTarea>;
 
 export const Observacion = z
@@ -51,6 +52,21 @@ export const Observacion = z
   .meta({ title: "Observacion" });
 export type Observacion = z.infer<typeof Observacion>;
 
+/** HU-38 (DP-17): dos niveles; cada uno produce una acción distinta sobre la tarea. */
+export const ValorTarea = z.enum(["lograda", "por_repetir"]);
+export type ValorTarea = z.infer<typeof ValorTarea>;
+
+export const Valoracion = z
+  .strictObject({
+    id: z.int().positive(),
+    valor: ValorTarea,
+    docente_id: z.int().positive(),
+    observacion_id: z.int().positive().nullable(),
+    creada_en: z.iso.datetime({ offset: true }),
+  })
+  .meta({ title: "Valoracion" });
+export type Valoracion = z.infer<typeof Valoracion>;
+
 export const Tarea = z
   .strictObject({
     id: z.int().positive(),
@@ -66,6 +82,8 @@ export const Tarea = z
     fecha_limite: Fecha,
     estado: EstadoTarea,
     observaciones: z.array(Observacion),
+    /** La última valoración del docente (se guarda el historial). */
+    valoracion: Valoracion.nullable(),
   })
   .meta({ title: "Tarea" });
 export type Tarea = z.infer<typeof Tarea>;
@@ -79,6 +97,34 @@ export const ObservacionNueva = z
   })
   .meta({ title: "ObservacionNueva" });
 export type ObservacionNueva = z.infer<typeof ObservacionNueva>;
+
+/**
+ * "Por repetir" exige una observación ligada a un aspecto y admite un plazo nuevo; "Lograda" no
+ * cambia el plazo. La API repite estas reglas (422) porque el refinamiento no pasa al esquema.
+ */
+export const ValoracionNueva = z
+  .strictObject({
+    valor: ValorTarea,
+    observacion: z
+      .strictObject({
+        clase_error_id: z.int().positive(),
+        texto: z.string().trim().min(1).max(LONGITUD_MAXIMA_OBSERVACION),
+      })
+      .meta({ title: "ObservacionDeValoracion" })
+      .nullable()
+      .optional(),
+    fecha_limite: Fecha.nullable().optional(),
+  })
+  .refine((v) => v.valor === "lograda" || v.observacion, {
+    path: ["observacion"],
+    message: "Por repetir exige una observación con su aspecto.",
+  })
+  .refine((v) => v.valor === "por_repetir" || !v.fecha_limite, {
+    path: ["fecha_limite"],
+    message: "El plazo nuevo solo aplica a Por repetir.",
+  })
+  .meta({ title: "ValoracionNueva" });
+export type ValoracionNueva = z.infer<typeof ValoracionNueva>;
 
 /** Intento de la tarea en el avance: si cuenta para la meta del día y, si no, por qué. */
 export const IntentoDeAvance = z
