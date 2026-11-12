@@ -40,6 +40,7 @@ import {
 import { Ban, Check, Circle, Mic, RefreshCw, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { indicadoresDeficientes } from "./resultados.ts";
 import { pedir } from "../api.ts";
 import { artefactosVigentes, type ArtefactosVigentes } from "./artefactos.ts";
 import { programarClic, unir, useMicrofono, type Microfono } from "../audio/microfono.ts";
@@ -815,6 +816,7 @@ export function PasoEjecucion(props: {
       referencia_id: contexto.artefactos.referencia?.id ?? null,
       conjunto_reglas_id: contexto.artefactos.reglas?.id ?? null,
       calificacion: variables.map(({ clase, nivel, pct }) => ({ clase, nivel, pct })),
+      indicadores_deficientes: indicadoresDeficientes(diagnostico, ok),
       eventos,
     });
     setFinal({ resultado, diagnostico, variables });

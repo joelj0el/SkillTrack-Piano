@@ -134,7 +134,7 @@ export function MisTareas() {
   );
 }
 
-function fechaHora(iso: string): string {
+export function fechaHora(iso: string): string {
   const fecha = new Date(iso);
   const dos = (n: number) => String(n).padStart(2, "0");
   return `${dos(fecha.getDate())}/${dos(fecha.getMonth() + 1)}/${fecha.getFullYear()} ${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;

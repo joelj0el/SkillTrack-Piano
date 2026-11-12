@@ -1,8 +1,9 @@
-import type { Diagnostico, EventoDiagnosticable } from "@skilltrack/core";
+import type { Diagnostico, EventoDiagnosticable, ResultadoDiagnostico } from "@skilltrack/core";
 import { describe, expect, it } from "vitest";
 import {
   accionSugerida,
   familiaDeEvento,
+  indicadoresDeficientes,
   ordenarPorCriticidad,
   NOMBRE_INDICADOR,
   NOMBRE_VARIABLE,
@@ -84,5 +85,28 @@ describe("pantalla de resultados", () => {
       "Curvatura de los dedos",
       "Soltura de mano y muñeca",
     ]);
+  });
+
+  it("PU-web-25: los indicadores deficientes son los detectados; sin diagnóstico o no evaluable, null", () => {
+    const sinError = { estado: "sin-error", motivo: null } as const;
+    const diagnostico: ResultadoDiagnostico = {
+      modo: "VA",
+      version_reglas: 1,
+      version_referencia: null,
+      diagnosticos: [],
+      cobertura: {},
+      indicadores: {
+        "IND-B2": { estado: "detectado", motivo: null },
+        "IND-A1": { estado: "detectado", motivo: null },
+        "IND-C1": sinError,
+        "IND-E1": { estado: "no-evaluable", motivo: "No evaluable por diseño" },
+      },
+    };
+    expect(indicadoresDeficientes(diagnostico, true)).toEqual(["IND-A1", "IND-B2"]);
+    expect(indicadoresDeficientes(diagnostico, false)).toBeNull();
+    expect(indicadoresDeficientes(null, true)).toBeNull();
+    expect(
+      indicadoresDeficientes({ ...diagnostico, indicadores: { "IND-C1": sinError } }, true),
+    ).toEqual([]);
   });
 });

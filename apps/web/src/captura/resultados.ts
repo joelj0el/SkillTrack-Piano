@@ -1,4 +1,10 @@
-import type { Clase, Diagnostico, EventoDiagnosticable } from "@skilltrack/core";
+import type {
+  Clase,
+  Diagnostico,
+  EventoDiagnosticable,
+  ResultadoDiagnostico,
+} from "@skilltrack/core";
+import type { CalificacionVariable } from "@skilltrack/contracts";
 
 /** Nombres de la taxonomía v0.1 (indicadores para el estudiante). */
 export const NOMBRE_INDICADOR: Record<string, string> = {
@@ -25,6 +31,25 @@ export const NOMBRE_VARIABLE: Record<Clase, string> = {
   "ER-E": "Curvatura de los dedos",
   "ER-F": "Soltura de mano y muñeca",
 };
+
+export const NOMBRE_NIVEL: Record<CalificacionVariable["nivel"], string> = {
+  logrado: "Logrado",
+  "en-desarrollo": "En desarrollo",
+  "por-mejorar": "Por mejorar",
+  "no-evaluado": "No evaluado",
+};
+
+/** HU-30: indicadores que la regla detectó, para que el docente los vea sin repetir el análisis. */
+export function indicadoresDeficientes(
+  diagnostico: ResultadoDiagnostico | null,
+  evaluable: boolean,
+): string[] | null {
+  if (!diagnostico || !evaluable) return null;
+  return Object.entries(diagnostico.indicadores)
+    .filter(([, e]) => e.estado === "detectado")
+    .map(([codigo]) => codigo)
+    .sort();
+}
 
 /** Orden de criticidad (§4.2, propuesta): la primera clase detectada es la corrección principal. */
 const CRITICIDAD = ["ER-B", "ER-A", "ER-E", "ER-C", "ER-F", "ER-D"];

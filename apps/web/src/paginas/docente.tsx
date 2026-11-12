@@ -3,6 +3,7 @@ import {
   ClaseError,
   Ejercicio,
   EstudianteResumen,
+  IntentoGuardado,
   LONGITUD_MAXIMA_OBSERVACION,
   REPETICIONES_MAX,
   REPETICIONES_MIN,
@@ -18,7 +19,8 @@ import { z } from "zod";
 import { ErrorApi, pedir } from "../api.ts";
 import { Cargado, NOMBRE_MANOS, fechaLegible, useCarga } from "../componentes.tsx";
 import { Boton, EstadoVista, PaginaCabecera, useAviso } from "../ui/base.tsx";
-import { ListaIntentos, Observaciones, ResumenTarea } from "./estudiante.tsx";
+import { NOMBRE_INDICADOR, NOMBRE_NIVEL, NOMBRE_VARIABLE } from "../captura/resultados.ts";
+import { ListaIntentos, Observaciones, ResumenTarea, fechaHora } from "./estudiante.tsx";
 
 /** HU-37: por cada día desde la asignación, las repeticiones válidas frente a la meta. */
 function AvanceDeTarea({ tareaId }: { tareaId: number }) {
@@ -54,6 +56,98 @@ function AvanceDeTarea({ tareaId }: { tareaId: number }) {
             </table>
           </div>
           <ListaIntentos avance={avance} />
+        </details>
+      )}
+    </Cargado>
+  );
+}
+
+const METRONOMO = { con: "Con metrónomo", sin: "Sin metrónomo" } as const;
+
+function tempoDe(i: IntentoGuardado): string {
+  const medido = i.tempo_medido_bpm === null ? "—" : Math.round(i.tempo_medido_bpm);
+  return `♩ elegido = ${i.tempo_elegido_bpm ?? "—"} · medido ≈ ${medido}`;
+}
+
+function CalificacionDe({ intento }: { intento: IntentoGuardado }) {
+  if (intento.estado === "no_evaluable") {
+    return <>No evaluable: {intento.motivo_no_evaluable ?? "sin motivo registrado"}</>;
+  }
+  if (!intento.calificacion) return <>Sin calificación</>;
+  return (
+    <ul>
+      {intento.calificacion.map((c) => (
+        <li key={c.clase} data-variable={c.clase}>
+          {`${NOMBRE_VARIABLE[c.clase]}: ${NOMBRE_NIVEL[c.nivel]}${c.pct === null ? "" : ` (${c.pct} %)`}`}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function IndicadoresDe({ intento }: { intento: IntentoGuardado }) {
+  const codigos = intento.indicadores_deficientes;
+  if (codigos === null) return <>—</>;
+  if (codigos.length === 0) return <>Ninguno</>;
+  return (
+    <ul>
+      {codigos.map((c) => (
+        <li key={c} data-indicador={c}>
+          {NOMBRE_INDICADOR[c] ?? c}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** HU-30: cada intento de la tarea, con su calificación por variable y los indicadores detectados. */
+function IntentosDeTarea({ tareaId }: { tareaId: number }) {
+  const { carga } = useCarga(
+    () => pedir("GET", `/tareas/${tareaId}/intentos`, z.array(IntentoGuardado)),
+    [tareaId],
+  );
+  return (
+    <Cargado carga={carga}>
+      {(intentos) => (
+        <details className="avance">
+          <summary>Intentos ({intentos.length})</summary>
+          {intentos.length === 0 ? (
+            <p className="suave">Todavía no hay intentos de esta tarea.</p>
+          ) : (
+            <div
+              className="tabla-contenedor"
+              tabIndex={0}
+              role="region"
+              aria-label={`Tabla de intentos de la tarea ${tareaId}`}
+            >
+              <table className="tabla" aria-label={`Intentos de la tarea ${tareaId}`}>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Tempo</th>
+                    <th>Metrónomo</th>
+                    <th>Calificación por variable</th>
+                    <th>Indicadores deficientes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {intentos.map((i) => (
+                    <tr key={i.id} data-intento={i.id}>
+                      <td>{fechaHora(i.iniciado_en)}</td>
+                      <td>{tempoDe(i)}</td>
+                      <td>{i.modo_metronomo ? METRONOMO[i.modo_metronomo] : "—"}</td>
+                      <td>
+                        <CalificacionDe intento={i} />
+                      </td>
+                      <td>
+                        <IndicadoresDe intento={i} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </details>
       )}
     </Cargado>
@@ -406,6 +500,7 @@ export function DetalleEstudiante() {
               <li key={t.id} className="tarjeta" data-tarea={t.id}>
                 <ResumenTarea tarea={t} />
                 <AvanceDeTarea tareaId={t.id} />
+                <IntentosDeTarea tareaId={t.id} />
                 {t.estado !== "Cancelada" && (
                   <>
                     <EditarTarea tarea={t} alGuardar={() => void recargar()} />

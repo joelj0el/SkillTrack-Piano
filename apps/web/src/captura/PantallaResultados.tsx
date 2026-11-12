@@ -17,6 +17,7 @@ import {
   accionSugerida,
   familiaDeEvento,
   NOMBRE_INDICADOR,
+  NOMBRE_NIVEL,
   NOMBRE_VARIABLE,
   ordenarPorCriticidad,
   type Familia,
@@ -50,12 +51,7 @@ const FAMILIA: Record<Familia, { tono: Tono; icono: LucideIcon; texto: string }>
   mano: { tono: "mano", icono: Hand, texto: "Mano o dedo" },
   "no-evaluable": { tono: "no-evaluable", icono: CircleHelp, texto: "No evaluable" },
 };
-const NIVEL: Record<Nivel, string> = {
-  logrado: "Logrado",
-  "en-desarrollo": "En desarrollo",
-  "por-mejorar": "Por mejorar",
-  "no-evaluado": "No evaluado",
-};
+const NIVEL: Record<Nivel, string> = NOMBRE_NIVEL;
 const MANO = { MI: "Mano izquierda", MD: "Mano derecha" } as const;
 const NOMBRES = ["Do", "Do♯", "Re", "Mi♭", "Mi", "Fa", "Fa♯", "Sol", "La♭", "La", "Si♭", "Si"];
 const nombreNota = (midi: number) => `${NOMBRES[midi % 12]}${Math.floor(midi / 12) - 1}`;
