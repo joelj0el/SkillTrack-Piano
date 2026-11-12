@@ -18,16 +18,23 @@ function intervalos(ataques: readonly number[]): number[] {
   return ataques.slice(1).map((t, i) => t - ataques[i]!);
 }
 
+/** Diferencia de un ataque con el punto medio de sus vecinos y el intervalo local (PRM-10). */
+function desvioLocal(ataques: readonly number[], i: number) {
+  return {
+    diferencia: ataques[i]! - (ataques[i - 1]! + ataques[i + 1]!) / 2,
+    intervaloLocal: (ataques[i + 1]! - ataques[i - 1]!) / 2,
+  };
+}
+
 /**
  * Desvío de cada ataque respecto del punto medio entre sus vecinos, en % del intervalo local
  * (la medida de PRM-10). null en el primero y el último.
  */
 export function desviosDelPulso(ataques: readonly number[]): (number | null)[] {
-  return ataques.map((t, i) => {
+  return ataques.map((_, i) => {
     if (i === 0 || i === ataques.length - 1) return null;
-    const intervaloLocal = (ataques[i + 1]! - ataques[i - 1]!) / 2;
-    const esperado = (ataques[i - 1]! + ataques[i + 1]!) / 2;
-    return (100 * (t - esperado)) / intervaloLocal;
+    const { diferencia, intervaloLocal } = desvioLocal(ataques, i);
+    return (100 * diferencia) / intervaloLocal;
   });
 }
 
@@ -66,9 +73,10 @@ export function analizarTempo(
 
   // Tropiezo: la nota se aparta del punto medio entre sus vecinas más que PRM-10 del intervalo.
   const tropiezos: number[] = [];
-  desviosDelPulso(ataques).forEach((d, i) => {
-    if (d !== null && Math.abs(d) > UMBRAL_TROPIEZO * 100) tropiezos.push(i);
-  });
+  for (let i = 1; i < ataques.length - 1; i++) {
+    const { diferencia, intervaloLocal } = desvioLocal(ataques, i);
+    if (Math.abs(diferencia) > UMBRAL_TROPIEZO * intervaloLocal) tropiezos.push(i);
+  }
 
   return {
     referencia: conReferenciaElegida ? "tempo_elegido" : "tempo_inicial",

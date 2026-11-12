@@ -1,3 +1,4 @@
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { analizarTempo, desviosDelPulso, tempoEnRango } from "./tempo.ts";
 
@@ -101,5 +102,35 @@ describe("desvío de cada ataque", () => {
     expect(d[2]).toBeCloseTo(20);
     // La nota 1 queda antes del punto medio entre 0 y 0,55: (0,25 − 0,275) / 0,275.
     expect(d[1]).toBeCloseTo(-100 / 11);
+  });
+});
+
+describe("tropiezo con el desvío compartido", () => {
+  /** La comparación que usaba analizarTempo antes de compartir el desvío con las bandas. */
+  function tropiezosOriginales(ataques: readonly number[]): number[] {
+    const tropiezos: number[] = [];
+    for (let i = 1; i < ataques.length - 1; i++) {
+      const intervaloLocal = (ataques[i + 1]! - ataques[i - 1]!) / 2;
+      const esperado = (ataques[i - 1]! + ataques[i + 1]!) / 2;
+      if (Math.abs(ataques[i]! - esperado) > 0.25 * intervaloLocal) tropiezos.push(i);
+    }
+    return tropiezos;
+  }
+
+  it("PP-audio-01: los tropiezos son exactamente los de la comparación original", () => {
+    // Intervalos de 0,2 a 0,3 s con perturbaciones; incluye casos justo en la frontera de PRM-10.
+    const ataques = fc
+      .array(fc.double({ min: 0.05, max: 0.5, noNaN: true }), { minLength: 8, maxLength: 40 })
+      .map((ints) => ints.reduce<number[]>((t, d) => [...t, (t.at(-1) ?? 0) + d], [0]));
+    const frontera = fc
+      .array(fc.constantFrom(0.25, 0.3125, 0.1875, 0.25), { minLength: 8, maxLength: 20 })
+      .map((ints) => ints.reduce<number[]>((t, d) => [...t, (t.at(-1) ?? 0) + d], [0]));
+    fc.assert(
+      fc.property(fc.oneof(ataques, frontera), (a) => {
+        const r = analizarTempo(a, { metronomo: "sin", tempoElegido: null });
+        expect(r.tropiezos).toEqual(tropiezosOriginales(a));
+      }),
+      { numRuns: 1000 },
+    );
   });
 });
