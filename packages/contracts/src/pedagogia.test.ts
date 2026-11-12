@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ObservacionNueva, TareaNueva } from "./index.ts";
+import { ObservacionNueva, TareaNueva, ValoracionNueva } from "./index.ts";
 
 const tarea = {
   estudiante_id: 1,
@@ -29,5 +29,16 @@ describe("contratos de pedagogía", () => {
     expect(
       ObservacionNueva.safeParse({ tarea_id: 1, clase_error_id: 2, texto: "Mejora…" }).success,
     ).toBe(true);
+  });
+
+  it("PU-contracts-29: Por repetir exige observación con aspecto y solo Por repetir admite plazo nuevo", () => {
+    const obs = { clase_error_id: 2, texto: "Repite la bajada" };
+    const ok = (v: unknown) => ValoracionNueva.safeParse(v).success;
+    expect(ok({ valor: "lograda" })).toBe(true);
+    expect(ok({ valor: "por_repetir", observacion: obs, fecha_limite: "2026-11-20" })).toBe(true);
+    expect(ok({ valor: "por_repetir" })).toBe(false);
+    expect(ok({ valor: "por_repetir", observacion: { texto: "Repite" } })).toBe(false);
+    expect(ok({ valor: "lograda", fecha_limite: "2026-11-20" })).toBe(false);
+    expect(ok({ valor: "en_proceso" })).toBe(false);
   });
 });

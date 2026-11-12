@@ -3,6 +3,7 @@ import {
   Ban,
   Calendar,
   Check,
+  CircleCheck,
   Clock,
   EyeOff,
   Hand,
@@ -21,6 +22,7 @@ const ESTADO_TAREA = {
   Asignada: { tono: "neutro", icono: Clock },
   "En práctica": { tono: "correcto", icono: Repeat },
   Vencida: { tono: "tiempo", icono: TriangleAlert },
+  Revisada: { tono: "correcto", icono: CircleCheck },
   Cancelada: { tono: "no-evaluable", icono: Ban },
 } as const;
 

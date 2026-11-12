@@ -27,6 +27,7 @@ const tarea = (id: number, fecha_limite: string, estado: string) => ({
   fecha_limite,
   estado,
   observaciones: [],
+  valoracion: null,
 });
 
 function servidor(respuestas: Respuestas) {

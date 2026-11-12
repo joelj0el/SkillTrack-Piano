@@ -28,6 +28,7 @@ class Estado(StrEnum):
     Asignada = "Asignada"
     En_práctica = "En práctica"
     Vencida = "Vencida"
+    Revisada = "Revisada"
     Cancelada = "Cancelada"
 
 
@@ -50,6 +51,22 @@ class Observacion(BaseModel):
     creada_en: AwareDatetime
 
 
+class Valor(StrEnum):
+    lograda = "lograda"
+    por_repetir = "por_repetir"
+
+
+class Valoracion(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: conint(le=9007199254740991, gt=0)
+    valor: Valor
+    docente_id: conint(le=9007199254740991, gt=0)
+    observacion_id: conint(le=9007199254740991, gt=0) | None
+    creada_en: AwareDatetime
+
+
 class Tarea(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -65,3 +82,4 @@ class Tarea(BaseModel):
     fecha_limite: date
     estado: Estado
     observaciones: list[Observacion]
+    valoracion: Valoracion | None

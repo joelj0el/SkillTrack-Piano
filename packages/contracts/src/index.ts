@@ -17,6 +17,8 @@ import {
   Tarea,
   TareaCambio,
   TareaNueva,
+  Valoracion,
+  ValoracionNueva,
 } from "./pedagogia.ts";
 import { Referencia, ReferenciaPublicada, ReferenciaVigente } from "./referencia.ts";
 import { ConjuntoReglas, ReglasPublicadas, ReglasVigentes } from "./reglas.ts";
@@ -54,6 +56,8 @@ export const esquemas = {
   avance_tarea: AvanceTarea,
   observacion_nueva: ObservacionNueva,
   observacion: Observacion,
+  valoracion_nueva: ValoracionNueva,
+  valoracion: Valoracion,
   resultado_intento: ResultadoIntento,
   resultado_intento_v1: ResultadoIntentoV1,
   intento_guardado: IntentoGuardado,
