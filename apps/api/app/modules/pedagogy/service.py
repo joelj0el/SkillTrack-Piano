@@ -15,18 +15,16 @@ from app.modules.catalog import service as catalogo
 from app.modules.pedagogy.models import Observacion, Tarea, ValoracionTarea
 
 
-def estado(
-    tarea: Tarea, hoy: date, en_practica: bool = False, valoracion: str | None = None
-) -> str:
-    """Estado calculado: Cancelada > Revisada (última valoración "lograda") > Vencida >
-    En práctica (≥ 1 intento válido o última valoración "por_repetir") > Asignada."""
-    if tarea.cancelada_en is not None:
-        return "Cancelada"
-    if valoracion == "lograda":
-        return "Revisada"
-    if tarea.fecha_limite < hoy:
-        return "Vencida"
-    return "En práctica" if en_practica or valoracion == "por_repetir" else "Asignada"
+def estados(db: Session, tarea_ids: list[int], hoy: date) -> dict[int, str]:
+    """Estado calculado en la vista v_estado_tarea (no hay columna): la API le pasa su "hoy"."""
+    if not tarea_ids:
+        return {}
+    db.execute(text("SELECT set_config('app.hoy', :hoy, true)"), {"hoy": hoy.isoformat()})
+    filas = db.execute(
+        text("SELECT tarea_id, estado FROM app.v_estado_tarea WHERE tarea_id = ANY(:ids)"),
+        {"ids": tarea_ids},
+    )
+    return dict(filas.all())
 
 
 def ultimas_valoraciones(db: Session, tarea_ids: list[int]) -> dict[int, ValoracionTarea]:
@@ -51,19 +49,6 @@ def valoracion_dto(v: ValoracionTarea | None) -> ValoracionDto | None:
         observacion_id=v.observacion_id,
         creada_en=v.creada_en,
     )
-
-
-def tareas_en_practica(db: Session, tarea_ids: list[int]) -> set[int]:
-    if not tarea_ids:
-        return set()
-    filas = db.execute(
-        text(
-            "SELECT DISTINCT tarea_id FROM app.v_avance_tarea"
-            " WHERE validas > 0 AND tarea_id = ANY(:ids)"
-        ),
-        {"ids": tarea_ids},
-    )
-    return set(filas.scalars())
 
 
 def avance(db: Session, tarea: Tarea, hoy: date) -> AvanceDto:
@@ -142,7 +127,7 @@ def observacion_dto(db: Session, obs: Observacion) -> ObservacionDto:
 
 def tareas_dto(db: Session, tareas: list[Tarea], hoy: date) -> list[TareaDto]:
     ejercicios = catalogo.ejercicios_por_id(db, list({t.ejercicio_id for t in tareas}))
-    en_practica = tareas_en_practica(db, [t.id for t in tareas])
+    estado_de = estados(db, [t.id for t in tareas], hoy)
     observaciones = observaciones_de(db, [t.id for t in tareas])
     valoraciones = ultimas_valoraciones(db, [t.id for t in tareas])
     return [
@@ -160,12 +145,7 @@ def tareas_dto(db: Session, tareas: list[Tarea], hoy: date) -> list[TareaDto]:
             tempo_max_bpm=t.tempo_max_bpm,
             repeticiones_por_dia=t.repeticiones_por_dia,
             fecha_limite=t.fecha_limite,
-            estado=estado(
-                t,
-                hoy,
-                t.id in en_practica,
-                valoraciones[t.id].valor if t.id in valoraciones else None,
-            ),
+            estado=estado_de[t.id],
             observaciones=[observacion_dto(db, o) for o in observaciones.get(t.id, [])],
             valoracion=valoracion_dto(valoraciones.get(t.id)),
         )
