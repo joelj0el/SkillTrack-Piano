@@ -20,6 +20,11 @@ const VISTAS_PRACTICA = [
 test.use({ contextOptions: { reducedMotion: "reduce" } });
 
 async function erroresGraves(page: Page): Promise<string[]> {
+  // Con movimiento reducido las transiciones duran 1 ms, pero siguen existiendo: axe mide
+  // cuando ninguna animación ni transición está en curso.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== "running"),
+  );
   const { violations } = await new AxeBuilder({ page }).analyze();
   return violations
     .filter((v) => IMPACTOS_GRAVES.includes(v.impact ?? ""))
