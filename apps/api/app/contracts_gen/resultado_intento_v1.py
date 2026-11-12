@@ -43,6 +43,31 @@ class SecuenciaEsperada(StrEnum):
     provisional = "provisional"
 
 
+class CodigoClase(StrEnum):
+    ER_A = "ER-A"
+    ER_B = "ER-B"
+    ER_C = "ER-C"
+    ER_D = "ER-D"
+    ER_E = "ER-E"
+    ER_F = "ER-F"
+
+
+class Nivel(StrEnum):
+    logrado = "logrado"
+    en_desarrollo = "en-desarrollo"
+    por_mejorar = "por-mejorar"
+    no_evaluado = "no-evaluado"
+
+
+class CalificacionVariable(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    clase: CodigoClase = Field(..., title="CodigoClase")
+    nivel: Nivel
+    pct: confloat(ge=0.0, le=100.0) | None
+
+
 class Estado8(StrEnum):
     digitacion_correcta = "digitacion-correcta"
     dedo_incorrecto = "dedo-incorrecto"
@@ -91,4 +116,5 @@ class ResultadoIntentoV1(BaseModel):
     secuencia_esperada: SecuenciaEsperada | None = None
     referencia_id: conint(le=9007199254740991, gt=0) | None = None
     conjunto_reglas_id: conint(le=9007199254740991, gt=0) | None = None
+    calificacion: list[CalificacionVariable] | None = None
     eventos: list[EventoResultadoV1] = Field(..., max_length=400)

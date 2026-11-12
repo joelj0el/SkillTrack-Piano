@@ -1,5 +1,16 @@
 import { z } from "zod";
 import { Manos } from "./catalogo.ts";
+import { CodigoClase } from "./reglas.ts";
+
+/** PRM-22: nivel de cada variable (clase) y el % que lo sustenta; null si no se evaluó. */
+export const CalificacionVariable = z
+  .strictObject({
+    clase: CodigoClase,
+    nivel: z.enum(["logrado", "en-desarrollo", "por-mejorar", "no-evaluado"]),
+    pct: z.number().min(0).max(100).nullable(),
+  })
+  .meta({ title: "CalificacionVariable" });
+export type CalificacionVariable = z.infer<typeof CalificacionVariable>;
 
 /**
  * ResultadoIntento: lo único que sale del teléfono después de un intento. Es estricto: no admite
@@ -101,6 +112,8 @@ const camposComunes = {
   // para los intentos que ya estaban en cola.
   referencia_id: z.int().positive().nullable().optional(),
   conjunto_reglas_id: z.int().positive().nullable().optional(),
+  // Calificación por variable con las reglas vigentes (HU-28 compara los últimos intentos).
+  calificacion: z.array(CalificacionVariable).max(6).nullable().optional(),
 };
 
 export const ResultadoIntentoV1 = z
@@ -143,6 +156,8 @@ export const IntentoGuardado = z
     secuencia_esperada: SecuenciaEsperada,
     referencia_id: z.int().positive().nullable(),
     conjunto_reglas_id: z.int().positive().nullable(),
+    version_ejercicio_id: z.int().positive(),
+    calificacion: z.array(CalificacionVariable).nullable(),
     iniciado_en: z.iso.datetime({ offset: true }),
   })
   .meta({ title: "IntentoGuardado" });

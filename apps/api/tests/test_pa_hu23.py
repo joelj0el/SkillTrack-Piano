@@ -105,3 +105,21 @@ def test_pu_catalog_13_el_conjunto_declara_los_12_indicadores_y_no_regla_lo_no_e
     r = cliente.post("/api/catalogo/reglas", json=regla_de_e1)
     assert r.status_code == 422
     assert r.json()["detail"][0]["msg"] == "Indicador no evaluable por diseño"
+
+
+def test_pu_attempts_09_el_intento_guarda_su_calificacion_por_variable(
+    cliente: TestClient, db: Session
+):
+    e = escenario.crear(db)
+    como(cliente, e.estudiante_a)
+    calificacion = [
+        {"clase": "ER-A", "nivel": "logrado", "pct": 95.0},
+        {"clase": "ER-E", "nivel": "no-evaluado", "pct": None},
+    ]
+    r = cliente.post("/api/intentos", json=resultado(calificacion=calificacion))
+    assert r.status_code == 201, r.text
+    [guardado] = cliente.get("/api/mis-intentos").json()
+    assert guardado["calificacion"] == calificacion
+    assert guardado["version_ejercicio_id"] == 1
+    # Un intento que quedó en cola sin calificación se guarda con null.
+    assert cliente.post("/api/intentos", json=resultado()).json()["calificacion"] is None

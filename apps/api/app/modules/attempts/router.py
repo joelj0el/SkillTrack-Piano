@@ -67,6 +67,8 @@ def _dto(i: Intento) -> IntentoGuardado:
         secuencia_esperada=i.secuencia_esperada,
         referencia_id=i.referencia_id,
         conjunto_reglas_id=i.conjunto_reglas_id,
+        version_ejercicio_id=i.version_ejercicio_id,
+        calificacion=i.calificacion,
         iniciado_en=i.iniciado_en,
     )
 
@@ -148,6 +150,9 @@ def guardar_intento(
         ),
         referencia_id=datos.referencia_id,
         conjunto_reglas_id=datos.conjunto_reglas_id,
+        calificacion=(
+            [c.model_dump(mode="json") for c in datos.calificacion] if datos.calificacion else None
+        ),
         eventos=[e.model_dump(mode="json") for e in datos.eventos],
     )
     db.add(intento)

@@ -54,6 +54,7 @@ class Intento(Base):
     pct_digitacion_correcta: Mapped[float | None] = mapped_column(Float)
     secuencia_esperada: Mapped[str] = mapped_column(String(12), server_default="provisional")
     eventos: Mapped[list[dict]] = mapped_column(JSONB)
+    calificacion: Mapped[list[dict] | None] = mapped_column(JSONB)
 
 
 class Diagnostico(Base):

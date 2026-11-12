@@ -53,6 +53,31 @@ class SecuenciaEsperada(StrEnum):
     provisional = "provisional"
 
 
+class CodigoClase(StrEnum):
+    ER_A = "ER-A"
+    ER_B = "ER-B"
+    ER_C = "ER-C"
+    ER_D = "ER-D"
+    ER_E = "ER-E"
+    ER_F = "ER-F"
+
+
+class Nivel(StrEnum):
+    logrado = "logrado"
+    en_desarrollo = "en-desarrollo"
+    por_mejorar = "por-mejorar"
+    no_evaluado = "no-evaluado"
+
+
+class CalificacionVariable(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    clase: CodigoClase = Field(..., title="CodigoClase")
+    nivel: Nivel
+    pct: confloat(ge=0.0, le=100.0) | None
+
+
 class ReferenciaTemporal(StrEnum):
     tempo_elegido = "tempo_elegido"
     tempo_inicial = "tempo_inicial"
@@ -214,6 +239,7 @@ class ResultadoIntento(BaseModel):
     secuencia_esperada: SecuenciaEsperada | None = None
     referencia_id: conint(le=9007199254740991, gt=0) | None = None
     conjunto_reglas_id: conint(le=9007199254740991, gt=0) | None = None
+    calificacion: list[CalificacionVariable] | None = None
     tempo_medido_bpm: confloat(le=400.0, gt=0.0) | None
     referencia_temporal: ReferenciaTemporal | None
     cambio_tempo_pct: confloat(ge=-100.0, le=1000.0) | None

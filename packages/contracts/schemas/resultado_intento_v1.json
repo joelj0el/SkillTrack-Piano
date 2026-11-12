@@ -172,6 +172,62 @@
         }
       ]
     },
+    "calificacion": {
+      "anyOf": [
+        {
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "clase": {
+                "type": "string",
+                "enum": [
+                  "ER-A",
+                  "ER-B",
+                  "ER-C",
+                  "ER-D",
+                  "ER-E",
+                  "ER-F"
+                ],
+                "title": "CodigoClase"
+              },
+              "nivel": {
+                "type": "string",
+                "enum": [
+                  "logrado",
+                  "en-desarrollo",
+                  "por-mejorar",
+                  "no-evaluado"
+                ]
+              },
+              "pct": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "clase",
+              "nivel",
+              "pct"
+            ],
+            "additionalProperties": false,
+            "title": "CalificacionVariable"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "eventos": {
       "maxItems": 400,
       "type": "array",
