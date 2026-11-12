@@ -1,5 +1,6 @@
 export * from "./bandas/bandas.ts";
 export * from "./diagnostico/desviaciones.ts";
+export * from "./diagnostico/reglas.ts";
 export * from "./bandas/retencion.ts";
 export * from "./bandas/validacion.ts";
 export * from "./alineacion/fusion.ts";
