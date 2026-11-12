@@ -1,4 +1,4 @@
-| PA-HU28-02 | Cumplido | Reintentar vuelve al conteo con la misma calibración y el mismo tempo (E2E PA-HU28-02) || PA-HU28-01 | Cumplido | Calificación por variable de los intentos anteriores del mismo ejercicio y manos (E2E PA-HU28-01, PU-attempts-09) || PA-HU27-02 | Cumplido | Sin datos, la variable es No evaluado con su motivo; IND-E1 e IND-F1 a F4 nunca se califican (E2E PA-HU27-02, PU-diagnostico-18) || PA-HU27-01 | Cumplido | Un intento incompleto es No evaluable con su motivo y una acción sugerida (E2E PA-HU27-01) || PA-HU26-02 | Cumplido | Última observación del docente con su aspecto (E2E PA-HU26-02) || PA-HU26-01 | Prototipo | La más crítica (§4.2, propuesta) es la corrección principal, con nombre, dónde y mensaje (E2E PA-HU26-01); el mensaje es el texto "pendiente de aprobación del panel" hasta PA-HU26-03 || PA-HU25-02 | Cumplido | Las notas no evaluables muestran su motivo (E2E PA-HU25-02) || PA-HU25-01 | Cumplido | Cada nota con su familia, icono y texto; al tocarla, mano, dedo y ms (E2E PA-HU25-01) || PA-HU07-03 | Cumplido | axe-core sin errores graves ni críticos en la pantalla de resultados (E2E PA-HU07-03) || PA-HU07-02 | Cumplido | Bloques en el orden del panel, una corrección principal con las demás plegadas y sin estrellas ni puntaje (E2E PA-HU07-02) || PA-HU07-01 | Cumplido | Del fin de la ejecución al resultado, 1,7 s en la corrida completa (≤ 5 s, PRM-03); el Worker se crea durante el conteo (E2E PA-HU07-01) |# n.2 Requerimientos — Iteración 4 (en curso)
+# n.2 Requerimientos — Iteración 4 (en curso)
 
 ## HU-22 · Bandas por consenso con regla de retención
 
@@ -48,32 +48,32 @@ Las cifras salen de `research/node/src/bandas/parametros.plantilla.json`:
 
 ## HU-07, 25, 26, 27 y 28 · Pantalla de resultados (P-42)
 
-| PA         | Estado    | Motivo / prueba                              |
-| ---------- | --------- | -------------------------------------------- |
-| PA-HU07-01 | Pendiente | E2E PA-HU07-01                               |
-| PA-HU07-02 | Pendiente | E2E PA-HU07-02                               |
-| PA-HU07-03 | Pendiente | E2E PA-HU07-03                               |
-| PA-HU07-04 | Pendiente | Manual: V4                                   |
-| PA-HU25-01 | Pendiente | E2E PA-HU25-01                               |
-| PA-HU25-02 | Pendiente | E2E PA-HU25-02                               |
-| PA-HU26-01 | Pendiente | E2E PA-HU26-01                               |
-| PA-HU26-02 | Pendiente | E2E PA-HU26-02                               |
-| PA-HU26-03 | Pendiente | Manual: el panel aprueba los mensajes (acta) |
-| PA-HU27-01 | Pendiente | E2E PA-HU27-01                               |
-| PA-HU27-02 | Pendiente | E2E PA-HU27-02                               |
-| PA-HU28-01 | Pendiente | E2E PA-HU28-01                               |
-| PA-HU28-02 | Pendiente | E2E PA-HU28-02                               |
+| PA         | Estado    | Motivo / prueba                                                                                                                                                                        |
+| ---------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU07-01 | Cumplido  | Del fin de la ejecución al resultado, 1,7 s en la corrida completa (≤ 5 s, PRM-03); el Worker se crea durante el conteo (E2E PA-HU07-01)                                               |
+| PA-HU07-02 | Cumplido  | Bloques en el orden del panel, una corrección principal con las demás plegadas y sin estrellas ni puntaje (E2E PA-HU07-02)                                                             |
+| PA-HU07-03 | Cumplido  | axe-core sin errores graves ni críticos en la pantalla de resultados (E2E PA-HU07-03)                                                                                                  |
+| PA-HU07-04 | Pendiente | Manual: V4                                                                                                                                                                             |
+| PA-HU25-01 | Cumplido  | Cada nota con su familia, icono y texto; al tocarla, mano, dedo y ms (E2E PA-HU25-01)                                                                                                  |
+| PA-HU25-02 | Cumplido  | Las notas no evaluables muestran su motivo (E2E PA-HU25-02)                                                                                                                            |
+| PA-HU26-01 | Prototipo | La más crítica (§4.2, propuesta) es la corrección principal, con nombre, dónde y mensaje (E2E PA-HU26-01); el mensaje es el texto "pendiente de aprobación del panel" hasta PA-HU26-03 |
+| PA-HU26-02 | Cumplido  | Última observación del docente con su aspecto (E2E PA-HU26-02)                                                                                                                         |
+| PA-HU26-03 | Pendiente | Manual: el panel aprueba los mensajes (acta)                                                                                                                                           |
+| PA-HU27-01 | Cumplido  | Un intento incompleto es No evaluable con su motivo y una acción sugerida (E2E PA-HU27-01)                                                                                             |
+| PA-HU27-02 | Cumplido  | Sin datos, la variable es No evaluado con su motivo; IND-E1 e IND-F1 a F4 nunca se califican (E2E PA-HU27-02, PU-diagnostico-18)                                                       |
+| PA-HU28-01 | Cumplido  | Calificación por variable de los intentos anteriores del mismo ejercicio y manos (E2E PA-HU28-01, PU-attempts-09)                                                                      |
+| PA-HU28-02 | Cumplido  | Reintentar vuelve al conteo con la misma calibración y el mismo tempo (E2E PA-HU28-02)                                                                                                 |
 
 ## HU-30 (mínima) · Ver los intentos de mis estudiantes
 
-| PA         | Estado    | Motivo / prueba  |
-| ---------- | --------- | ---------------- |
-| PA-HU30-01 | Pendiente | PA-HU30-01 (API) |
-| PA-HU30-02 | Pendiente | E2E PA-HU30-02   |
+| PA         | Estado   | Motivo / prueba                                                                                                                                                                                                                               |
+| ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU30-01 | Cumplido | Solo el docente con asignación vigente ve los intentos de la tarea; otro docente, el de otra institución, un estudiante o una asignación cerrada reciben 403; cada lectura y cada rechazo quedan en la auditoría (PA-HU30-01, PU-attempts-10) |
+| PA-HU30-02 | Cumplido | Por tarea: fecha, tempo, metrónomo, calificación por variable e indicadores deficientes de cada intento (E2E PA-HU30-02, PU-web-25)                                                                                                           |
 
 ## HU-38 · Valorar la tarea
 
-| PA         | Estado    | Motivo / prueba  |
-| ---------- | --------- | ---------------- |
-| PA-HU38-01 | Pendiente | E2E PA-HU38-01   |
-| PA-HU38-02 | Pendiente | PA-HU38-02 (API) |
+| PA         | Estado   | Motivo / prueba                                                                                                                                                                             |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU38-01 | Cumplido | El docente marca Por repetir con aspecto, observación y plazo nuevo (vuelve a En práctica) y luego Lograda (Revisada); el estudiante ve la valoración y la observación (E2E PA-HU38-01)     |
+| PA-HU38-02 | Cumplido | Solo el docente asignado valora (403 a los demás); la valoración guarda fecha y docente; Por repetir sin observación o sin aspecto → 422 (PA-HU38-02, PU-pedagogy-10 y 11, PU-contracts-29) |

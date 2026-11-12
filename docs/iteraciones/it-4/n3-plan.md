@@ -1,27 +1,37 @@
 # n.3 Plan — Iteración 4 (en curso)
 
-| Tarea          | Descripción                                                                                                           | Estado                                                                 |
-| -------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| TI-HU22-01     | Bandas por percentiles ponderados (cada docente pesa lo mismo) por evento × rasgo                                     | Implementado (commit `f1e3ff5`)                                        |
-| TI-HU22-02     | Regla de retención DM-12b con `rasgos_descartados` y rasgos sin evaluar, cada uno con su motivo                       | Implementado (commit `55caf85`)                                        |
-| TI-HU22-03     | Script `pnpm bandas` sobre la Campaña A → `referencia vN` (JSON), contrato `Referencia`                               | Implementado (commit `e2390d1`)                                        |
-| TI-HU22-04     | Publicación inmutable de la referencia (API superadmin)                                                               | Implementado (commit `e8c4115`)                                        |
-| TI-HU22-05     | V2 dejando un docente fuera (núcleo y script)                                                                         | Implementado (commit `a88ed14`)                                        |
-| TI-HU23-01     | Publicación inmutable de `conjunto_reglas vN` con su versión de taxonomía; caché de referencia y reglas en el cliente | Implementado (commit `f3efc85`); falta publicar la taxonomía           |
-| TI-HU23-02     | Herramienta del investigador: reglas y eventos de cada diagnóstico sobre un intento de ejemplo                        | Implementado (commit `c1da85a`); E2E de los ids del intento: `c5fc40f` |
-| TI-HU06-01     | Contrato `ConjuntoReglas` con la forma completa de cada regla y plantilla v1                                          | Implementado (commit `a1b3a64`)                                        |
-| TI-HU06-02     | Valores medidos y desviaciones respecto de la banda                                                                   | Implementado (commit `b2bba5a`)                                        |
-| TI-HU06-03     | Motor de reglas con evidencia por evento                                                                              | Implementado (commit `e7d8084`)                                        |
-| TI-HU06-04     | Golden de diagnósticos                                                                                                | Pendiente                                                              |
-| TI-HU24-01     | Modo V, A o VA en el motor                                                                                            | Implementado (commit `f474358`)                                        |
-| TI-HU24-02     | Scripts V3a y V3b                                                                                                     | Pendiente                                                              |
-| TI-HU07-01     | Pantalla de resultados P-42 y calificación por variable (PRM-22)                                                      | Implementado (commits `9a92930`, `9186016`)                            |
-| TI-HU07-03     | Del análisis a la pantalla en segundos: Worker creado durante el conteo                                               | Implementado (commit `9186016`)                                        |
-| TI-HU25-01, 02 | Nota por nota con familia, icono, texto y detalle                                                                     | Implementado (commit `9186016`)                                        |
-| TI-HU26-01, 02 | Corrección principal, otras plegadas y observación del docente                                                        | Implementado (commit `9186016`); mensajes pendientes del panel         |
-| TI-HU27-01, 02 | No evaluable con motivo y acción sugerida                                                                             | Implementado (commit `9186016`)                                        |
-| TI-HU28-01     | Calificación guardada en el intento y bloque de progreso                                                              | Implementado (commits `1ae27dd`, `9186016`)                            |
-| TI-HU28-02     | Reintentar                                                                                                            | Implementado (commit `9186016`)                                        |
+| Tarea      | Descripción                                                                                                           | Estado                                                                             |
+| ---------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| TI-HU22-01 | Bandas por percentiles ponderados (cada docente pesa lo mismo) por evento × rasgo                                     | Implementado (commit `f1e3ff5`)                                                    |
+| TI-HU22-02 | Regla de retención DM-12b con `rasgos_descartados` y rasgos sin evaluar, cada uno con su motivo                       | Implementado (commit `55caf85`)                                                    |
+| TI-HU22-03 | Script `pnpm bandas` sobre la Campaña A → `referencia vN` (JSON), contrato `Referencia`                               | Implementado (commit `e2390d1`)                                                    |
+| TI-HU22-04 | Publicación inmutable de la referencia (API superadmin)                                                               | Implementado (commit `e8c4115`)                                                    |
+| TI-HU22-05 | V2 dejando un docente fuera (núcleo y script)                                                                         | Implementado (commit `a88ed14`)                                                    |
+| TI-HU23-01 | Publicación inmutable de `conjunto_reglas vN` con su versión de taxonomía; caché de referencia y reglas en el cliente | Implementado (commit `f3efc85`); falta publicar la taxonomía                       |
+| TI-HU23-02 | Herramienta del investigador: reglas y eventos de cada diagnóstico sobre un intento de ejemplo                        | Implementado (commit `c1da85a`); E2E de los ids del intento: `c5fc40f`             |
+| TI-HU06-01 | Contrato `ConjuntoReglas` con la forma completa de cada regla y plantilla v1                                          | Implementado (commit `a1b3a64`)                                                    |
+| TI-HU06-02 | Valores medidos y desviaciones respecto de la banda                                                                   | Implementado (commit `b2bba5a`)                                                    |
+| TI-HU06-03 | Motor de reglas con evidencia por evento                                                                              | Implementado (commit `e7d8084`)                                                    |
+| TI-HU06-04 | Golden de diagnósticos                                                                                                | Pendiente                                                                          |
+| TI-HU24-01 | Modo V, A o VA en el motor                                                                                            | Implementado (commit `f474358`)                                                    |
+| TI-HU24-02 | Scripts V3a y V3b                                                                                                     | Pendiente                                                                          |
+| TI-HU07-01 | Estructura de bloques de P-42 con tokens y calificación por variable (PRM-22)                                         | Implementado (commits `9a92930`, `9186016`)                                        |
+| TI-HU07-02 | Resumen sin estrellas, al final (H4-12 reemplaza la regla de estrellas)                                               | Implementado (commit `9186016`)                                                    |
+| TI-HU07-03 | Del análisis a la pantalla en segundos: Worker creado durante el conteo                                               | Implementado (commit `9186016`)                                                    |
+| TI-HU07-04 | `/diseno-auditar` por tandas + axe-core                                                                               | Parcial: axe-core en PA-HU07-03 (commit `9186016`); auditoría por tandas pendiente |
+| TI-HU25-01 | Nota por nota con estado, familia, icono y texto                                                                      | Implementado (commit `9186016`)                                                    |
+| TI-HU25-02 | E2E de la vista nota por nota (detalle al tocar)                                                                      | Implementado (commit `9186016`)                                                    |
+| TI-HU26-01 | Corrección principal y otras plegadas con los mensajes del panel                                                      | Implementado (commit `9186016`); mensajes pendientes del panel                     |
+| TI-HU26-02 | Bloque de la observación del docente                                                                                  | Implementado (commit `9186016`)                                                    |
+| TI-HU26-03 | Revisión de los mensajes con el panel                                                                                 | Pendiente (manual)                                                                 |
+| TI-HU27-01 | No evaluable por intento y por evento, con motivo y acción sugerida                                                   | Implementado (commit `9186016`)                                                    |
+| TI-HU27-02 | Pantalla de no evaluable                                                                                              | Implementado (commit `9186016`)                                                    |
+| TI-HU28-01 | Calificación guardada en el intento y bloque de progreso                                                              | Implementado (commits `1ae27dd`, `9186016`)                                        |
+| TI-HU28-02 | Reintentar                                                                                                            | Implementado (commit `9186016`)                                                    |
+| TI-HU30-01 | Intentos de la tarea para el docente asignado, con calificación e indicadores deficientes; lectura auditada           | Implementado (commit `8a96466`)                                                    |
+| TI-HU30-02 | Intentos por tarea en la ficha del estudiante (docente)                                                               | Implementado (commit `8ae4e37`)                                                    |
+| TI-HU38-01 | `valoracion_tarea`, ruta de valoración y estado Revisada                                                              | Implementado (commit `6602753`)                                                    |
+| TI-HU38-02 | Valorar la tarea (docente) y ver la valoración (estudiante)                                                           | Implementado (commit `a70060e`)                                                    |
 
 ## Notas de ejecución
 
@@ -32,3 +42,9 @@
 - La semilla de demostración incluye `superadmin.demo`, que publica la referencia y las reglas (sin institución).
 - Correcciones previas: la revisión de privacidad de las E2E registra cada petición al salir (`19c13ff`) y axe espera a que no haya animaciones en curso (`08a0366`); las E2E bloqueantes pasaron 2 veces seguidas (18/18 cada vez).
 - PRM-03 se midió por primera vez: 5,2–5,3 s antes de crear el Worker durante el conteo; después, 1,2–2,9 s.
+- El commit `9186016` agrupa TI-HU07-01 a 03, TI-HU25-01 y 02, TI-HU26-01 y 02, TI-HU27-01 y 02 y TI-HU28-01 y 02 porque comparten los mismos archivos de la pantalla de resultados.
+- Las pruebas de `apps/web/src/captura/resultados.ts` (PU-web-21 a 24) se escribieron junto con el código, sin ejecutarlas antes en rojo.
+- HU-30 (mínima) y HU-38 se adelantan a esta iteración. Por DP-17, "Lograda" deja la tarea en "Revisada" y "Por repetir" la devuelve a "En práctica", con observación obligatoria ligada a un aspecto y plazo nuevo opcional; se guarda el historial de valoraciones.
+- Migraciones 0014 (`intento.indicadores_deficientes`) y 0015 (`valoracion_tarea`).
+- El n2 del commit `4e81e86` había dejado las filas de HU-07 y 25 a 28 pegadas en la primera línea; se repararon en su tabla.
+- Intermitente: en una corrida del gate, el Postgres de testcontainers no aceptó conexiones en 120 s y 84 pruebas de la API quedaron en error; al repetir, 95 en verde.
