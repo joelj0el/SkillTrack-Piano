@@ -1,13 +1,44 @@
-import type { ReferenciaVigente, ReglasVigentes } from "@skilltrack/contracts";
+import {
+  CODIGOS_INDICADOR,
+  type ReferenciaVigente,
+  type ReglasVigentes,
+} from "@skilltrack/contracts";
 import { describe, expect, it } from "vitest";
 import { ErrorApi, SinConexion } from "../api.ts";
 import { artefactosVigentes, cacheEnMemoria, type Descargar } from "./artefactos.ts";
 
 // Datos SINTÉTICOS.
+const PENDIENTE = "pendiente de aprobación del panel";
 const reglas: ReglasVigentes = {
   id: 4,
   publicada_en: "2027-02-10T12:00:00Z",
-  conjunto: { version: 2, version_taxonomia: "v0.1", reglas: [{ id: "R-B3" }] },
+  conjunto: {
+    version: 2,
+    version_taxonomia: "v0.1",
+    indicadores: Object.fromEntries(
+      CODIGOS_INDICADOR.map((c) => [
+        c,
+        c === "IND-A1"
+          ? { clase: "ER-A", evaluable: true, motivo_no_evaluable: null, mensaje: PENDIENTE }
+          : {
+              clase: `ER-${c.charAt(4)}`,
+              evaluable: false,
+              motivo_no_evaluable: "Sin rasgo",
+              mensaje: PENDIENTE,
+            },
+      ]),
+    ) as ReglasVigentes["conjunto"]["indicadores"],
+    reglas: [
+      {
+        id: "R-A1-01",
+        indicador: "IND-A1",
+        alcance: "evento",
+        modalidad: "A",
+        condicion: { tipo: "estado", dato: "nota", valores: ["incorrecta"] },
+        minimo_eventos: 1,
+      },
+    ],
+  },
 };
 const referencia = {
   id: 7,

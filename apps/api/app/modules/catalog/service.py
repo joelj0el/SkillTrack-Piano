@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.contracts_gen.conjunto_reglas import CodigoIndicador
 from app.contracts_gen.ejercicio import Ejercicio as EjercicioDto
 from app.contracts_gen.ejercicio import VersionEjercicio as VersionDto
 from app.modules.catalog.models import (
@@ -12,6 +13,8 @@ from app.modules.catalog.models import (
 )
 
 VERSION_TAXONOMIA = "v0.1"
+# Los 12 indicadores de la taxonomía, del contrato generado.
+CODIGOS_INDICADOR = tuple(c.value for c in CodigoIndicador)
 
 
 def ejercicios_vigentes(db: Session) -> list[tuple[Ejercicio, VersionEjercicio]]:
@@ -142,3 +145,26 @@ def reglas_vigentes(db: Session) -> ConjuntoReglas | None:
 
 def reglas_por_id(db: Session, conjunto_id: int) -> ConjuntoReglas | None:
     return db.get(ConjuntoReglas, conjunto_id)
+
+
+def problemas_del_conjunto(datos: dict) -> list[tuple[list[str | int], str]]:
+    """Lo que el modelo generado no expresa: los 12 indicadores y las referencias cruzadas."""
+    problemas: list[tuple[list[str | int], str]] = []
+    indicadores: dict = datos["indicadores"]
+    for codigo in CODIGOS_INDICADOR:
+        if codigo not in indicadores:
+            problemas.append((["indicadores", codigo], f"Falta {codigo}"))
+    for codigo, conf in indicadores.items():
+        if conf["clase"] != f"ER-{codigo[4]}":
+            problemas.append((["indicadores", codigo, "clase"], f"{codigo} no es de esa clase"))
+        if conf["evaluable"] and not any(r["indicador"] == codigo for r in datos["reglas"]):
+            problemas.append((["indicadores", codigo], f"{codigo} es evaluable sin reglas"))
+    vistos: set[str] = set()
+    for i, regla in enumerate(datos["reglas"]):
+        if regla["id"] in vistos:
+            problemas.append((["reglas", i, "id"], f"{regla['id']} repetida"))
+        vistos.add(regla["id"])
+        conf = indicadores.get(regla["indicador"])
+        if conf is not None and not conf["evaluable"]:
+            problemas.append((["reglas", i, "indicador"], "Indicador no evaluable por diseño"))
+    return problemas

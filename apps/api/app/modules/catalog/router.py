@@ -124,6 +124,12 @@ def publicar_reglas(
     """Publica `conjunto_reglas vN` para una versión existente de la taxonomía (PA-HU23-01)."""
     if not service.taxonomia_existe(db, datos.version_taxonomia):
         raise error_de_campo("version_taxonomia", "Esa versión de la taxonomía no existe.")
+    problemas = service.problemas_del_conjunto(datos.model_dump(mode="json"))
+    if problemas:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            [{"loc": ["body", *loc], "msg": msg, "type": "value_error"} for loc, msg in problemas],
+        )
     if service.reglas_existen(db, datos.version):
         raise YA_PUBLICADA
     fila = ConjuntoReglas(publicada_en=instante, **datos.model_dump(mode="json"))
@@ -146,7 +152,9 @@ def reglas_vigentes(db: Db) -> ReglasVigentes:
     fila = service.reglas_vigentes(db)
     if fila is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Sin reglas publicadas")
-    conjunto = {k: getattr(fila, k) for k in ("version", "version_taxonomia", "reglas")}
+    conjunto = {
+        k: getattr(fila, k) for k in ("version", "version_taxonomia", "indicadores", "reglas")
+    }
     return ReglasVigentes.model_validate(
         {"id": fila.id, "publicada_en": fila.publicada_en, "conjunto": conjunto}
     )

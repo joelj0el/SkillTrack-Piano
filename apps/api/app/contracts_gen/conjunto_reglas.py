@@ -3,9 +3,130 @@
 
 from __future__ import annotations
 
-from typing import Any
+from enum import StrEnum
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, conint, constr
+from pydantic import BaseModel, ConfigDict, Field, RootModel, conint, constr
+
+
+class CodigoClase(StrEnum):
+    ER_A = "ER-A"
+    ER_B = "ER-B"
+    ER_C = "ER-C"
+    ER_D = "ER-D"
+    ER_E = "ER-E"
+    ER_F = "ER-F"
+
+
+class Indicadores(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    clase: CodigoClase = Field(..., title="CodigoClase")
+    evaluable: Literal[True]
+    motivo_no_evaluable: None
+    mensaje: constr(min_length=1)
+
+
+class Indicadores1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    clase: CodigoClase = Field(..., title="CodigoClase")
+    evaluable: Literal[False]
+    motivo_no_evaluable: constr(min_length=1)
+    mensaje: constr(min_length=1)
+
+
+class CodigoIndicador(StrEnum):
+    IND_A1 = "IND-A1"
+    IND_B1 = "IND-B1"
+    IND_B2 = "IND-B2"
+    IND_B3 = "IND-B3"
+    IND_C1 = "IND-C1"
+    IND_D1 = "IND-D1"
+    IND_D2 = "IND-D2"
+    IND_E1 = "IND-E1"
+    IND_F1 = "IND-F1"
+    IND_F2 = "IND-F2"
+    IND_F3 = "IND-F3"
+    IND_F4 = "IND-F4"
+
+
+class ModalidadRegla(StrEnum):
+    V = "V"
+    A = "A"
+    VA = "VA"
+
+
+class Lado(StrEnum):
+    encima = "encima"
+    debajo = "debajo"
+    cualquiera = "cualquiera"
+
+
+class Condicion(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    tipo: Literal["fuera_de_banda"]
+    rasgo: constr(min_length=1, max_length=40)
+    lado: Lado
+
+
+class Dato(StrEnum):
+    nota = "nota"
+    dedo = "dedo"
+    desfase_manos = "desfase_manos"
+
+
+class Valore(RootModel[constr(min_length=1)]):
+    root: constr(min_length=1)
+
+
+class Condicion1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    tipo: Literal["estado"]
+    dato: Dato
+    valores: list[Valore] = Field(..., min_length=1)
+
+
+class Regla1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(pattern=r"^R-[A-Z0-9-]+$")
+    indicador: CodigoIndicador = Field(..., title="CodigoIndicador")
+    modalidad: ModalidadRegla = Field(..., title="ModalidadRegla")
+    alcance: Literal["evento"]
+    condicion: Condicion | Condicion1
+    minimo_eventos: conint(ge=1, le=9007199254740991)
+
+
+class Condicion2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    tipo: Literal["fuera_de_banda"]
+    rasgo: constr(min_length=1, max_length=40)
+    lado: Lado
+
+
+class Regla2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(pattern=r"^R-[A-Z0-9-]+$")
+    indicador: CodigoIndicador = Field(..., title="CodigoIndicador")
+    modalidad: ModalidadRegla = Field(..., title="ModalidadRegla")
+    alcance: Literal["intento"]
+    condicion: Condicion2
+
+
+class Regla(RootModel[Regla1 | Regla2]):
+    root: Regla1 | Regla2 = Field(..., title="Regla")
 
 
 class ConjuntoReglas(BaseModel):
@@ -14,4 +135,5 @@ class ConjuntoReglas(BaseModel):
     )
     version: conint(le=9007199254740991, gt=0)
     version_taxonomia: constr(min_length=1, max_length=16)
-    reglas: list[dict[str, Any]]
+    indicadores: dict[Literal["IND-A1", "IND-B1", "IND-B2", "IND-B3", "IND-C1", "IND-D1", "IND-D2", "IND-E1", "IND-F1", "IND-F2", "IND-F3", "IND-F4"], Indicadores | Indicadores1]
+    reglas: list[Regla] = Field(..., min_length=1)

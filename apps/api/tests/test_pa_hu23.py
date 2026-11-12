@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
@@ -8,12 +11,13 @@ from tests import escenario, fabricas
 from tests.conftest import como
 from tests.test_pa_hu08 import resultado
 
-# Datos SINTÉTICOS: una regla de ejemplo; su forma la fija el motor de reglas (HU-06).
-REGLA = {"id": "R-B3", "clase": "ER-B", "indicador": "IND-B3", "si": "desfase_manos.ms > banda"}
+# La plantilla v1 del conjunto de reglas (los 12 indicadores; mensajes pendientes del panel).
+PLANTILLA = Path(__file__).resolve().parents[3] / "tools" / "catalogo" / "conjunto_reglas.v1.json"
 
 
 def conjunto(version: int, **cambios) -> dict:
-    return {"version": version, "version_taxonomia": "v0.1", "reglas": [REGLA], **cambios}
+    datos = json.loads(PLANTILLA.read_text(encoding="utf-8"))
+    return {**datos, "version": version, **cambios}
 
 
 def test_pa_hu23_01_publicar_reglas_exige_la_version_de_la_taxonomia_y_es_inmutable(
@@ -32,7 +36,10 @@ def test_pa_hu23_01_publicar_reglas_exige_la_version_de_la_taxonomia_y_es_inmuta
     r = cliente.post("/api/catalogo/reglas", json=conjunto(1))
     assert r.status_code == 201, r.text
     assert (r.json()["version"], r.json()["version_taxonomia"]) == (1, "v0.1")
-    assert cliente.post("/api/catalogo/reglas", json=conjunto(1, reglas=[])).status_code == 409
+    assert (
+        cliente.post("/api/catalogo/reglas", json=conjunto(1, version_taxonomia="v0.1")).status_code
+        == 409
+    )
     with pytest.raises(DBAPIError, match="inmutable"):
         db.execute(text("UPDATE app.conjunto_reglas SET version_taxonomia = 'v0.2'"))
     db.rollback()
@@ -78,3 +85,23 @@ def test_pu_attempts_08_el_intento_registra_el_conjunto_de_reglas_con_clave_fora
     with pytest.raises(DBAPIError):
         db.execute(text("UPDATE app.intento SET conjunto_reglas_id = 9999"))
     db.rollback()
+
+
+def test_pu_catalog_13_el_conjunto_declara_los_12_indicadores_y_no_regla_lo_no_evaluable(
+    cliente: TestClient, db: Session
+):
+    escenario.crear(db)
+    como(cliente, fabricas.usuario(db, "super", superadmin=True))
+    falta = conjunto(1)
+    del falta["indicadores"]["IND-F4"]
+    r = cliente.post("/api/catalogo/reglas", json=falta)
+    assert r.status_code == 422
+    assert r.json()["detail"][0]["loc"] == ["body", "indicadores", "IND-F4"]
+
+    regla_de_e1 = conjunto(1)
+    regla_de_e1["reglas"].append(
+        {**regla_de_e1["reglas"][0], "id": "R-E1-01", "indicador": "IND-E1"}
+    )
+    r = cliente.post("/api/catalogo/reglas", json=regla_de_e1)
+    assert r.status_code == 422
+    assert r.json()["detail"][0]["msg"] == "Indicador no evaluable por diseño"

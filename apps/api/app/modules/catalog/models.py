@@ -91,5 +91,6 @@ class ConjuntoReglas(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     version: Mapped[int] = mapped_column(Integer, unique=True)
     version_taxonomia: Mapped[str] = mapped_column(String(16))
+    indicadores: Mapped[dict] = mapped_column(JSONB)
     reglas: Mapped[list[dict]] = mapped_column(JSONB)
     publicada_en: Mapped[datetime] = mapped_column(DateTime(timezone=True))
