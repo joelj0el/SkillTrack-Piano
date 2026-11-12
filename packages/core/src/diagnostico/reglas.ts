@@ -7,6 +7,7 @@ import type { Modalidad } from "../alineacion/manos.ts";
 import {
   desviaciones,
   UNIDAD_EJECUCION,
+  unidadDeEvento,
   valoresDelIntento,
   type BandaDeReferencia,
   type Desviacion,
@@ -88,11 +89,19 @@ export interface ResultadoDiagnostico {
   version_referencia: number | null;
   diagnosticos: Diagnostico[];
   indicadores: Record<string, EstadoIndicador>;
+  /** Por indicador evaluado: unidades comparadas y fuera (base de la calificación PRM-22). */
+  cobertura: Record<string, CoberturaRegla>;
+}
+
+/** Unidades ("e<idx>" o "ejecucion") que una regla pudo comparar y las que quedaron fuera. */
+export interface CoberturaRegla {
+  evaluadas: string[];
+  fuera: string[];
 }
 
 type Evaluacion =
-  | { estado: "dispara"; eventos: number[] }
-  | { estado: "no-dispara" }
+  | ({ estado: "dispara"; eventos: number[] } & CoberturaRegla)
+  | ({ estado: "no-dispara" } & CoberturaRegla)
   | { estado: "no-evaluable"; motivo: string };
 
 /** Un dato del evento se midió si su estado permite compararlo. */
@@ -119,12 +128,16 @@ function evaluar(
   const minimo = regla.alcance === "evento" ? regla.minimo_eventos : 1;
   const c = regla.condicion;
   let disparan: number[];
+  let evaluadas: string[];
+  let fuera: string[];
   if (c.tipo === "estado") {
     const medidos = eventos.filter((e) => e.estado === "evaluado" && estadoMedido(e, c.dato));
     if (!medidos.length) return { estado: "no-evaluable", motivo: `Sin datos de ${c.dato}` };
     disparan = medidos
       .filter((e) => c.valores.includes(estadoMedido(e, c.dato)!))
       .map((e) => e.idx);
+    evaluadas = medidos.map((e) => unidadDeEvento(e.idx));
+    fuera = disparan.map(unidadDeEvento);
   } else {
     if (!hayReferencia) return { estado: "no-evaluable", motivo: "Sin referencia publicada" };
     const delAlcance = desvios.filter(
@@ -140,10 +153,15 @@ function evaluar(
           : `Sin datos de ${c.rasgo}`,
       };
     }
-    disparan = conBanda.filter((d) => fueraDelLado(d, c.lado)).map((d) => d.idx ?? -1);
+    const salen = conBanda.filter((d) => fueraDelLado(d, c.lado));
+    disparan = salen.map((d) => d.idx ?? -1);
+    evaluadas = conBanda.map((d) => d.unidad);
+    fuera = salen.map((d) => d.unidad);
   }
-  if (disparan.length < minimo) return { estado: "no-dispara" };
+  if (disparan.length < minimo) return { estado: "no-dispara", evaluadas, fuera };
   return {
+    evaluadas,
+    fuera,
     estado: "dispara",
     eventos: regla.alcance === "intento" ? [] : disparan.sort((a, b) => a - b),
   };
@@ -156,6 +174,7 @@ export function diagnosticar(p: PedidoDiagnostico): ResultadoDiagnostico {
   );
   const diagnosticos: Diagnostico[] = [];
   const indicadores: Record<string, EstadoIndicador> = {};
+  const cobertura: Record<string, CoberturaRegla> = {};
   for (const codigo of Object.keys(p.reglas.indicadores).sort()) {
     const conf = p.reglas.indicadores[codigo]!;
     if (!conf.evaluable) {
@@ -183,6 +202,15 @@ export function diagnosticar(p: PedidoDiagnostico): ResultadoDiagnostico {
         });
       }
     }
+    const unir = (clave: keyof CoberturaRegla) =>
+      [
+        ...new Set(
+          evaluaciones.flatMap((x) => (x.ev.estado === "no-evaluable" ? [] : x.ev[clave])),
+        ),
+      ].sort();
+    if (evaluaciones.some((x) => x.ev.estado !== "no-evaluable")) {
+      cobertura[codigo] = { evaluadas: unir("evaluadas"), fuera: unir("fuera") };
+    }
     const disparo = evaluaciones.some((x) => x.ev.estado === "dispara");
     const evaluada = evaluaciones.some((x) => x.ev.estado !== "no-evaluable");
     const sinEvaluar = evaluaciones.find((x) => x.ev.estado === "no-evaluable")?.ev;
@@ -201,5 +229,6 @@ export function diagnosticar(p: PedidoDiagnostico): ResultadoDiagnostico {
     version_referencia: p.referencia?.version ?? null,
     diagnosticos,
     indicadores,
+    cobertura,
   };
 }
