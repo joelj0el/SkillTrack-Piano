@@ -1,7 +1,7 @@
 """Datos de demostración FICTICIOS para el entorno local (docker compose). Idempotente.
 
 Solo actúa si SEMILLA_DEMO=1. Crea una institución con 1 administrador, 2 docentes, 3 estudiantes
-y 1 investigador, las asignaciones y tareas con observaciones (una de ellas vencida). La
+y 1 investigador, 1 superadministrador (publica la referencia y las reglas), las asignaciones y tareas con observaciones (una de ellas vencida). La
 contraseña común sale de SEMILLA_CLAVE (solo para desarrollo). Los nombres son inventados.
 
 Uso: python -m app.semilla
@@ -30,6 +30,8 @@ USUARIOS = [
     ("estudiante3.demo", "Sofía Choque", "estudiante", False),
     ("investigador.demo", "Investigación (demo)", "investigador", False),
 ]
+# Sin institución: solo publica artefactos del catálogo (referencia, reglas).
+SUPERADMIN = ("superadmin.demo", "Superadministración (demo)")
 ASIGNACIONES = [
     ("docente.demo", "estudiante.demo"),
     ("docente.demo", "estudiante2.demo"),
@@ -75,6 +77,17 @@ def sembrar(db: Session, clave: str, hoy: date) -> bool:
             db.flush()
             db.add(Membresia(usuario_id=usuario.id, institucion_id=institucion.id, rol=rol))
         usuarios[username] = usuario
+    if db.scalar(select(Usuario.id).where(Usuario.username == SUPERADMIN[0])) is None:
+        db.add(
+            Usuario(
+                username=SUPERADMIN[0],
+                nombre_visible=SUPERADMIN[1],
+                hash_clave=hash_clave(clave),
+                clave_temporal=False,
+                es_menor=False,
+                superadmin=True,
+            )
+        )
     for docente, estudiante in ASIGNACIONES:
         existe = db.scalar(
             select(AsignacionDocente.id).where(

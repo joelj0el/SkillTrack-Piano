@@ -15,7 +15,10 @@ def test_pu_api_09_la_semilla_de_demostracion_es_completa_e_idempotente(
     hoy = date(2026, 11, 10)
     assert sembrar(db, "clave-demo-larga", hoy) is True
     assert sembrar(db, "clave-demo-larga", hoy) is False
-    assert db.scalar(select(func.count()).select_from(Usuario)) == 7
+    assert db.scalar(select(func.count()).select_from(Usuario)) == 8
+    # El superadministrador publica la referencia y las reglas; no pertenece a ninguna institución.
+    superadmin = db.scalars(select(Usuario).where(Usuario.superadmin)).one()
+    assert superadmin.username == "superadmin.demo"
 
     docente = db.scalars(select(Usuario).where(Usuario.username == "docente.demo")).one()
     nombres = [e["usuario"] for e in como_con(cliente, docente).get("/api/mis-estudiantes").json()]
