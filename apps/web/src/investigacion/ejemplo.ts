@@ -1,4 +1,8 @@
-import type { EventoResultado } from "@skilltrack/contracts";
+import {
+  CODIGOS_INDICADOR,
+  type ConjuntoReglas,
+  type EventoResultado,
+} from "@skilltrack/contracts";
 
 /**
  * Intento de ejemplo SINTÉTICO para revisar las reglas: ocho semicorcheas de la mano derecha
@@ -49,3 +53,69 @@ export const INTENTO_EJEMPLO = {
     }),
   ],
 };
+
+const PENDIENTE = "pendiente de aprobación del panel";
+const NO_EVALUABLE = "No evaluable por diseño: el núcleo no registra este rasgo por evento";
+
+/** Reglas y referencia de EJEMPLO para mostrar pantallas sin servidor (página de diseño). */
+export const REGLAS_DE_EJEMPLO: ConjuntoReglas = {
+  version: 1,
+  version_taxonomia: "v0.1",
+  indicadores: Object.fromEntries(
+    CODIGOS_INDICADOR.map((c) => [
+      c,
+      ["IND-A1", "IND-B2", "IND-C1", "IND-D2"].includes(c)
+        ? {
+            clase: `ER-${c.charAt(4)}`,
+            evaluable: true,
+            motivo_no_evaluable: null,
+            mensaje: PENDIENTE,
+          }
+        : {
+            clase: `ER-${c.charAt(4)}`,
+            evaluable: false,
+            motivo_no_evaluable: NO_EVALUABLE,
+            mensaje: PENDIENTE,
+          },
+    ]),
+  ) as ConjuntoReglas["indicadores"],
+  reglas: [
+    {
+      id: "R-A1-01",
+      indicador: "IND-A1",
+      alcance: "evento",
+      modalidad: "A",
+      condicion: { tipo: "estado", dato: "nota", valores: ["incorrecta", "faltante"] },
+      minimo_eventos: 1,
+    },
+    {
+      id: "R-B2-01",
+      indicador: "IND-B2",
+      alcance: "evento",
+      modalidad: "A",
+      condicion: { tipo: "fuera_de_banda", rasgo: "ataque.desvio_pct", lado: "cualquiera" },
+      minimo_eventos: 1,
+    },
+    {
+      id: "R-C1-01",
+      indicador: "IND-C1",
+      alcance: "evento",
+      modalidad: "V",
+      condicion: { tipo: "estado", dato: "dedo", valores: ["incorrecto"] },
+      minimo_eventos: 1,
+    },
+    {
+      id: "R-D2-01",
+      indicador: "IND-D2",
+      alcance: "evento",
+      modalidad: "V",
+      condicion: { tipo: "fuera_de_banda", rasgo: "tecla.zona", lado: "debajo" },
+      minimo_eventos: 1,
+    },
+  ],
+};
+
+export const BANDAS_DE_EJEMPLO = INTENTO_EJEMPLO.eventos.flatMap((e) => [
+  { unidad: `e${e.idx}`, rasgo: "tecla.zona", inferior: 0.2, superior: 0.6, centro: 0.4 },
+  { unidad: `e${e.idx}`, rasgo: "ataque.desvio_pct", inferior: -15, superior: 15, centro: 0 },
+]);

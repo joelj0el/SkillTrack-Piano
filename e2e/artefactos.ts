@@ -22,8 +22,9 @@ async function siguienteVersion(
   return version(await r.json()) + 1;
 }
 
-function bandas() {
-  const porEvento = INTENTO_EJEMPLO.eventos.flatMap((e) => [
+/** Bandas para los eventos 0..n-1 (por omisión, los del intento de ejemplo). */
+function bandas(n: number) {
+  const porEvento = Array.from({ length: n }, (_, idx) => ({ idx })).flatMap((e) => [
     { unidad: `e${e.idx}`, rasgo: "tecla.zona", inferior: 0.2, superior: 0.6, centro: 0.4 },
     { unidad: `e${e.idx}`, rasgo: "ataque.desvio_pct", inferior: -15, superior: 15, centro: 0 },
   ]);
@@ -37,7 +38,9 @@ function bandas() {
   return [...porEvento, tempo].map((b) => ({ ...b, n_docentes: 3, n_ejecuciones: 6 }));
 }
 
-export async function publicarArtefactos(): Promise<{ referenciaId: number; reglasId: number }> {
+export async function publicarArtefactos(
+  eventos = INTENTO_EJEMPLO.eventos.length,
+): Promise<{ referenciaId: number; reglasId: number }> {
   const api = await sesionApi("superadmin.demo", CLAVE_DEMO);
   // La referencia es de la versión vigente del EJ-01 (otra prueba pudo importar una partitura).
   const ej = (await (await api.get("/api/catalogo/ejercicios/EJ-01")).json()).version_vigente;
@@ -57,7 +60,7 @@ export async function publicarArtefactos(): Promise<{ referenciaId: number; regl
       factor_retencion: { valor: 1, estado: "[PROVISIONAL]" },
       parametros_rasgos: {},
     },
-    bandas: bandas(),
+    bandas: bandas(eventos),
     rasgos_descartados: [],
     rasgos_sin_evaluar: [],
     origen: {

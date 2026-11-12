@@ -45,3 +45,21 @@ Las cifras salen de `research/node/src/bandas/parametros.plantilla.json`:
 | ---------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PA-HU24-01 | Cumplido  | El mismo intento en V, A y VA solo difiere en los indicadores de la modalidad excluida y el resultado registra el modo (E2E PA-HU24-01, PU-diagnostico-13 y 14) |
 | PA-HU24-02 | Pendiente | Manual: V3b en G-1                                                                                                                                              |
+
+## HU-07, 25, 26, 27 y 28 · Pantalla de resultados (P-42)
+
+| PA         | Estado    | Motivo / prueba                              |
+| ---------- | --------- | -------------------------------------------- |
+| PA-HU07-01 | Pendiente | E2E PA-HU07-01                               |
+| PA-HU07-02 | Pendiente | E2E PA-HU07-02                               |
+| PA-HU07-03 | Pendiente | E2E PA-HU07-03                               |
+| PA-HU07-04 | Pendiente | Manual: V4                                   |
+| PA-HU25-01 | Pendiente | E2E PA-HU25-01                               |
+| PA-HU25-02 | Pendiente | E2E PA-HU25-02                               |
+| PA-HU26-01 | Pendiente | E2E PA-HU26-01                               |
+| PA-HU26-02 | Pendiente | E2E PA-HU26-02                               |
+| PA-HU26-03 | Pendiente | Manual: el panel aprueba los mensajes (acta) |
+| PA-HU27-01 | Pendiente | E2E PA-HU27-01                               |
+| PA-HU27-02 | Pendiente | E2E PA-HU27-02                               |
+| PA-HU28-01 | Pendiente | E2E PA-HU28-01                               |
+| PA-HU28-02 | Pendiente | E2E PA-HU28-02                               |
