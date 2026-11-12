@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { publicarArtefactos } from "./artefactos.ts";
 import { CLAVE_NUEVA, crearTareaApi, entrar, parDocenteEstudiante } from "./ayuda.ts";
 import {
   escena,
@@ -32,4 +33,22 @@ test("PA-HU08-04: un intento completo con cámara y micrófono no envía medios,
   expect(cuerpo.version).toBe(2);
   expect(cuerpo.version_modelo_mano).toBe("simulado@e2e");
   await verificarPrivacidad(page, peticiones);
+});
+
+test("PU-web-20: con referencia y reglas publicadas, un intento nuevo envía sus ids", async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(180_000);
+  const { referenciaId, reglasId } = await publicarArtefactos();
+  const { docente, estudiante, estudianteId } = await parDocenteEstudiante();
+  const tareaId = await crearTareaApi(docente, estudianteId);
+  await context.grantPermissions(["camera", "microphone"]);
+  await simularDispositivos(page, escena(57));
+  await entrar(page, estudiante, CLAVE_NUEVA);
+
+  const cuerpo = await intentoCompleto(page, tareaId);
+
+  expect(cuerpo.referencia_id).toBe(referenciaId);
+  expect(cuerpo.conjunto_reglas_id).toBe(reglasId);
 });
