@@ -191,6 +191,34 @@
         }
       ]
     },
+    "indicadores_deficientes": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "IND-A1",
+              "IND-B1",
+              "IND-B2",
+              "IND-B3",
+              "IND-C1",
+              "IND-D1",
+              "IND-D2",
+              "IND-E1",
+              "IND-F1",
+              "IND-F2",
+              "IND-F3",
+              "IND-F4"
+            ],
+            "title": "CodigoIndicador"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "iniciado_en": {
       "type": "string",
       "format": "date-time",
@@ -218,6 +246,7 @@
     "conjunto_reglas_id",
     "version_ejercicio_id",
     "calificacion",
+    "indicadores_deficientes",
     "iniciado_en"
   ],
   "additionalProperties": false,

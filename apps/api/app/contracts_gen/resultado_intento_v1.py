@@ -68,6 +68,21 @@ class CalificacionVariable(BaseModel):
     pct: confloat(ge=0.0, le=100.0) | None
 
 
+class CodigoIndicador(StrEnum):
+    IND_A1 = "IND-A1"
+    IND_B1 = "IND-B1"
+    IND_B2 = "IND-B2"
+    IND_B3 = "IND-B3"
+    IND_C1 = "IND-C1"
+    IND_D1 = "IND-D1"
+    IND_D2 = "IND-D2"
+    IND_E1 = "IND-E1"
+    IND_F1 = "IND-F1"
+    IND_F2 = "IND-F2"
+    IND_F3 = "IND-F3"
+    IND_F4 = "IND-F4"
+
+
 class Estado8(StrEnum):
     digitacion_correcta = "digitacion-correcta"
     dedo_incorrecto = "dedo-incorrecto"
@@ -117,4 +132,5 @@ class ResultadoIntentoV1(BaseModel):
     referencia_id: conint(le=9007199254740991, gt=0) | None = None
     conjunto_reglas_id: conint(le=9007199254740991, gt=0) | None = None
     calificacion: list[CalificacionVariable] | None = None
+    indicadores_deficientes: list[CodigoIndicador] | None = None
     eventos: list[EventoResultadoV1] = Field(..., max_length=400)

@@ -63,3 +63,17 @@ Las cifras salen de `research/node/src/bandas/parametros.plantilla.json`:
 | PA-HU27-02 | Pendiente | E2E PA-HU27-02                               |
 | PA-HU28-01 | Pendiente | E2E PA-HU28-01                               |
 | PA-HU28-02 | Pendiente | E2E PA-HU28-02                               |
+
+## HU-30 (mínima) · Ver los intentos de mis estudiantes
+
+| PA         | Estado    | Motivo / prueba  |
+| ---------- | --------- | ---------------- |
+| PA-HU30-01 | Pendiente | PA-HU30-01 (API) |
+| PA-HU30-02 | Pendiente | E2E PA-HU30-02   |
+
+## HU-38 · Valorar la tarea
+
+| PA         | Estado    | Motivo / prueba  |
+| ---------- | --------- | ---------------- |
+| PA-HU38-01 | Pendiente | E2E PA-HU38-01   |
+| PA-HU38-02 | Pendiente | PA-HU38-02 (API) |

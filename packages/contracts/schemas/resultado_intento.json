@@ -232,6 +232,35 @@
         }
       ]
     },
+    "indicadores_deficientes": {
+      "anyOf": [
+        {
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "IND-A1",
+              "IND-B1",
+              "IND-B2",
+              "IND-B3",
+              "IND-C1",
+              "IND-D1",
+              "IND-D2",
+              "IND-E1",
+              "IND-F1",
+              "IND-F2",
+              "IND-F3",
+              "IND-F4"
+            ],
+            "title": "CodigoIndicador"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "tempo_medido_bpm": {
       "anyOf": [
         {

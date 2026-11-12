@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Manos } from "./catalogo.ts";
-import { CodigoClase } from "./reglas.ts";
+import { CodigoClase, CodigoIndicador } from "./reglas.ts";
 
 /** PRM-22: nivel de cada variable (clase) y el % que lo sustenta; null si no se evaluó. */
 export const CalificacionVariable = z
@@ -11,6 +11,12 @@ export const CalificacionVariable = z
   })
   .meta({ title: "CalificacionVariable" });
 export type CalificacionVariable = z.infer<typeof CalificacionVariable>;
+
+/** Indicadores que la regla detectó en el intento (HU-30: el docente los ve sin repetir el análisis). */
+const IndicadoresDeficientes = z
+  .array(CodigoIndicador)
+  .max(12)
+  .refine((c) => new Set(c).size === c.length, "Un indicador aparece dos veces");
 
 /**
  * ResultadoIntento: lo único que sale del teléfono después de un intento. Es estricto: no admite
@@ -114,6 +120,7 @@ const camposComunes = {
   conjunto_reglas_id: z.int().positive().nullable().optional(),
   // Calificación por variable con las reglas vigentes (HU-28 compara los últimos intentos).
   calificacion: z.array(CalificacionVariable).max(6).nullable().optional(),
+  indicadores_deficientes: IndicadoresDeficientes.nullable().optional(),
 };
 
 export const ResultadoIntentoV1 = z
@@ -158,6 +165,7 @@ export const IntentoGuardado = z
     conjunto_reglas_id: z.int().positive().nullable(),
     version_ejercicio_id: z.int().positive(),
     calificacion: z.array(CalificacionVariable).nullable(),
+    indicadores_deficientes: z.array(CodigoIndicador).nullable(),
     iniciado_en: z.iso.datetime({ offset: true }),
   })
   .meta({ title: "IntentoGuardado" });

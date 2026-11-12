@@ -78,6 +78,21 @@ class CalificacionVariable(BaseModel):
     pct: confloat(ge=0.0, le=100.0) | None
 
 
+class CodigoIndicador(StrEnum):
+    IND_A1 = "IND-A1"
+    IND_B1 = "IND-B1"
+    IND_B2 = "IND-B2"
+    IND_B3 = "IND-B3"
+    IND_C1 = "IND-C1"
+    IND_D1 = "IND-D1"
+    IND_D2 = "IND-D2"
+    IND_E1 = "IND-E1"
+    IND_F1 = "IND-F1"
+    IND_F2 = "IND-F2"
+    IND_F3 = "IND-F3"
+    IND_F4 = "IND-F4"
+
+
 class ReferenciaTemporal(StrEnum):
     tempo_elegido = "tempo_elegido"
     tempo_inicial = "tempo_inicial"
@@ -240,6 +255,7 @@ class ResultadoIntento(BaseModel):
     referencia_id: conint(le=9007199254740991, gt=0) | None = None
     conjunto_reglas_id: conint(le=9007199254740991, gt=0) | None = None
     calificacion: list[CalificacionVariable] | None = None
+    indicadores_deficientes: list[CodigoIndicador] | None = None
     tempo_medido_bpm: confloat(le=400.0, gt=0.0) | None
     referencia_temporal: ReferenciaTemporal | None
     cambio_tempo_pct: confloat(ge=-100.0, le=1000.0) | None

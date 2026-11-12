@@ -69,6 +69,7 @@ def _dto(i: Intento) -> IntentoGuardado:
         conjunto_reglas_id=i.conjunto_reglas_id,
         version_ejercicio_id=i.version_ejercicio_id,
         calificacion=i.calificacion,
+        indicadores_deficientes=i.indicadores_deficientes,
         iniciado_en=i.iniciado_en,
     )
 
@@ -153,6 +154,11 @@ def guardar_intento(
         calificacion=(
             [c.model_dump(mode="json") for c in datos.calificacion] if datos.calificacion else None
         ),
+        indicadores_deficientes=(
+            [c.value for c in datos.indicadores_deficientes]
+            if datos.indicadores_deficientes is not None
+            else None
+        ),
         eventos=[e.model_dump(mode="json") for e in datos.eventos],
     )
     db.add(intento)
@@ -197,5 +203,35 @@ def mis_intentos(usuario: UsuarioEnSesion, db: Db) -> list[IntentoGuardado]:
         select(Intento)
         .where(Intento.estudiante_id == usuario.id)
         .order_by(Intento.iniciado_en.desc())
+    )
+    return [_dto(i) for i in db.scalars(consulta)]
+
+
+@router.get("/tareas/{tarea_id}/intentos", response_model=list[IntentoGuardado])
+def intentos_de_tarea(
+    tarea_id: int, docente: UsuarioEnSesion, db: Db, instante: Ahora
+) -> list[IntentoGuardado]:
+    """HU-30: solo el docente con asignación vigente; cada lectura y cada rechazo se auditan."""
+    tarea = db.get(Tarea, tarea_id)
+    if tarea is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Tarea no encontrada")
+    permitido = instituciones.asignacion_vigente(
+        db, docente.id, tarea.estudiante_id, hoy_local(instante)
+    )
+    auditoria.registrar(
+        db,
+        actor_id=docente.id,
+        accion="leer_intentos" if permitido else "acceso_denegado",
+        recurso="tarea",
+        recurso_id=tarea_id,
+        fecha=instante,
+    )
+    db.commit()
+    if not permitido:
+        raise PROHIBIDO
+    consulta = (
+        select(Intento)
+        .where(Intento.tarea_id == tarea_id)
+        .order_by(Intento.iniciado_en.desc(), Intento.id.desc())
     )
     return [_dto(i) for i in db.scalars(consulta)]
