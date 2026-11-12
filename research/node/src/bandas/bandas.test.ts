@@ -163,8 +163,10 @@ describe("referencia por consenso", () => {
     expect(ref.rasgos_descartados[0]!.motivo).toMatch(/comparable a la diferencia buscada/);
     expect(ref.bandas.some((b) => b.rasgo === "desfase_manos.ms")).toBe(false);
     expect(ref.bandas.some((b) => b.rasgo === "cambio_tempo.pct")).toBe(true);
+    const pendiente = "Diferencia buscada PENDIENTE: no se evalúa la retención";
     expect(ref.rasgos_sin_evaluar).toEqual([
-      { rasgo: "altura.indice", motivo: "Diferencia buscada PENDIENTE: no se evalúa la retención" },
+      { rasgo: "altura.indice", motivo: pendiente },
+      { rasgo: "tecla.zona", motivo: pendiente },
     ]);
     expect(ref.bandas.some((b) => b.rasgo === "altura.indice")).toBe(true);
     expect(ref.origen.tomas).toHaveLength(6);
