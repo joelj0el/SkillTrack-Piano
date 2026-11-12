@@ -64,6 +64,8 @@ export interface PedidoDiagnostico {
   cambioTempoPct: number | null;
   referencia: { version: number; bandas: readonly BandaDeReferencia[] } | null;
   reglas: ReglasMotor;
+  /** HU-24: con qué datos se diagnostica (solo visión, solo audio o ambos). */
+  modo: Modalidad;
 }
 
 export interface Diagnostico {
@@ -81,6 +83,7 @@ export interface EstadoIndicador {
 }
 
 export interface ResultadoDiagnostico {
+  modo: Modalidad;
   version_reglas: number;
   version_referencia: number | null;
   diagnosticos: Diagnostico[];
@@ -159,9 +162,16 @@ export function diagnosticar(p: PedidoDiagnostico): ResultadoDiagnostico {
       indicadores[codigo] = { estado: "no-evaluable", motivo: conf.motivo_no_evaluable };
       continue;
     }
-    const evaluaciones = p.reglas.reglas
-      .filter((r) => r.indicador === codigo)
-      .map((r) => ({ regla: r, ev: evaluar(r, p.eventos, desvios, p.referencia !== null) }));
+    const delIndicador = p.reglas.reglas.filter((r) => r.indicador === codigo);
+    const usables = delIndicador.filter((r) => p.modo === "VA" || r.modalidad === p.modo);
+    if (delIndicador.length && !usables.length) {
+      indicadores[codigo] = { estado: "no-evaluable", motivo: "No se evalúa en modo " + p.modo };
+      continue;
+    }
+    const evaluaciones = usables.map((r) => ({
+      regla: r,
+      ev: evaluar(r, p.eventos, desvios, p.referencia !== null),
+    }));
     for (const { regla, ev } of evaluaciones) {
       if (ev.estado === "dispara") {
         diagnosticos.push({
@@ -186,6 +196,7 @@ export function diagnosticar(p: PedidoDiagnostico): ResultadoDiagnostico {
           };
   }
   return {
+    modo: p.modo,
     version_reglas: p.reglas.version,
     version_referencia: p.referencia?.version ?? null,
     diagnosticos,

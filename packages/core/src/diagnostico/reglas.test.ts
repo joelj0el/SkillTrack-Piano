@@ -104,6 +104,7 @@ function correr(
     cambioTempoPct,
     referencia: { version: 3, bandas },
     reglas,
+    modo: "VA",
   });
 }
 
@@ -153,6 +154,7 @@ describe("motor de reglas", () => {
       cambioTempoPct: 10,
       referencia: null,
       reglas: conjunto([R_B1]),
+      modo: "VA",
     });
     expect(sinReferencia.diagnosticos).toEqual([]);
     expect(sinReferencia.version_referencia).toBeNull();
@@ -207,5 +209,57 @@ describe("el diagnóstico no usa aprendizaje automático", () => {
         /onnx|tflite|mediapipe|tensorflow|clasificador|import\(/i,
       );
     }
+  });
+});
+
+describe("modo V / A / VA (HU-24)", () => {
+  const R_C1: ReglaMotor = {
+    id: "R-C1-01",
+    indicador: "IND-C1",
+    alcance: "evento",
+    modalidad: "V",
+    condicion: { tipo: "estado", dato: "dedo", valores: ["incorrecto"] },
+    minimo_eventos: 1,
+  };
+  const R_B3: ReglaMotor = {
+    id: "R-B3-02",
+    indicador: "IND-B3",
+    alcance: "evento",
+    modalidad: "VA",
+    condicion: { tipo: "estado", dato: "desfase_manos", valores: ["una-nota-atras"] },
+    minimo_eventos: 1,
+  };
+  const reglas = conjunto([R_A1, R_C1, R_B3]);
+  const eventos = [
+    evento(0, { nota: { estado: "incorrecta" } }),
+    evento(1, { dedo: { estado: "incorrecto" } }),
+    evento(2, { desfase_manos: { estado: "una-nota-atras", ms: null, modalidad: "VA" } }),
+  ];
+  const en = (modo: "V" | "A" | "VA") =>
+    diagnosticar({ eventos, cambioTempoPct: null, referencia: null, reglas, modo });
+
+  it("PU-diagnostico-13: el mismo intento en V, A y VA registra el modo y solo cambia lo de la modalidad excluida", () => {
+    const [v, a, va] = [en("V"), en("A"), en("VA")];
+    expect([v.modo, a.modo, va.modo]).toEqual(["V", "A", "VA"]);
+    expect(va.diagnosticos.map((d) => d.indicador)).toEqual(["IND-A1", "IND-B3", "IND-C1"]);
+    expect(v.diagnosticos.map((d) => d.indicador)).toEqual(["IND-C1"]);
+    expect(a.diagnosticos.map((d) => d.indicador)).toEqual(["IND-A1"]);
+    expect(v.indicadores["IND-A1"]).toEqual({
+      estado: "no-evaluable",
+      motivo: "No se evalúa en modo V",
+    });
+    expect(a.indicadores["IND-C1"]).toEqual({
+      estado: "no-evaluable",
+      motivo: "No se evalúa en modo A",
+    });
+    // Lo que sí se evalúa en un modo sale igual que en VA.
+    expect(v.indicadores["IND-C1"]).toEqual(va.indicadores["IND-C1"]);
+    expect(a.indicadores["IND-A1"]).toEqual(va.indicadores["IND-A1"]);
+  });
+
+  it("PU-diagnostico-14: una regla que necesita visión y audio solo se evalúa en VA", () => {
+    expect(en("V").indicadores["IND-B3"]!.estado).toBe("no-evaluable");
+    expect(en("A").indicadores["IND-B3"]!.estado).toBe("no-evaluable");
+    expect(en("VA").indicadores["IND-B3"]!.estado).toBe("detectado");
   });
 });
