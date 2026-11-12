@@ -1,0 +1,6 @@
+{
+  "archivo": "docs/iteraciones/it-5/protocolo.md",
+  "sha256": "363684cdea2b6b761aa8c4a5010fc75c71cbd7ad4f4f61feb795d9ecf0db1e2a",
+  "congelado_en": "2026-11-12",
+  "nota": "sha256 del archivo con saltos de línea LF; el pipeline lo verifica antes de entrenar"
+}
