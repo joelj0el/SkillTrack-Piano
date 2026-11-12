@@ -26,6 +26,8 @@ const ESTADO_TAREA = {
   Cancelada: { tono: "no-evaluable", icono: Ban },
 } as const;
 
+export const VALOR_TAREA = { lograda: "Lograda", por_repetir: "Por repetir" } as const;
+
 export function ResumenTarea({ tarea, enlace }: { tarea: Tarea; enlace?: string }) {
   const contenido = (
     <>
@@ -50,6 +52,12 @@ export function ResumenTarea({ tarea, enlace }: { tarea: Tarea; enlace?: string 
           Repeticiones por día: {tarea.repeticiones_por_dia}
         </div>
       </div>
+      {tarea.valoracion && (
+        <p className="suave" data-valoracion={tarea.valoracion.valor}>
+          Valoración del docente: {VALOR_TAREA[tarea.valoracion.valor]} ·{" "}
+          {fechaLegible(tarea.valoracion.creada_en)}
+        </p>
+      )}
       <div className="tarjeta-pie">
         <Chip {...ESTADO_TAREA[tarea.estado]} data-estado={tarea.estado}>
           {tarea.estado}
