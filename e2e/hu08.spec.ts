@@ -1,13 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { publicarArtefactos } from "./artefactos.ts";
 import { CLAVE_NUEVA, crearTareaApi, entrar, parDocenteEstudiante } from "./ayuda.ts";
-import {
-  escena,
-  intentoCompleto,
-  registrarPeticiones,
-  simularDispositivos,
-  verificarPrivacidad,
-} from "./intento-simulado.ts";
+import { escena, intentoCompleto, simularDispositivos } from "./intento-simulado.ts";
+import { registrarPeticiones, verificarPrivacidad } from "./privacidad.ts";
 
 // El micrófono simulado suena sin un gesto de la persona.
 test.use({
@@ -27,12 +22,13 @@ test("PA-HU08-04: un intento completo con cámara y micrófono no envía medios,
   await simularDispositivos(page, escena(57));
   await entrar(page, estudiante, CLAVE_NUEVA);
 
-  const peticiones = await registrarPeticiones(page);
+  const peticiones = registrarPeticiones(page.context());
   const cuerpo = await intentoCompleto(page, tareaId);
 
   expect(cuerpo.version).toBe(2);
   expect(cuerpo.version_modelo_mano).toBe("simulado@e2e");
-  await verificarPrivacidad(page, peticiones);
+  expect(peticiones.length).toBeGreaterThan(0);
+  verificarPrivacidad(peticiones, new URL(page.url()).origin);
 });
 
 test("PU-web-20: con referencia y reglas publicadas, un intento nuevo envía sus ids", async ({

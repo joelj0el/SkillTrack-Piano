@@ -8,7 +8,7 @@
  * - el detector de la mano por uno simulado: cada índice baja sobre la tecla de su nota.
  * Todo lo demás es la app real: calibración, conteo, análisis en el teléfono y envío del intento.
  */
-import { expect, type Page, type Request } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 const ANCHO = 640;
 const ALTO = 360;
@@ -170,13 +170,6 @@ async function tocar(page: Page, x: number, y: number): Promise<void> {
   await page.mouse.click(ox + x * escala, oy + y * escala);
 }
 
-/** Todas las peticiones que salieron del contexto mientras dura `accion`. */
-export async function registrarPeticiones(page: Page): Promise<Request[]> {
-  const peticiones: Request[] = [];
-  page.context().on("request", (r) => peticiones.push(r));
-  return peticiones;
-}
-
 /**
  * Recorre la práctica real: encuadre, micrófono, calibración, conteo, ejecución y resultado.
  * Devuelve el cuerpo del intento enviado al servidor.
@@ -213,18 +206,4 @@ export async function intentoCompleto(
     timeout: 30_000,
   });
   return cuerpo;
-}
-
-const MEDIOS = /^(image|video|audio)\/|multipart\//i;
-
-/** Ninguna petición con medios ni multipart, ningún cuerpo > 256 KB ni otro origen. */
-export async function verificarPrivacidad(page: Page, peticiones: Request[]): Promise<void> {
-  const origen = new URL(page.url()).origin;
-  expect(peticiones.length).toBeGreaterThan(0);
-  for (const r of peticiones) {
-    const tipo = (await r.allHeaders())["content-type"] ?? "";
-    expect(tipo, r.url()).not.toMatch(MEDIOS);
-    expect(r.postDataBuffer()?.length ?? 0, r.url()).toBeLessThanOrEqual(256 * 1024);
-    expect(new URL(r.url()).origin, r.url()).toBe(origen);
-  }
 }
