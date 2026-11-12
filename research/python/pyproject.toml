@@ -3,7 +3,12 @@ name = "skilltrack-research"
 version = "0.1.0"
 description = "Scripts de investigación de SkillTrack-Piano (concordancia, clasificador, validaciones)"
 requires-python = "==3.12.*"
-dependencies = []
+dependencies = [
+    "numpy==2.5.4",
+    "onnxruntime==1.31.1",
+    "scikit-learn==1.9.1",
+    "skl2onnx==1.20.0",
+]
 
 [dependency-groups]
 dev = [
