@@ -33,18 +33,18 @@ Las cifras salen de `research/node/src/bandas/parametros.plantilla.json`:
 
 ## HU-06 · Tipificar errores por reglas
 
-| PA         | Estado    | Motivo / prueba                                                                                                                                                      |
-| ---------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PA-HU06-01 | Pendiente | Golden de diagnósticos (TI-HU06-04)                                                                                                                                  |
-| PA-HU06-02 | Cumplido  | Durante el diagnóstico en V, A y VA no se pide ningún detector, modelo ni WASM (E2E PA-HU06-02); el módulo del núcleo solo importa código propio (PU-diagnostico-12) |
-| PA-HU06-03 | Pendiente | Manual: V3a en G-1                                                                                                                                                   |
+| PA         | Estado    | Motivo / prueba                                                                                                                                                                                                                      |
+| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| PA-HU06-01 | Cumplido  | 8 intentos sintéticos (origen "sintetico") con la plantilla de reglas v1: el diagnóstico da exactamente sus clases, indicadores y eventos (PA-HU06-01, prueba Vitest del núcleo con las fixtures de `packages/core/fixtures/golden`) |
+| PA-HU06-02 | Cumplido  | Durante el diagnóstico en V, A y VA no se pide ningún detector, modelo ni WASM (E2E PA-HU06-02); el módulo del núcleo solo importa código propio (PU-diagnostico-12)                                                                 |
+| PA-HU06-03 | Pendiente | Manual: V3a en G-1. El script `pnpm validacion v3a` ya existe (PU-research-72 a 74 y 76, datos sintéticos); falta correrlo con los datos reales                                                                                      |
 
 ## HU-24 · Diagnóstico en modo V / A / VA
 
 | PA         | Estado    | Motivo / prueba                                                                                                                                                 |
 | ---------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PA-HU24-01 | Cumplido  | El mismo intento en V, A y VA solo difiere en los indicadores de la modalidad excluida y el resultado registra el modo (E2E PA-HU24-01, PU-diagnostico-13 y 14) |
-| PA-HU24-02 | Pendiente | Manual: V3b en G-1                                                                                                                                              |
+| PA-HU24-02 | Pendiente | Manual: V3b en G-1. El script `pnpm validacion v3b` ya existe (PU-research-75, datos sintéticos); falta correrlo con los datos reales                           |
 
 ## HU-07, 25, 26, 27 y 28 · Pantalla de resultados (P-42)
 

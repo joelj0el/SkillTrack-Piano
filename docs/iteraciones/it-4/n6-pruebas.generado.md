@@ -1,14 +1,14 @@
 # n.6 Pruebas — it-4 (generado)
 
-Generado por `pnpm docs:tests it-4` el 2026-11-12 16:56 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-4` el 2026-11-12 20:51 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
 | Playwright  | 56    | 55        | 0        | 1        |
-| Vitest      | 343   | 343       | 0        | 0        |
-| pytest      | 99    | 99        | 0        | 0        |
+| Vitest      | 351   | 351       | 0        | 0        |
+| pytest      | 100   | 100       | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
 
@@ -25,6 +25,7 @@ Generado por `pnpm docs:tests it-4` el 2026-11-12 16:56 UTC a partir de los repo
 | PA-HU03-03 | Playwright          | 1     | aprobada  | PA-HU03-03: sin permiso de cámara se explica cómo habilitarlo y se ofrece Reintentar                                                                         |
 | PA-HU03-05 | Playwright          | 1     | aprobada  | PA-HU03-05: durante 30 s de encuadre no sale ninguna imagen ni video por la red                                                                              |
 | PA-HU05-05 | pytest              | 1     | aprobada  | test_pa_hu05_05_el_intento_registra_versiones_de_nucleo_y_modelo_de_mano                                                                                     |
+| PA-HU06-01 | Vitest              | 1     | aprobada  | golden del diagnóstico (plantilla de reglas v1) > PA-HU06-01: cada fixture golden es sintética y el diagnóstico da exactamente sus clases e indicadores      |
 | PA-HU06-02 | Playwright          | 1     | aprobada  | PA-HU06-02: diagnosticar no descarga ni carga ningún modelo de aprendizaje automático                                                                        |
 | PA-HU07-01 | Playwright          | 1     | aprobada  | pantalla de resultados de un intento completo › PA-HU07-01: el resultado aparece en ≤ 5 s después de terminar (PRM-03)                                       |
 | PA-HU07-02 | Playwright          | 1     | aprobada  | pantalla de resultados de un intento completo › PA-HU07-02: bloques en el orden del panel, una corrección principal y sin estrellas                          |
@@ -111,10 +112,10 @@ Generado por `pnpm docs:tests it-4` el 2026-11-12 16:56 UTC a partir de los repo
 | infra         | 12  | 12        | 0        |
 | institutions  | 4   | 4         | 0        |
 | outbox        | 3   | 3         | 0        |
-| pedagogy      | 11  | 11        | 0        |
+| pedagogy      | 12  | 12        | 0        |
 | quality       | 9   | 9         | 0        |
 | registro      | 3   | 3         | 0        |
-| research      | 71  | 71        | 0        |
+| research      | 78  | 78        | 0        |
 | tempo         | 5   | 5         | 0        |
 | ui            | 6   | 6         | 0        |
 | web           | 23  | 23        | 0        |
