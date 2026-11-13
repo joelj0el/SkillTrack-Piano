@@ -21,3 +21,9 @@
 | ---------- | --------- | -------------------------------------------------------------------------------------------------------- |
 | PA-HU15-01 | Pendiente | "Mi progreso": calificación por variable por semana del propio estudiante; en curso                      |
 | PA-HU15-02 | Pendiente | "Mi grupo": errores recurrentes por clase y estudiante en los últimos N intentos, sin rankings; en curso |
+
+## HU-35 · Etiqueta del clasificador en resultados
+
+| PA         | Estado    | Motivo / prueba                                                             |
+| ---------- | --------- | --------------------------------------------------------------------------- |
+| PA-HU35-01 | Pendiente | Con la bandera apagada, el resultado es idéntico al de las reglas; en curso |
