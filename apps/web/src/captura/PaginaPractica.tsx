@@ -36,6 +36,8 @@ import {
   diagnosticar,
   type CalificacionVariable,
   type ResultadoDiagnostico,
+  etiquetaDelClasificador,
+  type EtiquetaClasificador,
 } from "@skilltrack/core";
 import { Ban, Check, Circle, Mic, RefreshCw, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
@@ -48,6 +50,7 @@ import { almacenIndexedDb, encolar, vaciar } from "../bandeja/bandeja.ts";
 import { Cargado, NOMBRE_MANOS, useCarga } from "../componentes.tsx";
 import { Boton, Esqueleto, EstadoVista, PaginaCabecera } from "../ui/base.tsx";
 import { useAvanceAutomatico } from "./avance.ts";
+import { CLASIFICADOR_ACTIVO, cargarClasificador } from "./clasificador.ts";
 import { PantallaResultados } from "./PantallaResultados.tsx";
 import { claveCalibracion, guardarCalibracion, leerCalibracion } from "./calibracion.ts";
 import { colorDeToken } from "./camara.ts";
@@ -596,6 +599,18 @@ export function PasoEjecucion(props: {
   const [respuesta, setRespuesta] = useState<RespuestaAnalisis | null>(null);
   const [guardado, setGuardado] = useState<string | null>(null);
   const [final, setFinal] = useState<Final | null>(null);
+  const [etiqueta, setEtiqueta] = useState<EtiquetaClasificador | null>(null);
+  // HU-35: con la bandera apagada (por defecto) no se carga ningún modelo y no hay etiqueta.
+  useEffect(() => {
+    if (!final || !respuesta) return;
+    let vigente = true;
+    void etiquetaDelClasificador(CLASIFICADOR_ACTIVO, cargarClasificador, respuesta.eventos).then(
+      (e) => vigente && setEtiqueta(e),
+    );
+    return () => {
+      vigente = false;
+    };
+  }, [final, respuesta]);
   const series = useRef<Partial<Record<"MI" | "MD", MuestraMano[]>>>({});
   const inicio = useRef(0);
   const relojAudio = useRef<{ ctx: number; rel: number } | null>(null);
@@ -621,6 +636,7 @@ export function PasoEjecucion(props: {
     setRespuesta(null);
     setGuardado(null);
     setFinal(null);
+    setEtiqueta(null);
     temporizadores.current.forEach(clearTimeout);
     temporizadores.current = [];
     inicio.current = performance.now();
@@ -941,6 +957,7 @@ export function PasoEjecucion(props: {
       guardado={guardado}
       duracionAnalisisMs={respuesta.duracionAnalisisMs}
       reintentar={empezar}
+      clasificador={etiqueta}
     />
   );
 }
