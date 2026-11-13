@@ -1,14 +1,14 @@
 # n.6 Pruebas — it-5 (generado)
 
-Generado por `pnpm docs:tests it-5` el 2026-11-12 23:07 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-5` el 2026-11-13 14:36 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
-| Playwright  | 56    | 55        | 0        | 1        |
-| Vitest      | 352   | 352       | 0        | 0        |
-| pytest      | 122   | 122       | 0        | 0        |
+| Playwright  | 59    | 58        | 0        | 1        |
+| Vitest      | 363   | 363       | 0        | 0        |
+| pytest      | 127   | 127       | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
 
@@ -42,6 +42,8 @@ Generado por `pnpm docs:tests it-5` el 2026-11-12 23:07 UTC a partir de los repo
 | PA-HU14-03 | pytest              | 1     | aprobada  | test_pa_hu14_03_docente_sin_asignacion_recibe_403_y_queda_auditado                                                                                           |
 | PA-HU14-04 | Playwright          | 1     | aprobada  | PA-HU14-04: la observación con aspecto llega al estudiante con fecha, aspecto y texto                                                                        |
 | PA-HU14-05 | Playwright          | 1     | aprobada  | PA-HU14-05: los cambios y la cancelación de la tarea llegan al estudiante                                                                                    |
+| PA-HU15-01 | Playwright + pytest | 2     | aprobada  | tableros descriptivos (HU-15) › PA-HU15-01: Mi progreso muestra la calificación por variable por semana del estudiante                                       |
+| PA-HU15-02 | Playwright + pytest | 2     | aprobada  | tableros descriptivos (HU-15) › PA-HU15-02: Mi grupo muestra los errores recurrentes por clase y estudiante en los últimos N intentos, sin rankings          |
 | PA-HU17-01 | Playwright          | 1     | aprobada  | PA-HU17-01: manifiesto instalable y service worker activo en 10 s o menos                                                                                    |
 | PA-HU17-02 | Playwright          | 1     | aprobada  | PA-HU17-02: sin red se muestra la app y las secciones del servidor dicen Sin conexión                                                                        |
 | PA-HU17-03 | Playwright          | 1     | aprobada  | PA-HU17-03: cabeceras de seguridad en toda ruta y redirección de HTTP a HTTPS                                                                                |
@@ -71,6 +73,7 @@ Generado por `pnpm docs:tests it-5` el 2026-11-12 23:07 UTC a partir de los repo
 | PA-HU31-03 | pytest              | 1     | aprobada  | test_pa_hu31_03_al_cerrar_la_asignacion_el_docente_deja_de_ver_al_estudiante                                                                                 |
 | PA-HU31-04 | pytest              | 1     | aprobada  | test_pa_hu31_04_usuarios_de_otra_institucion_reciben_403                                                                                                     |
 | PA-HU31-05 | pytest              | 1     | aprobada  | test_pa_hu31_05_restablecer_clave_revoca_sesiones_y_queda_auditado                                                                                           |
+| PA-HU35-01 | Playwright          | 1     | aprobada  | pantalla de resultados de un intento completo › PA-HU35-01: con la bandera del clasificador apagada (por defecto), el resultado es idéntico al de las reglas |
 | PA-HU37-01 | Playwright          | 1     | aprobada  | PA-HU37-01: con 2 intentos válidos hoy la tarea muestra 2 de 3 y la lista con fecha y hora                                                                   |
 | PA-HU37-02 | pytest              | 1     | aprobada  | test_pa_hu37_02_solo_cuentan_los_validos_y_cada_intento_dice_por_que                                                                                         |
 | PA-HU37-03 | Playwright          | 1     | aprobada  | PA-HU37-03: el docente ve por día las repeticiones válidas frente a la meta y cada intento                                                                   |
@@ -85,6 +88,7 @@ Generado por `pnpm docs:tests it-5` el 2026-11-12 23:07 UTC a partir de los repo
 | accesibilidad | 8   | 8         | 0        |
 | align         | 7   | 7         | 0        |
 | alineacion    | 6   | 6         | 0        |
+| analytics     | 3   | 3         | 0        |
 | api           | 10  | 10        | 0        |
 | attempts      | 10  | 10        | 0        |
 | audio         | 25  | 25        | 0        |
@@ -94,9 +98,10 @@ Generado por `pnpm docs:tests it-5` el 2026-11-12 23:07 UTC a partir de los repo
 | capture       | 18  | 18        | 0        |
 | catalog       | 13  | 13        | 0        |
 | catalogo      | 2   | 2         | 0        |
-| ci            | 6   | 6         | 0        |
+| ci            | 8   | 8         | 0        |
 | clasificador  | 12  | 12        | 0        |
-| contracts     | 29  | 29        | 0        |
+| classifier    | 2   | 2         | 0        |
+| contracts     | 31  | 31        | 0        |
 | core          | 1   | 1         | 0        |
 | dataset       | 5   | 5         | 0        |
 | desfase       | 5   | 5         | 0        |
@@ -121,4 +126,4 @@ Generado por `pnpm docs:tests it-5` el 2026-11-12 23:07 UTC a partir de los repo
 | research      | 79  | 79        | 0        |
 | tempo         | 5   | 5         | 0        |
 | ui            | 6   | 6         | 0        |
-| web           | 23  | 23        | 0        |
+| web           | 28  | 28        | 0        |
