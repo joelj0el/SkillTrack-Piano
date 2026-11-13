@@ -2,11 +2,21 @@ import { IntentoGuardado, type ResultadoIntento, type Tarea } from "@skilltrack/
 import {
   PRM_22,
   type CalificacionVariable,
+  type EtiquetaClasificador,
   type EventoDiagnosticable,
   type Nivel,
   type ResultadoDiagnostico,
 } from "@skilltrack/core";
-import { Check, CircleHelp, Clock, Hand, Music, RotateCcw, type LucideIcon } from "lucide-react";
+import {
+  Check,
+  CircleHelp,
+  Clock,
+  FlaskConical,
+  Hand,
+  Music,
+  RotateCcw,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { z } from "zod";
@@ -42,6 +52,8 @@ export interface DatosResultados {
   guardado: string | null;
   duracionAnalisisMs: number;
   reintentar: () => void;
+  /** HU-35: etiqueta del clasificador; null o ausente con la bandera apagada (por defecto). */
+  clasificador?: EtiquetaClasificador | null;
 }
 
 const FAMILIA: Record<Familia, { tono: Tono; icono: LucideIcon; texto: string }> = {
@@ -169,6 +181,7 @@ export function PantallaResultados(d: DatosResultados) {
           esperado · En desarrollo, {PRM_22.enDesarrollo}–{PRM_22.logrado - 1} % · Por mejorar,
           menos de {PRM_22.enDesarrollo} % · No evaluado, sin datos suficientes.
         </p>
+        {d.clasificador && <EtiquetaDelClasificador etiqueta={d.clasificador} />}
       </section>
 
       <Resumen resultado={resultado} tarea={d.tarea} intentos={intentos} />
@@ -179,6 +192,18 @@ export function PantallaResultados(d: DatosResultados) {
         Reintentar
       </Boton>
     </section>
+  );
+}
+
+/** HU-35: aparte de la calificación y marcada como del clasificador; nunca la cambia. */
+function EtiquetaDelClasificador({ etiqueta }: { etiqueta: EtiquetaClasificador }) {
+  const clases = etiqueta.clases.map((c) => NOMBRE_VARIABLE[c]);
+  return (
+    <p data-clasificador={etiqueta.version}>
+      <Chip icono={FlaskConical}>Clasificador experimental</Chip>{" "}
+      {clases.length ? `Marca: ${clases.join(", ")}.` : "No marca ninguna variable."} Es una
+      etiqueta aparte: no cambia la calificación de las reglas.
+    </p>
   );
 }
 

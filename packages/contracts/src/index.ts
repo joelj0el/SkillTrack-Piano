@@ -23,6 +23,7 @@ import {
 import { Referencia, ReferenciaPublicada, ReferenciaVigente } from "./referencia.ts";
 import { ConjuntoReglas, ReglasPublicadas, ReglasVigentes } from "./reglas.ts";
 import { Salud } from "./salud.ts";
+import { MiGrupo, MiProgreso } from "./tableros.ts";
 
 export * from "./calibracion.ts";
 export * from "./referencia.ts";
@@ -33,6 +34,7 @@ export * from "./identidad.ts";
 export * from "./instituciones.ts";
 export * from "./intentos.ts";
 export * from "./pedagogia.ts";
+export * from "./tableros.ts";
 export { Salud };
 
 // Cada entrada se exporta como schemas/<clave>.json y genera apps/api/app/contracts_gen/<clave>.py.
@@ -67,4 +69,6 @@ export const esquemas = {
   conjunto_reglas: ConjuntoReglas,
   reglas_publicadas: ReglasPublicadas,
   reglas_vigentes: ReglasVigentes,
+  mi_progreso: MiProgreso,
+  mi_grupo: MiGrupo,
 };

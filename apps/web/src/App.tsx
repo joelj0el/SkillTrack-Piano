@@ -1,6 +1,7 @@
 import type { Rol } from "@skilltrack/contracts";
 import {
   BookOpen,
+  ChartLine,
   ClipboardList,
   FlaskConical,
   GraduationCap,
@@ -8,6 +9,7 @@ import {
   Mic,
   Moon,
   Sun,
+  TableProperties,
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +23,7 @@ import { DetalleEstudiante, MisEstudiantes } from "./paginas/docente.tsx";
 import { CambiarClave, Entrar } from "./paginas/entrada.tsx";
 import { DetalleTarea, MisTareas } from "./paginas/estudiante.tsx";
 import { ModoInvestigacion } from "./paginas/investigacion.tsx";
+import { PaginaMiGrupo, PaginaMiProgreso } from "./paginas/tableros.tsx";
 import { roles, rutaInicial, useSesion } from "./sesion.tsx";
 import { aplicarTema, temaGuardado, type Tema } from "./tema.ts";
 import { Boton, Esqueleto, ProveedorAvisos } from "./ui/base.tsx";
@@ -117,9 +120,11 @@ function Navegacion() {
     <nav className="navegacion" aria-label="Principal">
       {r.has("estudiante") && <Destino a="/tareas" icono={ClipboardList} texto="Mis tareas" />}
       {r.has("estudiante") && <Destino a="/microfono" icono={Mic} texto="Micrófono" />}
+      {r.has("estudiante") && <Destino a="/mi-progreso" icono={ChartLine} texto="Mi progreso" />}
       {r.has("docente") && (
         <Destino a="/estudiantes" icono={GraduationCap} texto="Mis estudiantes" />
       )}
+      {r.has("docente") && <Destino a="/mi-grupo" icono={TableProperties} texto="Mi grupo" />}
       {r.has("admin_inst") && <Destino a="/usuarios" icono={UsersRound} texto="Usuarios" />}
       {r.has("investigador") && (
         <Destino a="/investigacion" icono={FlaskConical} texto="Modo investigación" />
@@ -156,6 +161,22 @@ export function App() {
         <Navegacion />
         <main className="contenedor">
           <Routes location={mostrada}>
+            <Route
+              path="/mi-progreso"
+              element={
+                <Protegida rol="estudiante">
+                  <PaginaMiProgreso />
+                </Protegida>
+              }
+            />
+            <Route
+              path="/mi-grupo"
+              element={
+                <Protegida rol="docente">
+                  <PaginaMiGrupo />
+                </Protegida>
+              }
+            />
             <Route
               path="/design"
               element={

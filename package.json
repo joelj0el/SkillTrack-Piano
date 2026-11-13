@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "pnpm --filter @skilltrack/web dev",
     "build": "pnpm --filter @skilltrack/web build",
-    "test": "vitest run --passWithNoTests",
+    "test": "node --disable-warning=ExperimentalWarning tools/despierto.ts node_modules/vitest/vitest.mjs run --passWithNoTests",
     "lint": "eslint .",
     "format": "node tools/formato.mjs --write",
     "format:check": "node tools/formato.mjs --check",
@@ -28,6 +28,7 @@
     "calibrar": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/calibrar/cli.ts",
     "reprocesar": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/reprocesar/cli.ts",
     "bandas": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/bandas/cli.ts",
+    "dataset:exportar": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/dataset/cli.ts",
     "validacion": "node --experimental-transform-types --disable-warning=ExperimentalWarning research/node/src/validacion/cli.ts",
     "mediapipe": "node tools/mediapipe.mjs"
   },

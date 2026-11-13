@@ -203,6 +203,26 @@ test.describe.serial("pantalla de resultados de un intento completo", () => {
     await expect(filas.nth(1)).toContainText("En desarrollo");
   });
 
+  test("PA-HU35-01: con la bandera del clasificador apagada (por defecto), el resultado es idéntico al de las reglas", async () => {
+    // Sin etiqueta del clasificador en ninguna parte de la pantalla.
+    await expect(page.locator("[data-clasificador]")).toHaveCount(0);
+    await expect(page.locator("[aria-label=Resultados]")).not.toContainText(/clasificador/i);
+    // Lo que se ve y lo que se guarda es lo de las reglas: misma calificación y mismos indicadores.
+    const enPantalla = await page
+      .locator("[data-bloque=variables] tr[data-variable]")
+      .evaluateAll((filas) =>
+        filas.map((f) => [f.getAttribute("data-variable"), f.getAttribute("data-nivel")]),
+      );
+    const indicadores = await page
+      .locator("[data-bloque=mejorar] [data-correccion]")
+      .evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute("data-indicador")))].sort());
+    const [guardado] = await (await page.request.get("/api/mis-intentos")).json();
+    expect(
+      guardado.calificacion.map((c: { clase: string; nivel: string }) => [c.clase, c.nivel]),
+    ).toEqual(enPantalla);
+    expect(guardado.indicadores_deficientes).toEqual(indicadores);
+  });
+
   test("PA-HU28-02: Reintentar vuelve al conteo con la misma calibración y el mismo tempo", async () => {
     await page.getByRole("button", { name: "Reintentar" }).click();
     const conteo = page.locator(".conteo-escena");

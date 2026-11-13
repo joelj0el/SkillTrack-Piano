@@ -16,5 +16,7 @@ export default defineConfig({
     name: "web",
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],
+    // Igual que el proyecto node (vitest.config.ts): Vitest exige el mismo valor en ambos.
+    maxWorkers: "50%",
   },
 });

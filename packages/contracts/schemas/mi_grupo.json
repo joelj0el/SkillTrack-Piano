@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ultimos": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    },
+    "estudiantes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "estudiante_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "nombre_visible": {
+            "type": "string"
+          },
+          "intentos_considerados": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "errores": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "clase": {
+                  "type": "string",
+                  "enum": [
+                    "ER-A",
+                    "ER-B",
+                    "ER-C",
+                    "ER-D",
+                    "ER-E",
+                    "ER-F"
+                  ],
+                  "title": "CodigoClase"
+                },
+                "intentos_con_error": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "indicadores": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "IND-A1",
+                      "IND-B1",
+                      "IND-B2",
+                      "IND-B3",
+                      "IND-C1",
+                      "IND-D1",
+                      "IND-D2",
+                      "IND-E1",
+                      "IND-F1",
+                      "IND-F2",
+                      "IND-F3",
+                      "IND-F4"
+                    ],
+                    "title": "CodigoIndicador"
+                  }
+                }
+              },
+              "required": [
+                "clase",
+                "intentos_con_error",
+                "indicadores"
+              ],
+              "additionalProperties": false,
+              "title": "ErrorRecurrente"
+            }
+          }
+        },
+        "required": [
+          "estudiante_id",
+          "nombre_visible",
+          "intentos_considerados",
+          "errores"
+        ],
+        "additionalProperties": false,
+        "title": "EstudianteDelGrupo"
+      }
+    }
+  },
+  "required": [
+    "ultimos",
+    "estudiantes"
+  ],
+  "additionalProperties": false,
+  "title": "MiGrupo"
+}

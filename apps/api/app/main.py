@@ -6,6 +6,7 @@ from app import __version__
 from app.core import salud
 from app.core.csrf import ExigirCabeceraCsrf
 from app.core.limites import LimitarCuerpo
+from app.modules.analytics import router as analytics
 from app.modules.attempts import router as attempts
 from app.modules.catalog import router as catalog
 from app.modules.identity import router as identity
@@ -30,6 +31,7 @@ def create_app(routers_privados: Sequence[APIRouter] = ()) -> FastAPI:
         catalog.router,
         pedagogy.router,
         attempts.router,
+        analytics.router,
     )
     for router in (*modulos, *routers_privados):
         privado.include_router(router)
