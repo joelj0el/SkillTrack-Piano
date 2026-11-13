@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "pnpm --filter @skilltrack/web dev",
     "build": "pnpm --filter @skilltrack/web build",
-    "test": "vitest run --passWithNoTests",
+    "test": "node --disable-warning=ExperimentalWarning tools/despierto.ts node_modules/vitest/vitest.mjs run --passWithNoTests",
     "lint": "eslint .",
     "format": "node tools/formato.mjs --write",
     "format:check": "node tools/formato.mjs --check",

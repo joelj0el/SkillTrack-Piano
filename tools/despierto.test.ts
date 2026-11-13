@@ -1,11 +1,11 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ESTADO_DESPIERTO, guardianWindows } from "./despierto.ts";
 
-describe("mantener el equipo despierto durante las E2E", () => {
+describe("mantener el equipo despierto durante las pruebas", () => {
   it("PU-ci-07: en Windows pide no suspender ni apagar la pantalla mientras viva el proceso", () => {
     // ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED
     expect(ESTADO_DESPIERTO).toBe(0x80000003);
@@ -23,5 +23,15 @@ describe("mantener el equipo despierto durante las E2E", () => {
       encoding: "utf8",
     });
     expect(r.status).toBe(3);
+  });
+
+  it("PU-ci-09: Vitest y las E2E corren sin que el equipo entre en espera", () => {
+    // La espera moderna detiene los workers a mitad de una prueba: la prueba "dura" lo que dura
+    // la espera y agota su límite de tiempo aunque no tenga ningún problema.
+    const { scripts } = JSON.parse(readFileSync("package.json", "utf8"));
+    expect(scripts.test).toMatch(
+      /^node .*tools\/despierto\.ts node_modules\/vitest\/vitest\.mjs run/,
+    );
+    expect(scripts.e2e).toMatch(/tools\/despierto\.ts /);
   });
 });
