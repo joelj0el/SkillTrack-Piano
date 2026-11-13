@@ -14,3 +14,10 @@
 | PA-HU34-01 | Pendiente | Manual. La partición por sujeto da 0 sujetos compartidos en todos los pliegues con datos sintéticos (PU-clasificador-04 y 05); falta con los datos reales |
 | PA-HU34-02 | Pendiente | Manual. El informe V3c existe (PU-clasificador-06, 10 y 11); falta correrlo con los datos reales                                                          |
 | PA-HU34-03 | Pendiente | Manual. Las clases con < 8 sujetos reales se excluyen con constancia (PU-clasificador-08); falta con los datos reales                                     |
+
+## HU-15 · Tableros descriptivos
+
+| PA         | Estado    | Motivo / prueba                                                                                          |
+| ---------- | --------- | -------------------------------------------------------------------------------------------------------- |
+| PA-HU15-01 | Pendiente | "Mi progreso": calificación por variable por semana del propio estudiante; en curso                      |
+| PA-HU15-02 | Pendiente | "Mi grupo": errores recurrentes por clase y estudiante en los últimos N intentos, sin rankings; en curso |

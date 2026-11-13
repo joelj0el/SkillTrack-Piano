@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "semanas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "semana": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "clase": {
+            "type": "string",
+            "enum": [
+              "ER-A",
+              "ER-B",
+              "ER-C",
+              "ER-D",
+              "ER-E",
+              "ER-F"
+            ],
+            "title": "CodigoClase"
+          },
+          "intentos": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "pct_promedio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "semana",
+          "clase",
+          "intentos",
+          "pct_promedio"
+        ],
+        "additionalProperties": false,
+        "title": "SemanaDeProgreso"
+      }
+    }
+  },
+  "required": [
+    "semanas"
+  ],
+  "additionalProperties": false,
+  "title": "MiProgreso"
+}
