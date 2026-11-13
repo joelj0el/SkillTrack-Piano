@@ -34,4 +34,13 @@ describe("mantener el equipo despierto durante las pruebas", () => {
     );
     expect(scripts.e2e).toMatch(/tools\/despierto\.ts /);
   });
+
+  it("PU-ci-10: Vitest usa como mucho la mitad de los núcleos", async () => {
+    // Con un worker por núcleo, en un equipo cargado (o a batería) los workers no alcanzan a
+    // arrancar a tiempo y Vitest los da por perdidos aunque ninguna prueba falle.
+    const { default: config } = await import("../vitest.config.ts");
+    expect(config.test?.maxWorkers).toBe("50%");
+    // El proyecto web declara el mismo valor: Vitest no admite valores distintos por proyecto.
+    expect(readFileSync("apps/web/vite.config.ts", "utf8")).toMatch(/maxWorkers: "50%"/);
+  });
 });
