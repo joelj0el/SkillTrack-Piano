@@ -119,6 +119,31 @@ export function muestrasDelFotograma(
   return salida;
 }
 
+export type Series = Partial<Record<IdMano, MuestraMano[]>>;
+
+/**
+ * Búfer incremental (la extracción ocurre mientras se toca; el análisis, al terminar): agrega la
+ * muestra de cada mano a su serie con su marca de tiempo. Una muestra que no avanza en el tiempo
+ * (repetida o fuera de orden) se descarta, así cada serie queda en orden estricto. Devuelve
+ * cuántas agregó.
+ */
+export function agregarAlBufer(
+  series: Series,
+  muestras: Partial<Record<IdMano, MuestraMano>>,
+): number {
+  let agregadas = 0;
+  for (const id of ["MI", "MD"] as const) {
+    const m = muestras[id];
+    if (!m) continue;
+    const serie = (series[id] ??= []);
+    const ultima = serie.at(-1);
+    if (ultima && m.t <= ultima.t) continue;
+    serie.push(m);
+    agregadas++;
+  }
+  return agregadas;
+}
+
 /** Fracción de notas que se pudieron evaluar: las oídas si hay audio; si no, las vistas. */
 export function fraccionEvaluable(r: RespuestaAnalisis): number {
   return r.acustico

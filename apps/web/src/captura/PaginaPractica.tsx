@@ -7,6 +7,7 @@ import {
   evaluarAudio,
   fraccionEvaluable,
   medirAudio,
+  agregarAlBufer,
   muestrasDelFotograma,
   opcionesTempo,
   programa,
@@ -687,11 +688,7 @@ export function PasoEjecucion(props: {
       const f = vista.fotograma.current;
       const t = (performance.now() - inicio.current) / 1000;
       if (f) {
-        for (const [id, m] of Object.entries(
-          muestrasDelFotograma(f.asignacion, f.ancho, f.alto, t),
-        )) {
-          (series.current[id as "MI" | "MD"] ??= []).push(m);
-        }
+        agregarAlBufer(series.current, muestrasDelFotograma(f.asignacion, f.ancho, f.alto, t));
       }
       let ev: Parameters<typeof transicion>[1] = { tipo: "tick", t };
       if (t - ultimoConteo > 1) {
