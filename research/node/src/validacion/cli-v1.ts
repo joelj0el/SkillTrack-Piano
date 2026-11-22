@@ -2,12 +2,14 @@
 //   pnpm validacion v1-visual --ejercicio EJ-01@1 --anotacion <v1-visual.csv> [--reporte <reporte-reproceso.json>]… [--salida <carpeta>]
 //   pnpm validacion v1-acustica --ejercicio EJ-01@1 --anotaciones <carpeta> [--tolerancia-ms 50] [--salida <carpeta>]
 //   pnpm validacion sincronizacion --toma <carpeta reprocesada> [--toma …] [--salida <carpeta>]
+//   pnpm validacion latencia --audio <grabacion.wav> --tempo <bpm> [--salida <carpeta>]
 import { existsSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { EventosAudio, FotogramaReproceso, ResultadoReproceso } from "@skilltrack/contracts";
 import pg from "pg";
 import { tomasParaV1, type TomaParaV1 } from "./consulta.ts";
+import { latenciaMetronomo, leerWav, tablaLatencia } from "./latencia.ts";
 import { sincronizacion, tablaSincronizacion, type TomaSincronizacion } from "./sincronizacion.ts";
 import { leerAnotacionVisual, v1Visual, type TomaV1 } from "./v1.ts";
 import {
@@ -178,4 +180,22 @@ export async function sincronizacionCli(o: { toma?: string[] | undefined; salida
     };
   });
   await escribirTabla(o.salida, "sincronizacion.md", tablaSincronizacion(sincronizacion(tomas)));
+}
+
+/** pnpm validacion latencia --audio <grabacion.wav> --tempo <bpm> [--salida <carpeta>] */
+export async function latenciaCli(o: {
+  audio?: string | undefined;
+  tempo?: string | undefined;
+  salida: string;
+}) {
+  const tempo = Number(o.tempo);
+  if (!o.audio || !Number.isFinite(tempo) || tempo <= 0) {
+    console.error(
+      "Uso: latencia --audio <grabacion.wav> --tempo <bpm del conteo> [--salida <carpeta>]",
+    );
+    process.exit(2);
+  }
+  const { muestras, tasa } = leerWav(readFileSync(o.audio));
+  const nombre = `latencia-${basename(o.audio).replace(/\.wav$/i, "")}.md`;
+  await escribirTabla(o.salida, nombre, tablaLatencia(latenciaMetronomo(muestras, tasa, tempo)));
 }
