@@ -1,13 +1,20 @@
 // Validaciones V1 (OE2 y OE3) sobre las tomas reprocesadas; cada una deja su tabla en Markdown.
 //   pnpm validacion v1-visual --ejercicio EJ-01@1 --anotacion <v1-visual.csv> [--reporte <reporte-reproceso.json>]… [--salida <carpeta>]
+//   pnpm validacion v1-acustica --ejercicio EJ-01@1 --anotaciones <carpeta> [--tolerancia-ms 50] [--salida <carpeta>]
 import { existsSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { ResultadoReproceso } from "@skilltrack/contracts";
+import { EventosAudio, ResultadoReproceso } from "@skilltrack/contracts";
 import pg from "pg";
 import { tomasParaV1, type TomaParaV1 } from "./consulta.ts";
 import { leerAnotacionVisual, v1Visual, type TomaV1 } from "./v1.ts";
-import { tablaV1Visual } from "./v1-informe.ts";
+import {
+  leerAnotacionAcustica,
+  TOLERANCIA_ATAQUE_MS,
+  v1Acustica,
+  type TomaAcustica,
+} from "./v1-acustica.ts";
+import { tablaV1Acustica, tablaV1Visual } from "./v1-informe.ts";
 
 const BASE_LOCAL = "postgresql://research:research@127.0.0.1:5434/research";
 
@@ -88,6 +95,53 @@ export async function v1VisualCli(o: OpcionesV1): Promise<void> {
         o.salida,
         `v1-visual-${o.ejercicio!.replace("@", "-v")}.md`,
         tablaV1Visual(v1Visual(tomas, anotadas)),
+      );
+    },
+    o.ejercicio,
+  );
+}
+
+export interface OpcionesV1Acustica extends OpcionesV1 {
+  anotaciones?: string | undefined;
+  "tolerancia-ms"?: string | undefined;
+}
+
+/** pnpm validacion v1-acustica --ejercicio EJ-01@1 --anotaciones <carpeta con <codigo_toma>.csv> [--tolerancia-ms 50] */
+export async function v1AcusticaCli(o: OpcionesV1Acustica): Promise<void> {
+  if (!o.ejercicio || !o.anotaciones) {
+    console.error(
+      "Uso: v1-acustica --ejercicio <EJ-xx@n> --anotaciones <carpeta> [--tolerancia-ms 50] [--salida <carpeta>]",
+    );
+    process.exit(2);
+  }
+  const tolerancia = Number(o["tolerancia-ms"] ?? TOLERANCIA_ATAQUE_MS);
+  await conBase(
+    o.base,
+    async (lista) => {
+      const tomas: TomaAcustica[] = [];
+      const sinAudio: string[] = [];
+      for (const t of lista) {
+        const anotacion = join(o.anotaciones!, `${t.codigo_toma}.csv`);
+        if (!existsSync(anotacion)) continue;
+        const eventos = join(t.ruta, "audio_events.json");
+        if (!existsSync(eventos)) {
+          sinAudio.push(t.codigo_toma);
+          continue;
+        }
+        const audio = EventosAudio.parse(JSON.parse(readFileSync(eventos, "utf8")));
+        tomas.push({
+          codigo_toma: t.codigo_toma,
+          origen: t.origen,
+          instrumento: t.instrumento,
+          anotados: leerAnotacionAcustica(readFileSync(anotacion, "utf8")),
+          detectados: audio.ataques.map((a) => ({ t: a.t, clase: a.clase })),
+        });
+      }
+      console.log(`Tomas anotadas sin audio_events.json: ${sinAudio.join(", ") || "ninguna"}`);
+      await escribirTabla(
+        o.salida,
+        `v1-acustica-${o.ejercicio!.replace("@", "-v")}.md`,
+        tablaV1Acustica(v1Acustica(tomas, tolerancia), tolerancia),
       );
     },
     o.ejercicio,

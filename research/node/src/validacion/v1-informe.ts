@@ -1,5 +1,6 @@
 /** Tablas en Markdown de V1: cifras tal como salen, con su n y aviso si hay pocas tomas. */
 import type { Origen } from "./concordancia.ts";
+import { exhaustividad, f1, precision, type Conteo, type FilaV1Acustica } from "./v1-acustica.ts";
 import { MINIMO_TOMAS_V1, type FilaV1Visual } from "./v1.ts";
 
 export const TITULO_ORIGEN: Record<Origen, string> = {
@@ -34,6 +35,36 @@ export function tablaV1Visual(filas: readonly FilaV1Visual[]): string {
       `| Segundos de proceso por segundo de video | ${num(f.extraccion.por_s_video, 2)} | ${f.extraccion.n} tomas |`,
       "",
       `Tomas anotadas: ${f.tomas_anotadas}. Anotaciones sin nota esperada: ${f.anotaciones_sin_evento}. Notas cuya mano anotada difiere de la esperada: ${f.manos_distintas}.`,
+      "",
+    );
+  }
+  return `${p.join("\n").trimEnd()}\n`;
+}
+
+const pctDe = (x: number | null) => (x === null ? "—" : `${(100 * x).toFixed(1)} %`);
+
+export function tablaV1Acustica(filas: readonly FilaV1Acustica[], toleranciaMs: number): string {
+  const p = [
+    "# V1 acústica · Ataques y notas frente a la anotación manual",
+    "",
+    `Un ataque detectado acierta si cae a ± ${toleranciaMs} ms de uno anotado (uno a uno). Una nota acierta si además la clase de altura coincide; las notas dudosas no cuentan como detectadas.`,
+    "",
+  ];
+  for (const f of filas) {
+    p.push(`## ${TITULO_ORIGEN[f.origen]} · instrumento: ${f.instrumento}`, "");
+    const aviso = avisoTomas(f.tomas);
+    if (aviso) p.push(aviso, "");
+    const fila = (nombre: string, c: Conteo | null) =>
+      c
+        ? `| ${nombre} | ${pctDe(precision(c))} | ${pctDe(exhaustividad(c))} | ${pctDe(f1(c))} | VP ${c.vp} · FP ${c.fp} · FN ${c.fn} |`
+        : `| ${nombre} | — | — | — | sin notas anotadas |`;
+    p.push(
+      "| Medida | Precisión | Exhaustividad | F1 | n |",
+      "| --- | --- | --- | --- | --- |",
+      fila("Ataques", f.ataques),
+      fila("Notas", f.notas),
+      "",
+      `Error de ataque (detectado − anotado): media ${num(f.error_ms.media)} ms · mediana del valor absoluto ${num(f.error_ms.mediana_abs)} ms · máximo ${num(f.error_ms.maximo_abs)} ms (n = ${f.error_ms.n} ataques emparejados, ${f.tomas} tomas).`,
       "",
     );
   }
