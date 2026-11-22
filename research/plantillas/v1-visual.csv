@@ -1,0 +1,8 @@
+# V1 visual: una fila por nota esperada de cada toma anotada (unas 10 tomas).
+# nota = número de la nota tal como la muestra la app (1 = primera); mano = MI o MD.
+# dedo = dedo que tocó (1 pulgar … 5 meñique); tecla = tecla que se hundió (Do4, Fa#3, Sib2 o MIDI).
+# Deja dedo o tecla vacíos si en el video no se ve con certeza. Borra estas filas de ejemplo.
+codigo_toma,nota,mano,dedo,tecla,comentario
+EJEMPLO-01,1,MD,1,Do4,
+EJEMPLO-01,2,MD,2,Re4,
+EJEMPLO-01,3,MD,3,Mi4,dedo tapado por la otra mano: si no se ve deja dedo vacío

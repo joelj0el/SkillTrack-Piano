@@ -40,3 +40,22 @@ export async function etiquetasDelEjercicio(
   );
   return rows as unknown as FilaEtiqueta[];
 }
+
+export interface TomaParaV1 {
+  codigo_toma: string;
+  origen: Origen;
+  instrumento: string;
+  ruta: string;
+}
+
+/** V1: todas las tomas del ejercicio (también las no evaluables, para el % de tomas válidas). */
+export async function tomasParaV1(base: Base, versionEjercicio: string): Promise<TomaParaV1[]> {
+  const { rows } = await base.consulta(
+    `SELECT e.codigo_toma, e.origen, s.instrumento, e.ruta
+       FROM ejecucion e JOIN sesion_grabacion s ON s.id = e.sesion
+      WHERE e.version_ejercicio = $1
+      ORDER BY e.codigo_toma`,
+    [versionEjercicio],
+  );
+  return rows as unknown as TomaParaV1[];
+}
