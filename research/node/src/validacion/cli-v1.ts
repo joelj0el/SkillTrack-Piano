@@ -1,12 +1,14 @@
 // Validaciones V1 (OE2 y OE3) sobre las tomas reprocesadas; cada una deja su tabla en Markdown.
 //   pnpm validacion v1-visual --ejercicio EJ-01@1 --anotacion <v1-visual.csv> [--reporte <reporte-reproceso.json>]… [--salida <carpeta>]
 //   pnpm validacion v1-acustica --ejercicio EJ-01@1 --anotaciones <carpeta> [--tolerancia-ms 50] [--salida <carpeta>]
+//   pnpm validacion sincronizacion --toma <carpeta reprocesada> [--toma …] [--salida <carpeta>]
 import { existsSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { EventosAudio, ResultadoReproceso } from "@skilltrack/contracts";
+import { EventosAudio, FotogramaReproceso, ResultadoReproceso } from "@skilltrack/contracts";
 import pg from "pg";
 import { tomasParaV1, type TomaParaV1 } from "./consulta.ts";
+import { sincronizacion, tablaSincronizacion, type TomaSincronizacion } from "./sincronizacion.ts";
 import { leerAnotacionVisual, v1Visual, type TomaV1 } from "./v1.ts";
 import {
   leerAnotacionAcustica,
@@ -146,4 +148,34 @@ export async function v1AcusticaCli(o: OpcionesV1Acustica): Promise<void> {
     },
     o.ejercicio,
   );
+}
+
+/** pnpm validacion sincronizacion --toma <carpeta reprocesada> [--toma …] [--salida <carpeta>] */
+export async function sincronizacionCli(o: { toma?: string[] | undefined; salida: string }) {
+  if (!o.toma?.length) {
+    console.error(
+      "Uso: sincronizacion --toma <carpeta de la toma reprocesada> [--toma …] [--salida <carpeta>]",
+    );
+    process.exit(2);
+  }
+  const tomas: TomaSincronizacion[] = o.toma.map((carpeta) => {
+    const resultado = ResultadoReproceso.parse(
+      JSON.parse(readFileSync(join(carpeta, "resultado.json"), "utf8")),
+    );
+    const fotogramas = readFileSync(join(carpeta, "landmarks.jsonl"), "utf8")
+      .split("\n")
+      .filter(Boolean)
+      .map((l) => FotogramaReproceso.parse(JSON.parse(l)));
+    const audio = EventosAudio.parse(
+      JSON.parse(readFileSync(join(carpeta, "audio_events.json"), "utf8")),
+    );
+    if (!audio.pista) console.log(`${resultado.codigo_toma}: sin audio (${audio.motivo ?? "—"})`);
+    return {
+      codigo_toma: resultado.codigo_toma,
+      origen: resultado.origen,
+      fotogramas,
+      ataques: audio.ataques.map((a) => a.t),
+    };
+  });
+  await escribirTabla(o.salida, "sincronizacion.md", tablaSincronizacion(sincronizacion(tomas)));
 }

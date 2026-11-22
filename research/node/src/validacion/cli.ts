@@ -18,12 +18,12 @@ import {
 } from "./concordancia.ts";
 import { etiquetasDelEjercicio, tomasDelEjercicio, type TomaDeLaBase } from "./consulta.ts";
 import { tablaEtiquetadores, tablaReglas, tablaV2 } from "./informe.ts";
-import { v1AcusticaCli, v1VisualCli } from "./cli-v1.ts";
+import { sincronizacionCli, v1AcusticaCli, v1VisualCli } from "./cli-v1.ts";
 import { v2PorOrigen } from "./v2.ts";
 
 const BASE_LOCAL = "postgresql://research:research@127.0.0.1:5434/research";
 const USO =
-  "Uso: v1-visual|v1-acustica|v2|v3a|v3b --ejercicio <EJ-xx@n> --referencia <referencia.json> [--reglas <conjunto.json>] [--salida <carpeta>]";
+  "Uso: v1-visual|v1-acustica|sincronizacion|v2|v3a|v3b --ejercicio <EJ-xx@n> --referencia <referencia.json> [--reglas <conjunto.json>] [--salida <carpeta>]";
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -35,11 +35,16 @@ const { values, positionals } = parseArgs({
     base: { type: "string" },
     anotacion: { type: "string" },
     anotaciones: { type: "string" },
+    toma: { type: "string", multiple: true },
     "tolerancia-ms": { type: "string" },
     reporte: { type: "string", multiple: true },
   },
 });
 const [validacion] = positionals;
+if (validacion === "sincronizacion") {
+  await sincronizacionCli(values);
+  process.exit(0);
+}
 if (validacion === "v1-acustica") {
   await v1AcusticaCli(values);
   process.exit(0);
