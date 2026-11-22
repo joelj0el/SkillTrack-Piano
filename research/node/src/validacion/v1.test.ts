@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prepararEsquema, type Base } from "../ingesta/registro.ts";
 import { tomasParaV1 } from "./consulta.ts";
 import { evento, resultado } from "./sinteticos.ts";
@@ -93,10 +93,15 @@ describe("V1 visual", () => {
     // Menos de 10 tomas anotadas: aviso explícito.
     expect(tabla).toMatch(/n chico: 0 tomas anotadas \(< 10\)/);
   });
+});
 
-  it("PU-research-83: la consulta de V1 trae todas las tomas del ejercicio, también las no evaluables, con su instrumento", async () => {
-    const pg = new PGlite();
-    const base: Base = { consulta: (sql, p) => pg.query(sql, p) as ReturnType<Base["consulta"]> };
+describe("consulta de V1", () => {
+  // PGlite tarda en arrancar: se crea una vez, con el mismo margen que las demás pruebas con base.
+  let pg: PGlite;
+  let base: Base;
+  beforeAll(async () => {
+    pg = new PGlite();
+    base = { consulta: (sql, p) => pg.query(sql, p) as ReturnType<Base["consulta"]> };
     await prepararEsquema(base);
     await base.consulta(
       `INSERT INTO participante VALUES ('P01', 'I', 'estudiante', null, null, null)`,
@@ -116,10 +121,13 @@ describe("V1 visual", () => {
         [codigo, version, evaluable],
       );
     }
+  }, 60_000);
+  afterAll(() => pg.close());
+
+  it("PU-research-83: la consulta de V1 trae todas las tomas del ejercicio, también las no evaluables, con su instrumento", async () => {
     expect(await tomasParaV1(base, "EJ-01@1")).toEqual([
       { codigo_toma: "T1", origen: "real", instrumento: "acustico", ruta: "/r/T1" },
       { codigo_toma: "T2", origen: "real", instrumento: "acustico", ruta: "/r/T2" },
     ]);
-    await pg.close();
   });
 });
