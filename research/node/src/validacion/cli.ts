@@ -36,6 +36,8 @@ const { values, positionals } = parseArgs({
     anotacion: { type: "string" },
     anotaciones: { type: "string" },
     toma: { type: "string", multiple: true },
+    video: { type: "string" },
+    calibracion: { type: "string" },
     audio: { type: "string" },
     tempo: { type: "string" },
     "tolerancia-ms": { type: "string" },
@@ -49,7 +51,7 @@ if (validacion === "latencia") {
 }
 if (validacion === "sincronizacion") {
   await sincronizacionCli(values);
-  process.exit(0);
+  process.exit(process.exitCode ?? 0);
 }
 if (validacion === "v1-acustica") {
   await v1AcusticaCli(values);

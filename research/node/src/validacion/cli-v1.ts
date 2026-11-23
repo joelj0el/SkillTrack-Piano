@@ -2,6 +2,7 @@
 //   pnpm validacion v1-visual --ejercicio EJ-01@1 --anotacion <v1-visual.csv> [--reporte <reporte-reproceso.json>]… [--salida <carpeta>]
 //   pnpm validacion v1-acustica --ejercicio EJ-01@1 --anotaciones <carpeta> [--tolerancia-ms 50] [--salida <carpeta>]
 //   pnpm validacion sincronizacion --toma <carpeta reprocesada> [--toma …] [--salida <carpeta>]
+//   pnpm validacion sincronizacion --video <clip.mp4> --calibracion <CAL.mp4 | calibracion-*.json> [--salida <carpeta>]
 //   pnpm validacion latencia --audio <grabacion.wav> --tempo <bpm> [--salida <carpeta>]
 import { existsSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
@@ -10,7 +11,9 @@ import { EventosAudio, FotogramaReproceso, ResultadoReproceso } from "@skilltrac
 import pg from "pg";
 import { tomasParaV1, type TomaParaV1 } from "./consulta.ts";
 import { latenciaMetronomo, leerWav, tablaLatencia } from "./latencia.ts";
+import { abrirProcesador } from "../reprocesar/navegador.ts";
 import { sincronizacion, tablaSincronizacion, type TomaSincronizacion } from "./sincronizacion.ts";
+import { ErrorVideoSuelto, tomaDeVideoSuelto } from "./sincronizacion-video.ts";
 import { leerAnotacionVisual, v1Visual, type TomaV1 } from "./v1.ts";
 import {
   leerAnotacionAcustica,
@@ -152,11 +155,51 @@ export async function v1AcusticaCli(o: OpcionesV1Acustica): Promise<void> {
   );
 }
 
-/** pnpm validacion sincronizacion --toma <carpeta reprocesada> [--toma …] [--salida <carpeta>] */
-export async function sincronizacionCli(o: { toma?: string[] | undefined; salida: string }) {
+/**
+ * pnpm validacion sincronizacion --toma <carpeta reprocesada> [--toma …] [--salida <carpeta>]
+ * pnpm validacion sincronizacion --video <clip> --calibracion <CAL.mp4 | calibracion-*.json>: un
+ * video suelto que no se registra como toma (sincronizacion-video.ts).
+ */
+export async function sincronizacionCli(o: {
+  toma?: string[] | undefined;
+  video?: string | undefined;
+  calibracion?: string | undefined;
+  salida: string;
+}) {
+  if (o.video || o.calibracion) {
+    if (!o.video || !o.calibracion || o.toma?.length) {
+      console.error(
+        "Uso: sincronizacion --video <clip de palmadas> --calibracion <clip CAL o calibracion-*.json> [--salida <carpeta>]",
+      );
+      process.exit(2);
+    }
+    for (const ruta of [o.video, o.calibracion]) {
+      if (!existsSync(ruta)) {
+        console.error(`No existe ${ruta}`);
+        process.exit(2);
+      }
+    }
+    const procesador = await abrirProcesador();
+    try {
+      const toma = await tomaDeVideoSuelto({
+        video: resolve(o.video),
+        calibracion: resolve(o.calibracion),
+        procesador,
+      });
+      const nombre = `sincronizacion-${basename(o.video).replace(/.[^.]+$/, "")}.md`;
+      await escribirTabla(o.salida, nombre, tablaSincronizacion(sincronizacion([toma])));
+    } catch (error) {
+      if (!(error instanceof ErrorVideoSuelto)) throw error;
+      console.error(error.message);
+      process.exitCode = 2;
+    } finally {
+      await procesador.cerrar();
+    }
+    return;
+  }
   if (!o.toma?.length) {
     console.error(
-      "Uso: sincronizacion --toma <carpeta de la toma reprocesada> [--toma …] [--salida <carpeta>]",
+      "Uso: sincronizacion --toma <carpeta de la toma reprocesada> [--toma …] [--salida <carpeta>]  ·  o  --video <clip> --calibracion <CAL>",
     );
     process.exit(2);
   }
