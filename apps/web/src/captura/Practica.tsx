@@ -13,6 +13,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { colorDeToken, toqueAVideo, useCamara, type Camara } from "./camara.ts";
 import { CONEXIONES, crearDetector, type DeteccionManos, type Detector } from "./detector.ts";
+import { cadaFotograma } from "./fotogramas.ts";
 import { NOMBRE_MANO, crearContadorFps, type ManoVista } from "./manos-en-vivo.ts";
 
 import { Boton, EstadoVista } from "../ui/base.tsx";
@@ -164,13 +165,9 @@ export function VistaCamara({
     const asignar = crearAsignador<ManoVista>(() => frontalRef.current);
     const contarFps = crearContadorFps();
     let ultimoFps = 0;
-    let ultimoT = -1;
-    let cuadro = 0;
-    const paso = (ahora: number) => {
-      cuadro = requestAnimationFrame(paso);
+    // Una detección por fotograma de video, con el instante de ese fotograma.
+    return cadaFotograma(v, (t) => {
       if (!ctx || v.readyState < 2 || v.videoWidth === 0) return;
-      const t = Math.max(ahora, ultimoT + 1);
-      ultimoT = t;
       const deteccion = detector.detectar(v, t);
       const f: Fotograma = {
         deteccion,
@@ -189,9 +186,7 @@ export function VistaCamara({
         ultimoFps = t;
         setFps(valor);
       }
-    };
-    cuadro = requestAnimationFrame(paso);
-    return () => cancelAnimationFrame(cuadro);
+    });
   }, [detector]);
 
   // Calidad de imagen sobre fotogramas reducidos.
