@@ -1,13 +1,13 @@
 # n.6 Pruebas — it-3 (generado)
 
-Generado por `pnpm docs:tests it-3` el 2026-11-22 01:45 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-3` el 2026-11-23 18:19 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
 | Playwright  | 60    | 59        | 0        | 1        |
-| Vitest      | 377   | 377       | 0        | 0        |
+| Vitest      | 381   | 381       | 0        | 0        |
 | pytest      | 127   | 127       | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
@@ -96,7 +96,7 @@ Generado por `pnpm docs:tests it-3` el 2026-11-22 01:45 UTC a partir de los repo
 | aumento       | 4   | 4         | 0        |
 | bandas        | 20  | 20        | 0        |
 | cadena        | 6   | 6         | 0        |
-| capture       | 18  | 18        | 0        |
+| capture       | 20  | 20        | 0        |
 | catalog       | 13  | 13        | 0        |
 | catalogo      | 2   | 2         | 0        |
 | ci            | 8   | 8         | 0        |
@@ -124,7 +124,7 @@ Generado por `pnpm docs:tests it-3` el 2026-11-22 01:45 UTC a partir de los repo
 | pedagogy      | 12  | 12        | 0        |
 | quality       | 9   | 9         | 0        |
 | registro      | 3   | 3         | 0        |
-| research      | 91  | 91        | 0        |
+| research      | 93  | 93        | 0        |
 | tempo         | 5   | 5         | 0        |
 | ui            | 6   | 6         | 0        |
 | web           | 28  | 28        | 0        |
