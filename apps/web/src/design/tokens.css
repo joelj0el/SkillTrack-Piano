@@ -47,11 +47,10 @@
   --tamano-ilustracion: 7.5rem;
   --escala-conteo: 3;
 
-  /* Formas: 8 / 12 / 20 y 28 para tarjetas de portada y vidrio (ADR-003). */
+  /* Formas (ADR-003): 8 detalles, 12 botones y campos, 16 tarjetas; chips totalmente redondos. */
   --radio-sm: 0.5rem;
   --radio-md: 0.75rem;
-  --radio-lg: 1.25rem;
-  --radio-xl: 1.75rem;
+  --radio-lg: 1rem;
   --radio-completo: 62.5rem;
   --borde: 1px;
   --borde-foco: 2px;

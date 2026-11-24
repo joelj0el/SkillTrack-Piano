@@ -1,4 +1,4 @@
-# ADR-003 — Diseño v2: tamaño de portada, radio extra, fuentes autoalojadas y vidrio
+# ADR-003 — Diseño v2: tamaño de portada, radios, fuentes autoalojadas y vidrio
 
 **Estado:** aceptado (autor) · **Fecha:** 2026-11-23 · **Códigos:** DS-01, DS-04, DS-06, RNF-16 · **Visto bueno de la tutora:** pendiente
 
@@ -18,7 +18,7 @@ El sistema de diseño v0 fija la escala tipográfica 13 / 15 / 17 / 20 / 28 / 34
 ## Decisión
 
 - **DS-01:** se agrega `--texto-portada` (2,75 rem = 44 px) **solo** para el título de las portadas y la frase del panel de la entrada; el resto de la interfaz sigue en la escala v0 y el mínimo de 15 px para el estudiante.
-- **DS-04:** se agrega `--radio-xl` (1,75 rem = 28 px) para portadas, tarjetas de vidrio y la tarjeta de la entrada.
+- **DS-04 (revisado):** radios de 8 px (`--radio-sm`, detalles), 12 px (`--radio-md`, botones y campos) y 16 px (`--radio-lg`, tarjetas, portadas, vidrio y la tarjeta de la entrada); los chips son totalmente redondos (`--radio-completo`). Se retira el radio de 28 px.
 - **Tipografía:** Inter (texto) y DM Serif Display (títulos y saludos), instaladas como dependencias `@fontsource/*` (OFL-1.1) y servidas por la propia aplicación; quedan en la caché de la PWA.
 - **Vidrio:** solo en inicio, entrada, paneles y resultados. Siempre sobre un fondo sólido; sin `backdrop-filter` la superficie cae al color sólido de la tarjeta, que cumple el contraste AA. La calibración y la práctica no usan vidrio, desenfoques ni animaciones pesadas.
 - **Contraste (DS-06):** los colores nuevos (botones, menú lateral, portada) se agregan a `pnpm design:contraste`, que los verifica en claro y oscuro.
@@ -28,3 +28,7 @@ El sistema de diseño v0 fija la escala tipográfica 13 / 15 / 17 / 20 / 28 / 34
 - **Positivas:** la interfaz gana jerarquía visual sin enviar nada a otro origen.
 - **Negativas:** dos dependencias nuevas de fuentes (~100 KB en la caché); el vidrio exige más al navegador, por eso se limita a pantallas sin cámara.
 - **Sección II:** el apartado del sistema de diseño describe la v2 y remite a este ADR para las dos ampliaciones.
+
+## Revisión del autor (2026-11-23)
+
+Tras ver la primera versión, el autor pidió una interfaz menos redondeada: el radio de 28 px de portadas y tarjetas y los botones en forma de píldora daban un aspecto blando, poco académico. Los radios pasan a 16 px en tarjetas y 12 px en botones y campos, y los chips quedan totalmente redondos. El radio de tarjetas de la v0 (20 px) baja a 16 px; el de 28 px se retira.

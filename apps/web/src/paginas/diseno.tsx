@@ -95,7 +95,7 @@ function Muestras() {
             Sombra {n}
           </div>
         ))}
-        {["sm", "md", "lg", "xl"].map((r) => (
+        {["sm", "md", "lg", "completo"].map((r) => (
           <div key={r} className="tarjeta" style={{ borderRadius: `var(--radio-${r})` }}>
             Radio {r}
           </div>

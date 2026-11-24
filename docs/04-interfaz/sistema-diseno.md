@@ -36,7 +36,7 @@ Los pesos son 400, 600 y 700 (`--peso-normal`, `--peso-medio` y `--peso-fuerte`)
 ### Espaciado, radios y sombras
 
 - **Espaciado:** retícula de 4 px, con los valores 4, 8, 12, 16, 24, 32 y 48 (`--espacio-1` a `--espacio-12`). El margen lateral en el móvil es de 16 px y la separación entre secciones, de 32 px.
-- **Radios:** 8, 12 y 20 px (`--radio-sm`, `--radio-md` y `--radio-lg`), y 28 px (`--radio-xl`) para portadas, vidrio y la tarjeta de la entrada (ADR-003).
+- **Radios (ADR-003):** 8 px en detalles (`--radio-sm`), 12 px en botones y campos (`--radio-md`), 16 px en tarjetas, portadas y vidrio (`--radio-lg`); los chips son totalmente redondos (`--radio-completo`).
 - **Vidrio:** solo en inicio, entrada, paneles y resultados (`.vidrio`); siempre con un color sólido de respaldo que cumple AA. Nunca en la calibración ni en la práctica.
 - **Sombras:** tres niveles suaves (`--sombra-1` a `--sombra-3`), con valores propios en el modo oscuro.
 - **Áreas táctiles:** al menos 48 px (`--alto-toque`). "Cancelar" durante la ejecución mide al menos 56 px (`--alto-toque-grande`) y queda lejos de los bordes.
