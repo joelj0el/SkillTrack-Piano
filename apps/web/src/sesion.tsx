@@ -60,11 +60,18 @@ export function roles(usuario: UsuarioActual): Set<Rol> {
   return new Set(usuario.membresias.map((m) => m.rol));
 }
 
-/** Pantalla inicial de cada rol (PA-HU01-01). */
+export const NOMBRE_ROL: Record<Rol, string> = {
+  admin_inst: "Administración",
+  docente: "Docente",
+  estudiante: "Estudiante",
+  investigador: "Investigación",
+};
+
+/** Pantalla inicial de cada rol (PA-HU01-01): el panel de inicio para docentes y estudiantes. */
 export function rutaInicial(usuario: UsuarioActual): string {
   const r = roles(usuario);
   if (r.has("admin_inst")) return "/usuarios";
-  if (r.has("docente")) return "/estudiantes";
+  if (r.has("docente")) return "/inicio";
   if (r.has("investigador")) return "/investigacion";
-  return "/tareas";
+  return "/inicio";
 }

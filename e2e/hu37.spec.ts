@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
-import { CLAVE_NUEVA, crearTareaApi, entrar, parDocenteEstudiante, sesionApi } from "./ayuda.ts";
+import {
+  CLAVE_NUEVA,
+  crearTareaApi,
+  entrar,
+  parDocenteEstudiante,
+  sesionApi,
+  irAMisTareas,
+} from "./ayuda.ts";
 
 const CSRF = { "x-skilltrack-csrf": "1" };
 
@@ -52,6 +59,7 @@ test("PA-HU37-01: con 2 intentos válidos hoy la tarea muestra 2 de 3 y la lista
   await practicar(estudiante, tareaId, [[64], [62], [55]]);
 
   await entrar(page, estudiante, CLAVE_NUEVA);
+  await irAMisTareas(page);
   await page.getByRole("link", { name: /EJ-01/ }).click();
   await expect(page.getByText("2 de 3 hoy")).toBeVisible();
   const intentos = page.getByRole("list", { name: "Intentos" }).getByRole("listitem");

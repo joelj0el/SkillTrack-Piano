@@ -95,11 +95,11 @@ describe("pantallas", () => {
       "/api/auth/me": { estado: 401, cuerpo: { detail: "Se requiere sesión" } },
       "/api/auth/login": { estado: 401, cuerpo: { detail: "Usuario o contraseña incorrectos" } },
     });
-    abrir("/");
+    abrir("/entrar");
 
     fireEvent.change(await screen.findByLabelText("Usuario"), { target: { value: "ana" } });
     fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "x" } });
-    fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Iniciar sesión" }));
 
     expect((await screen.findByRole("alert")).textContent).toBe("Usuario o contraseña incorrectos");
   });

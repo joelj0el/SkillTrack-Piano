@@ -6,6 +6,7 @@ import {
   entrar,
   fechaLegible,
   parDocenteEstudiante,
+  irAMisTareas,
 } from "./ayuda.ts";
 
 test("PA-HU14-01: la tarea asignada aparece en Mis tareas del estudiante con sus 5 datos", async ({
@@ -28,6 +29,7 @@ test("PA-HU14-01: la tarea asignada aparece en Mis tareas del estudiante con sus
 
   await page.getByRole("button", { name: "Salir" }).click();
   await entrar(page, estudiante, CLAVE_NUEVA);
+  await irAMisTareas(page);
   const tarjeta = page.getByRole("link", { name: /EJ-01/ });
   await expect(tarjeta).toContainText("Manos juntas");
   await expect(tarjeta).toContainText("♩ = 60–70");
@@ -55,6 +57,7 @@ test("PA-HU14-04: la observación con aspecto llega al estudiante con fecha, asp
 
   await page.getByRole("button", { name: "Salir" }).click();
   await entrar(page, estudiante, CLAVE_NUEVA);
+  await irAMisTareas(page);
   await page.getByRole("link", { name: /EJ-01/ }).click();
   const observacion = page.getByRole("list", { name: "Observaciones" }).getByRole("listitem");
   await expect(observacion).toContainText("Desfase rítmico");
@@ -82,6 +85,7 @@ test("PA-HU14-05: los cambios y la cancelación de la tarea llegan al estudiante
 
   await page.getByRole("button", { name: "Salir" }).click();
   await entrar(page, estudiante, CLAVE_NUEVA);
+  await irAMisTareas(page);
   const pendientes = page.getByRole("region", { name: "Pendientes" });
   await expect(pendientes).toContainText("♩ = 65–75");
   await expect(pendientes).toContainText("Repeticiones por día: 5");
@@ -96,6 +100,7 @@ test("PA-HU14-05: los cambios y la cancelación de la tarea llegan al estudiante
 
   await page.getByRole("button", { name: "Salir" }).click();
   await entrar(page, estudiante, CLAVE_NUEVA);
+  await irAMisTareas(page);
   await expect(page.getByRole("region", { name: "Pendientes" })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Canceladas" })).toContainText("Cancelada");
 });
