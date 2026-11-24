@@ -75,6 +75,8 @@
   --desplazamiento-aparicion: 0.5rem;
   --opacidad-deshabilitado: 0.55;
   --opacidad-apagada: 0.35;
+  --opacidad-realce: 0.12;
+  --elevacion: 0.1875rem;
 
   /* Capas. */
   --capa-barra: 5;

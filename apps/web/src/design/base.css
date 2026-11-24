@@ -572,10 +572,6 @@ a.tarjeta {
   transition: transform var(--duracion-corta) var(--curva);
 }
 
-a.tarjeta:hover {
-  box-shadow: var(--sombra-2);
-}
-
 a.tarjeta:active {
   transform: scale(var(--escala-pulsado));
 }
@@ -888,12 +884,6 @@ button,
   transition: transform var(--duracion-corta) var(--curva);
 }
 
-button:hover,
-.boton-enlace:hover {
-  background: var(--color-boton-pulsado);
-  border-color: var(--color-boton-pulsado);
-}
-
 button:active,
 .boton-enlace:active {
   transform: scale(var(--escala-pulsado));
@@ -910,12 +900,6 @@ button.secundario,
   background: var(--color-superficie);
   border-color: var(--color-borde-control);
   color: var(--color-enlace);
-}
-
-button.secundario:hover,
-.boton-enlace.secundario:hover {
-  background: var(--color-superficie-2);
-  border-color: var(--color-borde-control);
 }
 
 button.peligro {
@@ -2191,4 +2175,113 @@ form + .lista {
 .muestra-titulo {
   font-family: var(--fuente-titulo);
   font-size: var(--texto-xl);
+}
+
+/* ---- Movimiento v2: solo transform y opacity (DS-07), 150–250 ms ---- */
+
+/* Botones e ítems del menú: el cambio de tono es una capa que aparece por opacidad. */
+button,
+.boton-enlace,
+.navegacion a {
+  position: relative;
+  isolation: isolate;
+}
+
+button::after,
+.boton-enlace::after,
+.navegacion a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracion-corta) var(--curva);
+}
+
+/* Tarjetas: se elevan un poco; la sombra mayor aparece por opacidad. */
+a.tarjeta,
+.tarjeta-resumen,
+.proximo,
+.paso,
+.plan,
+.calificacion {
+  position: relative;
+  transition: transform var(--duracion-media) var(--curva);
+}
+
+a.tarjeta::after,
+.tarjeta-resumen::after,
+.proximo::after,
+.paso::after,
+.plan::after,
+.calificacion::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--sombra-3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracion-media) var(--curva);
+}
+
+@media (hover: hover) {
+  button:not(:disabled):hover::after,
+  .boton-enlace:hover::after {
+    opacity: var(--opacidad-realce);
+  }
+
+  .navegacion a:hover::after {
+    opacity: var(--opacidad-realce);
+  }
+
+  a.tarjeta:hover,
+  .tarjeta-resumen:hover,
+  .proximo:hover,
+  .paso:hover,
+  .plan:hover,
+  .calificacion:hover {
+    transform: translateY(calc(-1 * var(--elevacion)));
+  }
+
+  a.tarjeta:hover::after,
+  .tarjeta-resumen:hover::after,
+  .proximo:hover::after,
+  .paso:hover::after,
+  .plan:hover::after,
+  .calificacion:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Entrada suave de las secciones al cargar (nunca en la calibración ni en la práctica). */
+.contenedor > :not(.practica, :has(.practica)),
+:is(.panel, .publica) > * {
+  animation: aparecer var(--duracion-media) var(--curva) both;
+}
+
+:is(.panel, .publica) > :nth-child(2) {
+  animation-delay: var(--retardo-lista);
+}
+
+:is(.panel, .publica) > :nth-child(3) {
+  animation-delay: calc(2 * var(--retardo-lista));
+}
+
+:is(.panel, .publica) > :nth-child(n + 4) {
+  animation-delay: calc(3 * var(--retardo-lista));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.tarjeta:hover,
+  .tarjeta-resumen:hover,
+  .proximo:hover,
+  .paso:hover,
+  .plan:hover,
+  .calificacion:hover {
+    transform: none;
+  }
 }
