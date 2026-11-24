@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App.tsx";
@@ -78,14 +78,13 @@ describe("diseño v2: inicio público, panel y menú", () => {
     expect(cambioSemanal({ esta: 0, anterior: 0 })).toBe("igual que la semana anterior");
   });
 
-  it("PU-web-32: sin sesión, / muestra la página pública con planes informativos y sin puntajes", async () => {
+  it("PU-web-32: sin sesión, / muestra la página pública con Ver planes y sin puntajes", async () => {
     servidor({ "/api/auth/me": { estado: 401, cuerpo: { detail: "Se requiere sesión" } } });
     abrir("/");
 
     expect(await screen.findByRole("heading", { level: 1, name: /Aprende piano/ })).toBeDefined();
     expect(screen.getAllByRole("link", { name: "Iniciar sesión" }).length).toBeGreaterThan(0);
-    const planes = screen.getByRole("region", { name: "Planes" });
-    expect(within(planes).getAllByText("Bs —")).toHaveLength(3);
+    expect(screen.getAllByRole("button", { name: "Ver planes" }).length).toBeGreaterThan(0);
     expect(screen.getByText(/no sale del teléfono/)).toBeDefined();
     expect(document.body.textContent).not.toMatch(PROHIBIDO);
   });
@@ -150,5 +149,44 @@ describe("diseño v2: inicio público, panel y menú", () => {
     abrir("/entrar");
     const volver = await screen.findByRole("link", { name: "Volver al inicio" });
     expect(volver.getAttribute("href")).toBe("/");
+  });
+
+  it("PU-web-36: /planes muestra los 3 planes, la Institución como recomendada y los límites sin definir como —", async () => {
+    servidor({ "/api/auth/me": { estado: 401, cuerpo: { detail: "Se requiere sesión" } } });
+    abrir("/planes");
+    expect(await screen.findByRole("heading", { level: 1, name: "Planes" })).toBeDefined();
+    const planes = screen.getAllByRole("article");
+    expect(planes.map((p) => p.querySelector("h2")?.textContent)).toEqual([
+      "Docente",
+      "Institución",
+      "Convenio especial",
+    ]);
+    expect(planes.map((p) => p.getAttribute("data-destacado"))).toEqual(["false", "true", "false"]);
+    expect(within(planes[1]!).getByText("Recomendado")).toBeDefined();
+    for (const p of planes) expect(within(p).getByText("Bs —")).toBeDefined();
+    expect(within(planes[0]!).getByText("Hasta — estudiantes")).toBeDefined();
+    expect(within(planes[1]!).getByText(/— docentes, — estudiantes/)).toBeDefined();
+    // Ningún límite inventado: la única cifra es el docente del plan Docente.
+    expect(planes.map((p) => p.textContent?.match(/\d+/g) ?? [])).toEqual([["1"], [], []]);
+    expect(screen.getAllByRole("button", { name: /Solicitar información/ })).toHaveLength(3);
+  });
+
+  it("PU-web-37: Ver planes abre la ventana con su título; ya no hay planes al final de la página", async () => {
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+      this.open = false;
+    };
+    servidor({ "/api/auth/me": { estado: 401, cuerpo: { detail: "Se requiere sesión" } } });
+    abrir("/");
+    await screen.findByRole("heading", { level: 1, name: /Aprende piano/ });
+    expect(screen.queryByRole("region", { name: "Planes" })).toBeNull();
+    const botones = screen.getAllByRole("button", { name: "Ver planes" });
+    expect(botones.length).toBe(2);
+    fireEvent.click(botones[0]!);
+    const ventana = screen.getByRole("dialog", { name: "Planes" });
+    expect(within(ventana).getAllByRole("article")).toHaveLength(3);
+    expect(within(ventana).getByRole("button", { name: "Cerrar" })).toBeDefined();
   });
 });

@@ -23,6 +23,7 @@ import { DetalleEjercicio, Catalogo } from "./paginas/catalogo.tsx";
 import { DetalleEstudiante, MisEstudiantes } from "./paginas/docente.tsx";
 import { CambiarClave, Entrar, Perfil } from "./paginas/entrada.tsx";
 import { PanelDocente, PanelEstudiante } from "./paginas/panel.tsx";
+import { BotonPlanes, PaginaPlanes } from "./paginas/planes.tsx";
 import { InicioPublico } from "./paginas/publica.tsx";
 import { DetalleTarea, MisTareas } from "./paginas/estudiante.tsx";
 import { ModoInvestigacion } from "./paginas/investigacion.tsx";
@@ -111,12 +112,14 @@ function Marca() {
 /** Barra superior: la marca (cuando no hay menú lateral), el cambio de tema y la salida. */
 function Barra() {
   const { estado, salir } = useSesion();
+  const { pathname } = useLocation();
   const activo = estado.tipo === "activo" && !estado.usuario.clave_temporal;
   return (
     <header className="barra">
       <div className="barra-fila">
         <Marca />
         <div className="barra-acciones">
+          {estado.tipo === "anonimo" && pathname === "/" && <BotonPlanes />}
           <BotonTema />
           {activo && (
             <Boton variante="secundario" icono={LogOut} onClick={() => void salir()}>
@@ -264,6 +267,7 @@ export function App() {
               }
             />
             <Route path="/entrar" element={<Entrar />} />
+            <Route path="/planes" element={<PaginaPlanes />} />
             <Route path="/cambiar-clave" element={<CambiarClave />} />
             <Route
               path="/tareas"

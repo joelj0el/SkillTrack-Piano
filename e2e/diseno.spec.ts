@@ -34,3 +34,28 @@ test("PU-diseno-02: Cancelar durante la ejecución mide al menos 56 px", async (
   const caja = await page.getByRole("button", { name: "Cancelar" }).boundingBox();
   expect(caja?.height).toBeGreaterThanOrEqual(56);
 });
+
+test("PU-diseno-04: la ventana de planes tiene título, mantiene el foco y se cierra con Esc y con Cerrar", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("banner").getByRole("button", { name: "Ver planes" }).click();
+  const ventana = page.getByRole("dialog", { name: "Planes" });
+  await expect(ventana).toBeVisible();
+  await expect(ventana.getByRole("article")).toHaveCount(3);
+  // El foco no sale de la ventana al recorrerla con Tab.
+  for (let i = 0; i < 8; i++) {
+    await page.keyboard.press("Tab");
+    expect(await ventana.evaluate((v) => v.contains(document.activeElement))).toBe(true);
+  }
+  await page.keyboard.press("Escape");
+  await expect(ventana).toBeHidden();
+
+  await page.getByRole("button", { name: "Ver planes" }).first().click();
+  await ventana.getByRole("button", { name: "Cerrar" }).click();
+  await expect(ventana).toBeHidden();
+
+  await page.goto("/planes");
+  await expect(page.getByRole("heading", { level: 1, name: "Planes" })).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(3);
+});

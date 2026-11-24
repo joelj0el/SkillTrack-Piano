@@ -1,47 +1,58 @@
 /**
  * Planes de la página pública: solo informativos. No hay facturación, registro ni ruta de la API
- * para planes (fuera del alcance del proyecto); el acceso lo crea el administrador. Los precios y
- * el correo de contacto quedan pendientes hasta que se definan.
+ * para planes (fuera del alcance del proyecto); el acceso lo crea el administrador. Cada precio o
+ * límite que todavía no está definido se muestra como "—": no se inventan cifras.
  */
 export interface Plan {
   nombre: string;
   para: string;
   precio: string;
-  beneficios: string[];
+  destacado: boolean;
+  /** Solo funciones que ya existen en el sistema. */
+  incluye: string[];
 }
 
 export const PLANES: Plan[] = [
   {
     nombre: "Docente",
-    para: "Para un docente con su grupo de estudiantes",
+    para: "Para un docente y sus estudiantes",
     precio: "Bs —",
-    beneficios: [
-      "Tareas con tempo, manos y repeticiones por día",
-      "Ficha de cada estudiante con sus intentos",
-      "Errores recurrentes del grupo, sin rankings",
+    destacado: false,
+    incluye: [
+      "1 docente",
+      "Hasta — estudiantes",
+      "Catálogo de ejercicios con partitura y digitación",
+      "Asignación de tareas con tempo y repeticiones",
+      "Análisis de cada intento con resultado nota por nota",
+      "Seguimiento de cada estudiante",
     ],
   },
   {
     nombre: "Institución",
-    para: "Para escuelas, conservatorios e institutos",
+    para: "Para escuelas y conservatorios con varios docentes",
     precio: "Bs —",
-    beneficios: [
-      "Varios docentes y sus estudiantes",
-      "Administración de usuarios y asignaciones",
-      "Los mismos ejercicios para toda la institución",
+    destacado: true,
+    incluye: [
+      "Varios docentes (— docentes, — estudiantes)",
+      "Todo lo del plan Docente",
+      "Administración de usuarios por la institución",
+      "Vista «Mi grupo» para cada docente",
+      "Soporte para la puesta en marcha",
     ],
   },
   {
     nombre: "Convenio especial",
-    para: "Para proyectos de investigación y programas públicos",
+    para: "Para conservatorios e institutos",
     precio: "Bs —",
-    beneficios: [
-      "Condiciones acordadas con la institución",
-      "Acompañamiento en la puesta en marcha",
-      "Datos de investigación solo con consentimiento",
+    destacado: false,
+    incluye: [
+      "Condiciones a medida para conservatorios e institutos",
+      "Cantidad de docentes y estudiantes a convenir",
+      "Acompañamiento en la capacitación",
+      "Precio según el convenio",
     ],
   },
 ];
 
-/** Correo para solicitar acceso; vacío mientras no se defina (la página lo dice). */
+/** Correo para solicitar información o acceso; vacío mientras no se defina (la página lo dice). */
 export const CORREO_CONTACTO = "";

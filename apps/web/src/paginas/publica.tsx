@@ -10,9 +10,11 @@ import {
   UserRound,
   type LucideIcon,
 } from "lucide-react";
-import { CORREO_CONTACTO, PLANES } from "../config/planes.ts";
+import { Link } from "react-router";
+import { CORREO_CONTACTO } from "../config/planes.ts";
 import { EnlaceBoton } from "../ui/base.tsx";
 import { Portada, SeccionCabecera } from "../ui/portada.tsx";
+import { BotonPlanes } from "./planes.tsx";
 
 const PASOS: { icono: LucideIcon; titulo: string; texto: string }[] = [
   {
@@ -61,14 +63,14 @@ function SolicitarAcceso({ variante }: { variante?: "secundario" }) {
     </a>
   ) : (
     // Sin correo definido todavía: lleva a los planes, que explican cómo se obtiene el acceso.
-    <a className={["boton-enlace", variante].filter(Boolean).join(" ")} href="#planes">
+    <Link className={["boton-enlace", variante].filter(Boolean).join(" ")} to="/planes">
       <Mail aria-hidden="true" />
       Solicitar acceso para mi institución
-    </a>
+    </Link>
   );
 }
 
-/** Página de inicio pública (sin sesión): qué es, cómo funciona, para quién y planes. */
+/** Página de inicio pública (sin sesión): qué es, cómo funciona y para quién; los planes, en su ventana. */
 export function InicioPublico() {
   return (
     <div className="publica">
@@ -86,6 +88,7 @@ export function InicioPublico() {
             <EnlaceBoton to="/entrar" icono={LogIn} className="boton-portada">
               Iniciar sesión
             </EnlaceBoton>
+            <BotonPlanes />
             <SolicitarAcceso variante="secundario" />
           </>
         }
@@ -131,28 +134,6 @@ export function InicioPublico() {
             servidor: solo se guardan los resultados de cada intento.
           </p>
         </div>
-      </section>
-
-      <section id="planes" aria-label="Planes">
-        <SeccionCabecera titulo="Planes" />
-        <ul className="planes">
-          {PLANES.map((p) => (
-            <li key={p.nombre} className="plan vidrio">
-              <h3>{p.nombre}</h3>
-              <p className="suave">{p.para}</p>
-              <p className="plan-precio">{p.precio}</p>
-              <ul>
-                {p.beneficios.map((b) => (
-                  <li key={b}>{b}</li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
-        <p className="suave">
-          Los planes son informativos: el acceso lo crea el administrador de tu institución.
-          {CORREO_CONTACTO ? "" : " Correo de contacto: pendiente."}
-        </p>
       </section>
 
       <section className="cierre vidrio" aria-label="Empezar">
