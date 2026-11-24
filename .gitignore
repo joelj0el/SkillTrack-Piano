@@ -35,3 +35,6 @@ build/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Prueba manual del pago por QR con el banco (QR en PNG): nunca en git
+apps/api/.baneco/

@@ -203,3 +203,43 @@ def test_pu_baneco_09_la_api_no_arranca_con_baneco_sin_sus_variables(monkeypatch
     with pytest.raises(ConfiguracionInvalida):
         create_app()
 
+
+def test_pu_baneco_10_el_comando_manual_guarda_el_png_y_dice_la_variante(tmp_path):
+    from datetime import UTC, datetime
+
+    from scripts.baneco_probar import anular, probar
+
+    pasarela, banco, _ = armar()
+    banco.v2 = False
+    lineas: list[str] = []
+    esperas: list[float] = []
+
+    def esperar(segundos: float) -> None:
+        esperas.append(segundos)
+        if len(esperas) == 2:
+            banco.pagar(next(iter(banco.qrs)))
+
+    estado = probar(
+        pasarela,
+        Decimal("1"),
+        tmp_path,
+        datetime(2026, 11, 10, 12, tzinfo=UTC),
+        esperar=esperar,
+        salida=lineas.append,
+    )
+    assert estado == "pagado"
+    [png] = tmp_path.glob("qr-PRUEBA-*.png")
+    assert png.read_bytes().startswith(b"\x89PNG")
+    assert lineas[2:] == [
+        "pendiente",
+        "pendiente",
+        "PAGADO",
+        "Variante de la consulta de estado que funcionó: manual",
+    ]
+    assert esperas == [5, 5]
+    [(qr_id, enviado)] = banco.qrs.items()
+    assert (enviado["amount"], enviado["dueDate"]) == (Decimal("1"), "2026-11-11")
+    # Nada secreto en la salida.
+    assert not any(s in "\n".join(lineas) for s in (LLAVE, SECRETOS["baneco_cuenta"], PNG))
+    anular(pasarela, qr_id, salida=lineas.append)
+    assert banco.qrs[qr_id]["estado"] == 9
