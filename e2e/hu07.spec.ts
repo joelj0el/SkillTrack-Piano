@@ -223,6 +223,34 @@ test.describe.serial("pantalla de resultados de un intento completo", () => {
     expect(guardado.indicadores_deficientes).toEqual(indicadores);
   });
 
+  test("PU-graficos-01: gráficos de resultados con título, texto alternativo, tabla equivalente y sin errores graves", async () => {
+    const desfase = page.locator("[data-figura=desfase]");
+    await expect(desfase.locator("figcaption")).toHaveText(
+      "Desfase de cada ataque respecto del pulso (ms)",
+    );
+    await expect(desfase.getByRole("img")).toHaveAttribute("aria-label", /ataques medidos/);
+    // Cada nota tiene su fila en la tabla equivalente (58 eventos de la escala a manos juntas).
+    await desfase.locator("summary").click();
+    await expect(desfase.getByRole("table").locator("tbody tr")).toHaveCount(58);
+    await expect(desfase.getByRole("table")).toContainText(/Sí|No/);
+
+    // Calificación por variable: el nivel va escrito, y "No evaluado" con su motivo.
+    const barras = page.locator("[data-bloque=variables] [data-grafico=niveles] li");
+    await expect(barras).toHaveCount(6);
+    const noEvaluada = page.locator("[data-grafico=niveles] li[data-clase=ER-E]");
+    await expect(noEvaluada).toContainText("No evaluado");
+    await expect(noEvaluada).toContainText("Motivo:");
+
+    // Comparación: una línea por variable con los intentos anteriores y este.
+    const lineas = page.locator("[data-figura=comparacion] [data-grafico=lineas] li");
+    await expect(lineas).toHaveCount(6);
+    await expect(lineas.first().getByRole("img")).toHaveAttribute("aria-label", /Notas/);
+
+    const { violations } = await new AxeBuilder({ page }).analyze();
+    const graves = violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""));
+    expect(graves.map((v) => v.id)).toEqual([]);
+  });
+
   test("PA-HU28-02: Reintentar vuelve al conteo con la misma calibración y el mismo tempo", async () => {
     await page.getByRole("button", { name: "Reintentar" }).click();
     const conteo = page.locator(".conteo-escena");

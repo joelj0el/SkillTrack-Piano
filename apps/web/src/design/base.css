@@ -2298,3 +2298,263 @@ a.tarjeta::after,
     transform: none;
   }
 }
+
+/* Gráficos: SVG propio con tokens. El nivel siempre va escrito con su icono (no solo color). */
+.grafico {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+}
+
+.grafico-titulo {
+  font-weight: var(--peso-medio);
+}
+
+.grafico-nota {
+  margin: 0;
+  font-size: var(--texto-sm);
+}
+
+.grafico-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.grafico-texto {
+  fill: var(--color-texto-suave);
+  font-size: var(--texto-xs);
+  font-family: var(--fuente-texto);
+}
+
+.grafico-eje {
+  stroke: var(--color-borde-control);
+  stroke-width: var(--borde);
+}
+
+.grafico-franja {
+  fill: var(--color-correcto-fondo);
+}
+
+.grafico-barra {
+  fill: var(--color-correcto);
+}
+
+.grafico-barra.fuera {
+  fill: var(--color-tiempo);
+}
+
+.grafico-sin-dato {
+  fill: none;
+  stroke: var(--color-borde-control);
+  stroke-width: var(--borde);
+}
+
+.grafico-pista {
+  fill: var(--color-superficie-2);
+}
+
+.grafico-relleno {
+  fill: var(--color-acento);
+}
+
+.grafico-relleno.nivel-logrado {
+  fill: var(--color-correcto);
+}
+
+.grafico-relleno.nivel-en-desarrollo {
+  fill: var(--color-tiempo);
+}
+
+.grafico-relleno.nivel-por-mejorar {
+  fill: var(--color-nota);
+}
+
+.grafico-umbral {
+  stroke: var(--color-borde-control);
+  stroke-width: var(--borde);
+  stroke-dasharray: 2 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.grafico-tabla > summary {
+  cursor: pointer;
+  color: var(--color-enlace);
+  font-size: var(--texto-sm);
+}
+
+.grafico-tabla[open] > summary {
+  margin-bottom: var(--espacio-2);
+}
+
+.barras {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barras-fila {
+  display: grid;
+  grid-template-columns: var(--ancho-etiqueta-grafico) minmax(0, 1fr);
+  column-gap: var(--espacio-3);
+  row-gap: var(--espacio-1);
+  align-items: center;
+}
+
+.barras-etiqueta {
+  font-size: var(--texto-sm);
+}
+
+.grafico-barra-pct {
+  width: 100%;
+  height: var(--alto-barra-grafico);
+}
+
+.barras-valor,
+.barras-motivo {
+  grid-column: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  font-size: var(--texto-sm);
+}
+
+.barras-valor svg {
+  width: var(--tamano-icono);
+  height: var(--tamano-icono);
+  flex: none;
+}
+
+.barras-valor.nivel-logrado svg {
+  color: var(--color-correcto);
+}
+
+.barras-valor.nivel-en-desarrollo svg {
+  color: var(--color-tiempo);
+}
+
+.barras-valor.nivel-por-mejorar svg {
+  color: var(--color-nota);
+}
+
+.barras-valor.nivel-no-evaluado svg {
+  color: var(--color-no-evaluable);
+}
+
+.minilinea {
+  width: 100%;
+  height: var(--alto-minigrafico);
+  overflow: visible;
+}
+
+.minilinea-trazo {
+  fill: none;
+  stroke: var(--color-acento);
+  stroke-width: var(--trazo-grafico);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.minilinea-punto {
+  fill: var(--color-acento);
+}
+
+.minilinea-punto.ultimo {
+  stroke: var(--color-superficie);
+  stroke-width: var(--trazo-grafico);
+}
+
+.lineas-variables {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--ancho-tarjeta-min), 1fr));
+  gap: var(--separacion-tarjetas);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linea-variable {
+  display: grid;
+  gap: var(--espacio-1);
+  padding: var(--espacio-3);
+  border: var(--borde) solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.linea-variable-nombre {
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+.linea-variable-ultimo {
+  font-size: var(--texto-xs);
+}
+
+.tarjeta-resumen .minilinea {
+  margin-top: var(--espacio-1);
+}
+
+/* Mapa de calor (Mi grupo): la intensidad acompaña al texto "En n de N", nunca lo reemplaza. */
+.calor-1 {
+  background: var(--calor-1);
+}
+
+.calor-2 {
+  background: var(--calor-2);
+}
+
+.calor-3 {
+  background: var(--calor-3);
+}
+
+.calor-4 {
+  background: var(--calor-4);
+}
+
+/* El texto suave no llega a AA sobre los tonos intensos: en las celdas va con el color normal. */
+:is(.calor-1, .calor-2, .calor-3, .calor-4) .suave {
+  color: var(--color-texto);
+}
+
+.calor-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--texto-xs);
+}
+
+.calor-leyenda li {
+  padding: var(--espacio-1) var(--espacio-2);
+  border: var(--borde) solid var(--color-borde);
+  border-radius: var(--radio-sm);
+}
+
+.estudiantes-tendencia {
+  display: grid;
+  gap: var(--separacion-tarjetas);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pila-secciones {
+  display: grid;
+  gap: var(--separacion-secciones);
+}
+
+.pila-secciones > h2 {
+  margin: 0;
+}
+
+.mini-tendencia {
+  position: relative;
+  display: block;
+}

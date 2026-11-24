@@ -78,6 +78,16 @@
   --opacidad-realce: 0.12;
   --elevacion: 0.1875rem;
 
+  /* Gráficos (SVG propio): medidas y escalones del mapa de calor, derivados de los colores. */
+  --alto-minigrafico: 2.25rem;
+  --alto-barra-grafico: 0.75rem;
+  --ancho-etiqueta-grafico: 9rem;
+  --trazo-grafico: 2px;
+  --calor-1: color-mix(in srgb, var(--color-acento) 10%, var(--color-superficie));
+  --calor-2: color-mix(in srgb, var(--color-acento) 20%, var(--color-superficie));
+  --calor-3: color-mix(in srgb, var(--color-acento) 30%, var(--color-superficie));
+  --calor-4: color-mix(in srgb, var(--color-acento) 40%, var(--color-superficie));
+
   /* Capas. */
   --capa-barra: 5;
   --capa-practica: 10;
