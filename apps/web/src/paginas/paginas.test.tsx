@@ -12,6 +12,9 @@ const usuario = (rol: string, clave_temporal = false) => ({
   nombre_visible: "Ana",
   superadmin: false,
   clave_temporal,
+  correo: null,
+  telefono: null,
+  pago_pendiente: false,
   membresias: [{ institucion_id: 1, rol }],
 });
 

@@ -8,11 +8,12 @@ from app.contracts_gen.cambio_clave import CambioClave
 from app.contracts_gen.inicio_sesion import InicioSesion
 from app.contracts_gen.usuario_actual import Membresia, UsuarioActual
 from app.core.db import obtener_db
-from app.core.reloj import ahora
+from app.core.reloj import ahora, hoy_local
 from app.modules.identity import service
 from app.modules.identity.deps import COOKIE_SESION, UsuarioEnSesion
 from app.modules.identity.models import Usuario
 from app.modules.institutions.service import membresias_de
+from app.modules.plans.service import pago_pendiente
 
 MENSAJE_CREDENCIALES = "Usuario o contraseña incorrectos"
 
@@ -23,17 +24,35 @@ Db = Annotated[Session, Depends(obtener_db)]
 Ahora = Annotated[datetime, Depends(ahora)]
 
 
-def usuario_actual(db: Session, usuario: Usuario) -> UsuarioActual:
+def usuario_actual(db: Session, usuario: Usuario, instante: datetime) -> UsuarioActual:
     return UsuarioActual(
         id=usuario.id,
         usuario=usuario.username,
         nombre_visible=usuario.nombre_visible,
         superadmin=usuario.superadmin,
         clave_temporal=usuario.clave_temporal,
+        correo=usuario.email,
+        telefono=usuario.telefono,
+        pago_pendiente=not usuario.superadmin
+        and pago_pendiente(db, usuario.id, hoy_local(instante)),
         membresias=[
             Membresia(institucion_id=m.institucion_id, rol=m.rol)
             for m in membresias_de(db, usuario.id)
         ],
+    )
+
+
+def abrir_sesion(db: Session, usuario: Usuario, respuesta: Response, instante: datetime) -> None:
+    """Crea la sesión y la deja en la cookie (también tras el registro de un comprador)."""
+    token = service.crear_sesion(db, usuario, instante)
+    respuesta.set_cookie(
+        COOKIE_SESION,
+        token,
+        max_age=int(service.INACTIVIDAD_MAXIMA.total_seconds()),
+        path="/api",
+        httponly=True,
+        secure=True,
+        samesite="lax",
     )
 
 
@@ -48,22 +67,13 @@ def login(datos: InicioSesion, respuesta: Response, db: Db, instante: Ahora) -> 
         ) from None
     except service.CredencialesInvalidas:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, MENSAJE_CREDENCIALES) from None
-    token = service.crear_sesion(db, usuario, instante)
-    respuesta.set_cookie(
-        COOKIE_SESION,
-        token,
-        max_age=int(service.INACTIVIDAD_MAXIMA.total_seconds()),
-        path="/api",
-        httponly=True,
-        secure=True,
-        samesite="lax",
-    )
-    return usuario_actual(db, usuario)
+    abrir_sesion(db, usuario, respuesta, instante)
+    return usuario_actual(db, usuario, instante)
 
 
 @privado.get("/me", response_model=UsuarioActual)
-def me(usuario: UsuarioEnSesion, db: Db) -> UsuarioActual:
-    return usuario_actual(db, usuario)
+def me(usuario: UsuarioEnSesion, db: Db, instante: Ahora) -> UsuarioActual:
+    return usuario_actual(db, usuario, instante)
 
 
 @privado.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

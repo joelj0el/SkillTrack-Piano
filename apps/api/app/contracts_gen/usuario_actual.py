@@ -32,4 +32,7 @@ class UsuarioActual(BaseModel):
     nombre_visible: str
     superadmin: bool
     clave_temporal: bool
+    correo: str | None
+    telefono: str | None
+    pago_pendiente: bool
     membresias: list[Membresia]

@@ -48,7 +48,10 @@ class Suscripcion(Base):
     """Plan de una institución; un convenio especial reemplaza los límites del plan."""
 
     __tablename__ = "suscripcion"
-    __table_args__ = (Index("ix_suscripcion_institucion", "institucion_id", "estado"),)
+    __table_args__ = (
+        Index("ix_suscripcion_institucion", "institucion_id", "estado"),
+        Index("ix_suscripcion_convenio_codigo", "convenio_codigo_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     institucion_id: Mapped[int] = mapped_column(ForeignKey("institucion.id", ondelete="CASCADE"))
@@ -60,7 +63,27 @@ class Suscripcion(Base):
     condiciones: Mapped[str | None] = mapped_column(Text)
     limite_docentes: Mapped[int | None] = mapped_column(Integer)
     limite_estudiantes: Mapped[int | None] = mapped_column(Integer)
+    # Convenio con código usado en el registro (ADR-005): fija el precio de la suscripción.
+    convenio_codigo_id: Mapped[int | None] = mapped_column(ForeignKey("convenio_codigo.id"))
     creada_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ConvenioCodigo(Base):
+    """Convenio con código (ADR-005): plan, precio especial (0 = sin pago), cupos y vencimiento."""
+
+    __tablename__ = "convenio_codigo"
+    __table_args__ = (
+        CheckConstraint("precio_bs >= 0", name="precio_convenio_no_negativo"),
+        CheckConstraint("cupos > 0", name="cupos_positivos"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    codigo: Mapped[str] = mapped_column(String(32), unique=True)
+    plan_id: Mapped[int] = mapped_column(ForeignKey("plan.id"))
+    precio_bs: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    cupos: Mapped[int] = mapped_column(Integer)
+    vence: Mapped[date] = mapped_column(Date)
+    creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class SolicitudAcceso(Base):

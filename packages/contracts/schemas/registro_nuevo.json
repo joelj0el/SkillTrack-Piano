@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "independiente",
+        "institucion"
+      ]
+    },
+    "nombre": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "correo": {
+      "type": "string",
+      "maxLength": 254,
+      "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    },
+    "telefono": {
+      "type": "string",
+      "pattern": "^[0-9 +()-]{6,20}$"
+    },
+    "usuario": {
+      "type": "string",
+      "pattern": "^[a-z0-9._-]{3,64}$"
+    },
+    "clave": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 256
+    },
+    "institucion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "plan_id": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "codigo_convenio": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9-]{4,32}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "acepta_terminos": {
+      "type": "boolean",
+      "const": true
+    }
+  },
+  "required": [
+    "tipo",
+    "nombre",
+    "correo",
+    "telefono",
+    "usuario",
+    "clave",
+    "institucion",
+    "plan_id",
+    "codigo_convenio",
+    "acepta_terminos"
+  ],
+  "additionalProperties": false,
+  "title": "RegistroNuevo"
+}
