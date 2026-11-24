@@ -103,7 +103,10 @@ class SolicitudAcceso(Base):
 
 
 class PagoQr(Base):
-    """Cobro por QR de una suscripción. `id_transaccion` es el identificador del banco."""
+    """Cobro por QR de una suscripción.
+
+    `id_transaccion` es nuestro id del pago (el transactionId que se envía al banco) y `qr_id`, el
+    del banco. Datos mínimos: no se guardan la imagen del QR ni los datos de quien paga."""
 
     __tablename__ = "pago_qr"
     __table_args__ = (CheckConstraint("monto_bs > 0", name="monto_positivo"),)
@@ -111,7 +114,15 @@ class PagoQr(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     suscripcion_id: Mapped[int] = mapped_column(ForeignKey("suscripcion.id", ondelete="CASCADE"))
     monto_bs: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    moneda: Mapped[str] = mapped_column(String(3), default="BOB")
     id_transaccion: Mapped[str] = mapped_column(String(80), unique=True)
+    qr_id: Mapped[str | None] = mapped_column(String(80), unique=True)
     estado: Mapped[str] = mapped_column(String(10))
+    vence: Mapped[date | None] = mapped_column(Date)
     creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     confirmado_en: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Fecha y hora del pago tal como las informa el banco.
+    fecha_pago: Mapped[str | None] = mapped_column(String(20))
+    hora_pago: Mapped[str | None] = mapped_column(String(20))
+    # Última consulta al banco: como mucho una cada 5 s por pago.
+    consultado_en: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

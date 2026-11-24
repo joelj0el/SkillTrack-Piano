@@ -9,6 +9,14 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL:?}
+      PAGOS_PROVEEDOR: ${PAGOS_PROVEEDOR:-simulado}
+      BANECO_API_URL: ${BANECO_API_URL:-}
+      BANECO_USUARIO: ${BANECO_USUARIO:-}
+      BANECO_CONTRASENA: ${BANECO_CONTRASENA:-}
+      BANECO_CUENTA: ${BANECO_CUENTA:-}
+      BANECO_LLAVE_AES: ${BANECO_LLAVE_AES:-}
+      BANECO_AVISO_ACTIVO: ${BANECO_AVISO_ACTIVO:-false}
+      BANECO_AVISO_IPS: ${BANECO_AVISO_IPS:-}
     # Las migraciones se aplican en el despliegue, antes de levantar; aquí solo se sirve la API.
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 

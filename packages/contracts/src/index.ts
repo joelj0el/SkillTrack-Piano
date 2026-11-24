@@ -35,11 +35,13 @@ import {
   SuscripcionNueva,
 } from "./planes.ts";
 import {
+  AvisoPagoQr,
   ConvenioCodigo,
   ConvenioCodigoNuevo,
   CuentaPendiente,
   MiPago,
   RegistroNuevo,
+  RespuestaAvisoQr,
 } from "./registro.ts";
 import { Referencia, ReferenciaPublicada, ReferenciaVigente } from "./referencia.ts";
 import { ConjuntoReglas, ReglasPublicadas, ReglasVigentes } from "./reglas.ts";
@@ -111,4 +113,6 @@ export const esquemas = {
   convenio_codigo: ConvenioCodigo,
   mi_pago: MiPago,
   cuenta_pendiente: CuentaPendiente,
+  aviso_pago_qr: AvisoPagoQr,
+  respuesta_aviso_qr: RespuestaAvisoQr,
 };

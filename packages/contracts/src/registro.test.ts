@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ConvenioCodigoNuevo, MiPago, RegistroNuevo } from "./registro.ts";
+import { AvisoPagoQr, ConvenioCodigoNuevo, MiPago, RegistroNuevo } from "./registro.ts";
 
 // Datos SINTÉTICOS.
 const registro = {
@@ -55,6 +55,8 @@ describe("registro de compradores (HU-40)", () => {
       monto_bs: null,
       codigo_convenio: null,
       estado: "pendiente",
+      vence_plan: null,
+      proveedor: "simulado",
       qr: null,
     };
     expect(MiPago.safeParse(pago).success).toBe(true);
@@ -63,12 +65,40 @@ describe("registro de compradores (HU-40)", () => {
         ...pago,
         monto_bs: 50,
         qr: {
-          id_transaccion: "SIM-000001",
+          id_transaccion: "ST-000001",
+          estado: "pendiente",
           simulado: true,
           imagen_png: null,
           vence_en: "2026-11-25T12:00:00Z",
         },
       }).success,
     ).toBe(true);
+  });
+
+  it("PU-contracts-38: el aviso del banco acepta campos extra y el QR tiene su estado", () => {
+    expect(
+      AvisoPagoQr.safeParse({ payment: { QRID: "q-1", amount: 50, extra: true } }).success,
+    ).toBe(true);
+    expect(AvisoPagoQr.safeParse({}).success).toBe(false);
+    const qr = {
+      id_transaccion: "ST-1",
+      estado: "vencido",
+      simulado: false,
+      imagen_png: "iVBOR",
+      vence_en: "2026-11-25T23:59:59-04:00",
+    };
+    const pago = {
+      institucion: "I",
+      plan: "P",
+      periodo: "mensual",
+      monto_bs: 1,
+      codigo_convenio: null,
+      estado: "activa",
+      vence_plan: "2026-12-24",
+      proveedor: "baneco",
+      qr,
+    };
+    expect(MiPago.safeParse(pago).success).toBe(true);
+    expect(MiPago.safeParse({ ...pago, qr: { ...qr, estado: "rechazado" } }).success).toBe(false);
   });
 });

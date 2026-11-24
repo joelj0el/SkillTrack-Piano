@@ -88,6 +88,8 @@ export const MiPlan = z
     limite_estudiantes: Limite,
     docentes: z.int().min(0),
     estudiantes: z.int().min(0),
+    /** El pago por QR con el banco está habilitado (PAGOS_PROVEEDOR=baneco). */
+    pago_qr: z.boolean(),
   })
   .meta({ title: "MiPlan" });
 export type MiPlan = z.infer<typeof MiPlan>;

@@ -1,41 +1,79 @@
-"""Pago por QR de una suscripción, desacoplado del banco (ADR-004).
+"""Pago por QR de una suscripción, desacoplado del proveedor (ADR-004).
 
-El servicio solo conoce la interfaz `PasarelaQr`. Las pruebas usan `PasarelaSimulada`; el
-adaptador del Banco Económico se agrega cuando exista su documentación técnica, leyendo las
-credenciales solo de variables de entorno. Sin dirección pública en local, el estado se consulta
-cada pocos segundos (`consultar_pago`) en lugar de esperar un aviso del banco.
+El servicio solo conoce la interfaz `PasarelaQr`. El proveedor se elige con PAGOS_PROVEEDOR:
+`simulado` (predeterminado, nunca llama al banco) o `baneco` (adaptador del Banco Económico).
+Un único camino activa el plan: `confirmar_pago`, con un UPDATE condicional (pendiente → pagado),
+lo use la consulta del estado, el aviso del banco o el superadministrador.
 """
 
+import logging
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Literal, Protocol
 from uuid import uuid4
 
+from fastapi import Request
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.core.reloj import hoy_local
 from app.modules.plans.models import ConvenioCodigo, PagoQr, Plan, Suscripcion
 
-EstadoBanco = Literal["pendiente", "pagado", "vencido", "anulado"]
+registro = logging.getLogger("app.pagos")
+
+EstadoBanco = Literal["pendiente", "pagado", "anulado"]
+MONEDA = "BOB"
+# Como mucho una consulta al banco cada 5 s por pago.
+INTERVALO_CONSULTA = timedelta(seconds=5)
 
 
 @dataclass(frozen=True)
 class QrGenerado:
     id_transaccion: str
-    # Imagen del QR tal como la entrega el banco (p. ej. PNG en base64).
-    imagen: str
-    vence_en: datetime
+    qr_id: str
+    # PNG en Base64 tal como lo entrega el banco; None en el simulado. Nunca se guarda ni se
+    # escribe en el registro.
+    imagen: str | None
+    vence: date
+
+
+@dataclass(frozen=True)
+class PagoRecibido:
+    """Un pago informado por el banco. Solo se leen estos campos: nada de quien paga."""
+
+    qr_id: str
+    monto: Decimal
+    moneda: str
+    fecha: str | None
+    hora: str | None
+
+
+@dataclass(frozen=True)
+class EstadoQr:
+    estado: EstadoBanco
+    pagos: tuple[PagoRecibido, ...] = ()
 
 
 class PasarelaQr(Protocol):
-    def generar_qr(self, *, monto_bs: Decimal, glosa: str, referencia: str) -> QrGenerado: ...
+    proveedor: Literal["simulado", "baneco"]
 
-    def consultar(self, id_transaccion: str) -> EstadoBanco: ...
+    def generar_qr(
+        self, *, id_transaccion: str, monto_bs: Decimal, descripcion: str, vence: date
+    ) -> QrGenerado: ...
+
+    def consultar(self, qr_id: str) -> EstadoQr: ...
+
+    def cancelar(self, qr_id: str) -> None: ...
 
 
 class PasarelaNoDisponible(Exception):
-    """No hay adaptador del banco configurado: el pago por QR está en integración."""
+    """No hay proveedor de pagos configurado."""
+
+
+class BancoNoDisponible(Exception):
+    """El banco no respondió o respondió con error. El mensaje solo lleva la operación, el código
+    HTTP y el responseCode: nunca cuerpos, llaves, cuentas ni tokens."""
 
 
 class SinPrecio(Exception):
@@ -43,20 +81,31 @@ class SinPrecio(Exception):
 
 
 class PasarelaSimulada:
-    """Adaptador para pruebas y desarrollo: nunca llama al banco."""
+    """Proveedor para pruebas y desarrollo: nunca llama al banco."""
+
+    proveedor: Literal["simulado", "baneco"] = "simulado"
 
     def __init__(self) -> None:
         self._estados: dict[str, EstadoBanco] = {}
+        self._montos: dict[str, Decimal] = {}
 
-    def generar_qr(self, *, monto_bs: Decimal, glosa: str, referencia: str) -> QrGenerado:
-        # Aleatorio: tras reiniciar la API no choca con los pagos ya guardados.
-        id_transaccion = f"SIM-{uuid4().hex[:16].upper()}"
+    def generar_qr(
+        self, *, id_transaccion: str, monto_bs: Decimal, descripcion: str, vence: date
+    ) -> QrGenerado:
         self._estados[id_transaccion] = "pendiente"
-        return QrGenerado(id_transaccion, "QR SIMULADO", datetime(2100, 1, 1, tzinfo=UTC))
+        self._montos[id_transaccion] = monto_bs
+        return QrGenerado(id_transaccion, id_transaccion, None, vence)
 
-    def consultar(self, id_transaccion: str) -> EstadoBanco:
+    def consultar(self, qr_id: str) -> EstadoQr:
         # Tras reiniciar la API el simulado olvida sus QR: siguen pendientes.
-        return self._estados.get(id_transaccion, "pendiente")
+        estado = self._estados.get(qr_id, "pendiente")
+        if estado != "pagado":
+            return EstadoQr(estado)
+        monto = self._montos.get(qr_id, Decimal("0"))
+        return EstadoQr("pagado", (PagoRecibido(qr_id, monto, MONEDA, None, None),))
+
+    def cancelar(self, qr_id: str) -> None:
+        self._estados[qr_id] = "anulado"
 
     def marcar(self, id_transaccion: str, estado: EstadoBanco) -> None:
         self._estados[id_transaccion] = estado
@@ -64,17 +113,19 @@ class PasarelaSimulada:
 
 DURACION = {"mensual": timedelta(days=30), "anual": timedelta(days=365)}
 
-# Adaptador vigente: el simulado, hasta tener la documentación técnica de la API del banco.
-_PASARELA_VIGENTE = PasarelaSimulada()
 
-
-def pasarela_vigente() -> PasarelaQr:
-    """Dependencia de FastAPI; las pruebas la reemplazan por su propio simulado."""
-    return _PASARELA_VIGENTE
+def pasarela_vigente(request: Request) -> PasarelaQr:
+    """Dependencia de FastAPI: el proveedor que la aplicación eligió al arrancar."""
+    return request.app.state.pasarela
 
 
 def es_simulada(pasarela: PasarelaQr) -> bool:
-    return isinstance(pasarela, PasarelaSimulada)
+    return pasarela.proveedor == "simulado"
+
+
+def nuevo_id_transaccion() -> str:
+    """Nuestro id del pago, aleatorio: tras reiniciar la API no choca con los ya guardados."""
+    return f"ST-{uuid4().hex[:16].upper()}"
 
 
 def monto_de(db: Session, suscripcion: Suscripcion) -> Decimal | None:
@@ -94,12 +145,22 @@ def pago_pendiente_de(db: Session, suscripcion_id: int) -> PagoQr | None:
     ).first()
 
 
+def ultimo_pago_sin_confirmar(db: Session, suscripcion_id: int) -> PagoQr | None:
+    """El QR más reciente que no se pagó (pendiente, vencido o anulado), para mostrarlo."""
+    return db.scalars(
+        select(PagoQr)
+        .where(PagoQr.suscripcion_id == suscripcion_id, PagoQr.estado != "pagado")
+        .order_by(PagoQr.id.desc())
+    ).first()
+
+
 def iniciar_pago(
     db: Session,
     pasarela: PasarelaQr | None,
     suscripcion: Suscripcion,
     instante: datetime,
 ) -> tuple[PagoQr, QrGenerado]:
+    """Genera el QR del monto del plan (o del convenio), que vence mañana en hora de La Paz."""
     if pasarela is None:
         raise PasarelaNoDisponible
     plan = db.get(Plan, suscripcion.plan_id)
@@ -107,15 +168,19 @@ def iniciar_pago(
     if plan is None or monto is None or monto <= 0:
         raise SinPrecio
     qr = pasarela.generar_qr(
+        id_transaccion=nuevo_id_transaccion(),
         monto_bs=monto,
-        glosa=f"SkillTrack-Piano · {plan.nombre} ({plan.periodo})",
-        referencia=f"suscripcion-{suscripcion.id}",
+        descripcion=f"SkillTrack-Piano – Plan {plan.nombre}",
+        vence=hoy_local(instante) + timedelta(days=1),
     )
     pago = PagoQr(
         suscripcion_id=suscripcion.id,
         monto_bs=monto,
+        moneda=MONEDA,
         id_transaccion=qr.id_transaccion,
+        qr_id=qr.qr_id,
         estado="pendiente",
+        vence=qr.vence,
         creado_en=instante,
     )
     db.add(pago)
@@ -123,21 +188,59 @@ def iniciar_pago(
     return pago, qr
 
 
+def toca_consultar(pago: PagoQr, instante: datetime) -> bool:
+    return pago.consultado_en is None or instante - pago.consultado_en >= INTERVALO_CONSULTA
+
+
 def consultar_pago(
     db: Session, pasarela: PasarelaQr, pago_id: int, hoy: date, instante: datetime
 ) -> str:
-    """Consulta el banco y, si el pago se confirmó, activa la suscripción una sola vez."""
+    """Consulta el estado del QR y, si el banco confirma el pago, activa el plan una sola vez.
+
+    Pagado = el QR figura pagado y entre sus pagos hay uno con el mismo qrId, el monto esperado y
+    BOB. Si el monto o la moneda no coinciden, el plan no se activa."""
     pago = db.get(PagoQr, pago_id)
     if pago is None:
         raise LookupError(pago_id)
-    estado = pasarela.consultar(pago.id_transaccion)
-    if estado == "pagado":
-        confirmar_pago(db, pago.id, hoy, instante)
-    elif estado in ("vencido", "anulado") and pago.estado == "pendiente":
-        pago.estado = estado
+    if pago.estado != "pendiente":
+        return pago.estado
+    if pago.vence is not None and hoy > pago.vence:
+        pago.estado = "vencido"
+        db.commit()
+        return pago.estado
+    pago.consultado_en = instante
+    qr_id = pago.qr_id or pago.id_transaccion
+    estado = pasarela.consultar(qr_id)
+    if estado.estado == "pagado":
+        recibido = next(
+            (
+                p
+                for p in estado.pagos
+                if p.qr_id == qr_id and p.monto == pago.monto_bs and p.moneda == pago.moneda
+            ),
+            None,
+        )
+        if recibido is None:
+            registro.warning("Pago %s: el QR figura pagado sin un pago que coincida", pago.id)
+        else:
+            pago.fecha_pago = recibido.fecha
+            pago.hora_pago = recibido.hora
+            confirmar_pago(db, pago.id, hoy, instante)
+    elif estado.estado == "anulado":
+        pago.estado = "anulado"
     db.commit()
     db.refresh(pago)
     return pago.estado
+
+
+def cancelar_pago(db: Session, pasarela: PasarelaQr, pago: PagoQr) -> None:
+    pasarela.cancelar(pago.qr_id or pago.id_transaccion)
+    db.execute(
+        update(PagoQr)
+        .where(PagoQr.id == pago.id, PagoQr.estado == "pendiente")
+        .values(estado="anulado")
+    )
+    db.commit()
 
 
 def confirmar_pago(db: Session, pago_id: int, hoy: date, instante: datetime) -> bool:

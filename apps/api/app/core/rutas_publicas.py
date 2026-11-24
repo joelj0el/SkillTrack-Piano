@@ -11,5 +11,8 @@ RUTAS_PUBLICAS: frozenset[str] = frozenset(
         "/api/solicitudes-acceso",
         # Registro de compradores adultos: crea la cuenta pendiente de pago (ADR-005).
         "/api/registro",
+        # Aviso de pago que envía el servidor del banco (ADR-004): apagado por defecto, solo desde
+        # las IPs permitidas, con límite por IP; nunca activa el plan sin reconfirmar el estado.
+        "/api/qrsimple/notifyPaymentQR",
     }
 )

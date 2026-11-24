@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, confloat
@@ -20,11 +21,24 @@ class Estado(StrEnum):
     cancelada = "cancelada"
 
 
+class Proveedor(StrEnum):
+    simulado = "simulado"
+    baneco = "baneco"
+
+
+class Estado3(StrEnum):
+    pendiente = "pendiente"
+    pagado = "pagado"
+    vencido = "vencido"
+    anulado = "anulado"
+
+
 class QrDePago(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     id_transaccion: str
+    estado: Estado3
     simulado: bool
     imagen_png: str | None
     vence_en: AwareDatetime
@@ -40,4 +54,6 @@ class MiPago(BaseModel):
     monto_bs: confloat(ge=0.0, le=1000000.0) | None
     codigo_convenio: str | None
     estado: Estado
+    vence_plan: date | None
+    proveedor: Proveedor
     qr: QrDePago | None

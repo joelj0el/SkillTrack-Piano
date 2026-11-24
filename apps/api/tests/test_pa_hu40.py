@@ -234,6 +234,9 @@ def test_pa_hu40_04_confirmado_el_pago_por_el_adaptador_el_plan_se_activa_una_ve
     assert cliente.post("/api/mi-pago/verificar").json()["estado"] == "pendiente"
 
     pasarela.marcar(qr["id_transaccion"], "pagado")
+    # Como mucho una consulta al banco cada 5 s por pago.
+    assert cliente.post("/api/mi-pago/verificar").json()["estado"] == "pendiente"
+    reloj.avanzar(seconds=5)
     assert cliente.post("/api/mi-pago/verificar").json()["estado"] == "activa"
     assert cliente.get("/api/auth/me").json()["pago_pendiente"] is False
     assert cliente.get(f"/api/instituciones/{inst}/usuarios").status_code == 200
@@ -248,8 +251,7 @@ def test_pa_hu40_04_confirmado_el_pago_por_el_adaptador_el_plan_se_activa_una_ve
     assert _suscripcion(db, inst).fin == date(2026, 12, 10)
 
     # Un adaptador nuevo (la API reinició) no repite el id de un pago ya guardado.
-    otro = pagos.PasarelaSimulada().generar_qr(monto_bs=Decimal("1"), glosa="g", referencia="r")
-    assert otro.id_transaccion != fila.id_transaccion
+    assert pagos.nuevo_id_transaccion() != fila.id_transaccion
 
 
 def test_pa_hu40_04_el_superadministrador_activa_desde_solicitudes_una_sola_vez(

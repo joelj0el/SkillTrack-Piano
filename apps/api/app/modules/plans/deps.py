@@ -14,6 +14,7 @@ RUTAS_CON_PAGO_PENDIENTE = frozenset(
         "/api/mi-pago",
         "/api/mi-pago/qr",
         "/api/mi-pago/verificar",
+        "/api/mi-pago/cancelar",
     }
 )
 
