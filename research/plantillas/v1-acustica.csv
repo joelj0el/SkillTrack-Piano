@@ -1,0 +1,6 @@
+# V1 acústica: capa de instantes de Sonic Visualiser, un archivo por toma: <codigo_toma>.csv
+# Cada línea: tiempo en segundos desde el inicio del video, y la nota (opcional: Do, Re, Fa#, Sib…).
+# Sin nota, la línea solo cuenta para el F1 de ataques. Borra estas tres líneas de ejemplo.
+1.250,Do
+2.031,Re
+2.800,

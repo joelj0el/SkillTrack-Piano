@@ -2,6 +2,7 @@
 //   pnpm validacion v2  --ejercicio EJ-01@1 --referencia <referencia.json> [--salida <carpeta>]
 //   pnpm validacion v3a --ejercicio EJ-01@1 --referencia <referencia.json> --reglas <conjunto.json> [--salida <carpeta>]
 //   pnpm validacion v3b --ejercicio EJ-01@1 --referencia <referencia.json> --reglas <conjunto.json> [--salida <carpeta>]
+// Las de la It-2 y la It-3 (V1 y sincronización) están en cli-v1.ts.
 import { existsSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -17,11 +18,12 @@ import {
 } from "./concordancia.ts";
 import { etiquetasDelEjercicio, tomasDelEjercicio, type TomaDeLaBase } from "./consulta.ts";
 import { tablaEtiquetadores, tablaReglas, tablaV2 } from "./informe.ts";
+import { latenciaCli, sincronizacionCli, v1AcusticaCli, v1VisualCli } from "./cli-v1.ts";
 import { v2PorOrigen } from "./v2.ts";
 
 const BASE_LOCAL = "postgresql://research:research@127.0.0.1:5434/research";
 const USO =
-  "Uso: v2|v3a|v3b --ejercicio <EJ-xx@n> --referencia <referencia.json> [--reglas <conjunto.json>] [--salida <carpeta>]";
+  "Uso: v1-visual|v1-acustica|sincronizacion|latencia|v2|v3a|v3b --ejercicio <EJ-xx@n> --referencia <referencia.json> [--reglas <conjunto.json>] [--salida <carpeta>]";
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -31,9 +33,34 @@ const { values, positionals } = parseArgs({
     reglas: { type: "string" },
     salida: { type: "string", default: "." },
     base: { type: "string" },
+    anotacion: { type: "string" },
+    anotaciones: { type: "string" },
+    toma: { type: "string", multiple: true },
+    video: { type: "string" },
+    calibracion: { type: "string" },
+    audio: { type: "string" },
+    tempo: { type: "string" },
+    "tolerancia-ms": { type: "string" },
+    reporte: { type: "string", multiple: true },
   },
 });
 const [validacion] = positionals;
+if (validacion === "latencia") {
+  await latenciaCli(values);
+  process.exit(0);
+}
+if (validacion === "sincronizacion") {
+  await sincronizacionCli(values);
+  process.exit(process.exitCode ?? 0);
+}
+if (validacion === "v1-acustica") {
+  await v1AcusticaCli(values);
+  process.exit(0);
+}
+if (validacion === "v1-visual") {
+  await v1VisualCli(values);
+  process.exit(0);
+}
 if (
   !["v2", "v3a", "v3b"].includes(validacion ?? "") ||
   !values.ejercicio ||

@@ -17,6 +17,7 @@
     <script type="module">
       import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
       import {
+        agregarAlBufer,
         analizar,
         crearAsignador,
         muestrasDelFotograma,
@@ -169,9 +170,7 @@
           const r = detector.detectForVideo(video, tMs);
           const mundo = new Map(r.landmarks.map((m, i) => [m, r.worldLandmarks[i]]));
           const asignacion = asignar(r.landmarks);
-          for (const [id, m] of Object.entries(muestrasDelFotograma(asignacion, ancho, alto, t))) {
-            (series[id] ??= []).push(m);
-          }
+          agregarAlBufer(series, muestrasDelFotograma(asignacion, ancho, alto, t));
           fotogramas.push({
             t,
             manos: ["MI", "MD"].flatMap((id) => {

@@ -1,14 +1,17 @@
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { secuencia } from "../audio/sintesis.ts";
 import { secuenciaEscala } from "../ejercicio/escala.ts";
 import { homografia } from "../geometria/homografia.ts";
 import {
+  agregarAlBufer,
   analizar,
   crearAsignador,
   fraccionEvaluable,
   muestrasDelFotograma,
   type MuestraMano,
   type RespuestaAnalisis,
+  type Series,
 } from "./cadena.ts";
 
 const manoEn = (x: number, z = 0) => Array.from({ length: 21 }, () => ({ x, y: 0.5, z }));
@@ -196,5 +199,48 @@ describe("análisis con audio", () => {
       true,
     );
     expect(r.eventos.every((e) => e.dedo.estado === "no-detectado")).toBe(true);
+  });
+});
+
+describe("búfer incremental de series (TI-HU05-04)", () => {
+  const muestra = (t: number, altura = 0): MuestraMano => ({
+    t,
+    alturas: { indice: altura },
+    puntas: { indice: { x: 1, y: 2 } },
+  });
+
+  it("PU-cadena-05: agrega cada muestra a la serie de su mano con su marca de tiempo y descarta la que no avanza", () => {
+    const series: Series = {};
+    expect(agregarAlBufer(series, { MI: muestra(0.1), MD: muestra(0.1) })).toBe(2);
+    expect(agregarAlBufer(series, { MD: muestra(0.2, 0.5) })).toBe(1);
+    // Repetida o fuera de orden: no entra, para que el tiempo de la serie solo avance.
+    expect(agregarAlBufer(series, { MD: muestra(0.2), MI: muestra(0.05) })).toBe(0);
+    expect(series.MI!.map((m) => m.t)).toEqual([0.1]);
+    expect(series.MD!.map((m) => [m.t, m.alturas.indice])).toEqual([
+      [0.1, 0],
+      [0.2, 0.5],
+    ]);
+  });
+
+  it("PP-cadena-01: para cualquier orden de llegada, cada serie queda en orden estricto y sin perder un instante nuevo", () => {
+    fc.assert(
+      fc.property(
+        fc.array(
+          fc.tuple(fc.constantFrom("MI" as const, "MD" as const), fc.integer({ min: 0, max: 50 })),
+        ),
+        (llegadas) => {
+          const series: Series = {};
+          const maximo: Record<string, number> = {};
+          for (const [mano, t] of llegadas) {
+            const nueva = t > (maximo[mano] ?? -Infinity);
+            expect(agregarAlBufer(series, { [mano]: muestra(t) })).toBe(nueva ? 1 : 0);
+            if (nueva) maximo[mano] = t;
+          }
+          for (const s of Object.values(series)) {
+            for (let i = 1; i < s.length; i++) expect(s[i]!.t).toBeGreaterThan(s[i - 1]!.t);
+          }
+        },
+      ),
+    );
   });
 });

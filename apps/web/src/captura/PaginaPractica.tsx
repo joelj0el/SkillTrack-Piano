@@ -7,7 +7,6 @@ import {
   evaluarAudio,
   fraccionEvaluable,
   medirAudio,
-  muestrasDelFotograma,
   opcionesTempo,
   programa,
   reducirTasa,
@@ -55,6 +54,7 @@ import { PantallaResultados } from "./PantallaResultados.tsx";
 import { claveCalibracion, guardarCalibracion, leerCalibracion } from "./calibracion.ts";
 import { colorDeToken } from "./camara.ts";
 import { duracionEsperada, transicion, type Estado, type Plan } from "./estado.ts";
+import { agregarFotograma } from "./fotogramas.ts";
 import {
   PanelSemaforo,
   TarjetaSemaforo,
@@ -686,13 +686,7 @@ export function PasoEjecucion(props: {
       cuadro = requestAnimationFrame(paso);
       const f = vista.fotograma.current;
       const t = (performance.now() - inicio.current) / 1000;
-      if (f) {
-        for (const [id, m] of Object.entries(
-          muestrasDelFotograma(f.asignacion, f.ancho, f.alto, t),
-        )) {
-          (series.current[id as "MI" | "MD"] ??= []).push(m);
-        }
-      }
+      if (f) agregarFotograma(series.current, f, inicio.current);
       let ev: Parameters<typeof transicion>[1] = { tipo: "tick", t };
       if (t - ultimoConteo > 1) {
         ultimoConteo = t;

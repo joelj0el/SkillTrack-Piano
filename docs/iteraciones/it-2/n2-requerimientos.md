@@ -2,6 +2,13 @@
 
 Criterios de aceptación de la It-2 y su estado en esta versión. "Prototipo" indica que la lógica existe y tiene pruebas unitarias, pero el criterio completo (de punta a punta) todavía no se puede ejecutar. El resultado de cada prueba está en `n6-pruebas.generado.md`.
 
+## Actualización: validación V1 visual (21-nov)
+
+| PA         | Estado    | Motivo                                                                                                                                                                            |
+| ---------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU04-01 | Cumplido  | Con video y micrófono simulados: Conteo → Tocando → Analizando → Resultado sin ningún toque y sin botón "Enviar" (E2E PA-HU04-01)                                                 |
+| PA-HU05-01 | Pendiente | `pnpm validacion v1-visual` mide el % de notas sin evento visual y la exactitud dedo–tecla contra la anotación (PU-research-80 a 83, datos sintéticos); faltan las tomas anotadas |
+
 ## Actualización: versión de demostración
 
 Con el ADR-002 (`'wasm-unsafe-eval'` solo en `script-src`) se integró el detector de la mano autoalojado y el recorrido completo en el teléfono: encuadre con los 21 puntos de cada mano, Izquierda/Derecha y fps → calibración de 4 toques con las teclas dibujadas y la tecla bajo cada dedo → conteo → "Tocando" → fin automático → análisis en un Web Worker → resultado provisional por nota → intento guardado por la bandeja de salida. La secuencia esperada es **provisional** (escala de 2 octavas generada desde la tónica, sin digitación) mientras no exista la partitura transcrita.

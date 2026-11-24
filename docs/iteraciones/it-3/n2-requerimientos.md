@@ -2,6 +2,13 @@
 
 En esta versión ningún criterio de aceptación de la It-3 se ejecuta de punta a punta: todos dependen de la captura de audio en el navegador o de fixtures del autor. La lógica que los sostiene está en el núcleo con pruebas unitarias sobre señales sintéticas ("Prototipo").
 
+## Actualización: validación V1 acústica y sincronización (21-nov)
+
+| PA         | Estado    | Motivo                                                                                                                                                                                   |
+| ---------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PA-HU10-01 | Pendiente | `pnpm validacion v1-acustica` da precisión, exhaustividad, F1 y error de ataque por origen e instrumento (PU-research-84 a 86, datos sintéticos); falta la anotación en Sonic Visualiser |
+| PA-HU11-01 | Manual    | `pnpm validacion sincronizacion` mide el error audio–video con palmadas (PU-research-87 y 88, datos sintéticos); falta grabar el clip                                                    |
+
 ## Actualización: versión de demostración
 
 La captura de audio quedó integrada en el teléfono: AudioWorklet sin procesamiento del navegador, prueba de micrófono (P-37, también como pantalla propia `/microfono`), preparación con tempo y dos modos de metrónomo (P-34), conteo de 4 clics audibles con pulso visual, grabación sincronizada con la imagen y resultado provisional con cada nota como ✓ / ✗ / dudosa / faltante / extra, tempo inicial frente a final, notas irregulares y la mano y el dedo atribuidos por la visión a cada ataque. Todo el audio se procesa en el teléfono.
