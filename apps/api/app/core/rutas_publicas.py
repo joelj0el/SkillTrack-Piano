@@ -9,5 +9,7 @@ RUTAS_PUBLICAS: frozenset[str] = frozenset(
         "/api/planes",
         # Solicitud de acceso desde la página de inicio, sin cuenta todavía (ADR-004).
         "/api/solicitudes-acceso",
+        # Registro de compradores adultos: crea la cuenta pendiente de pago (ADR-005).
+        "/api/registro",
     }
 )
