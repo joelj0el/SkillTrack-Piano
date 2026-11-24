@@ -15,6 +15,7 @@ from app.modules.identity.models import Usuario
 from app.modules.institutions import service
 from app.modules.institutions.deps import AdminDeInstitucion, Ahora, Db, EstudianteAccesible
 from app.modules.institutions.models import AsignacionDocente
+from app.modules.plans import service as planes
 
 router = APIRouter(tags=["institutions"])
 
@@ -50,6 +51,10 @@ def crear_usuario(
     db: Db,
     instante: Ahora,
 ) -> UsuarioCreado:
+    try:
+        planes.verificar_limite(db, institucion_id, datos.rol.value, hoy_local(instante))
+    except planes.LimiteAlcanzado as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, e.mensaje) from None
     try:
         usuario, clave = identidad.crear_usuario(
             db,

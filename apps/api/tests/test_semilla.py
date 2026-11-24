@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.attempts.models import Intento
 from app.modules.identity.models import Usuario
-from app.semilla import MARCA_DEMO, sembrar, sembrar_intentos_demo
+from app.semilla import MARCA_DEMO, sembrar, sembrar_intentos_demo, sembrar_planes
 from tests.conftest import Reloj
 
 
@@ -65,3 +65,16 @@ def test_pu_api_11_la_semilla_agrega_intentos_de_demostracion_marcados_en_varias
     grupo = como_con(cliente, docente).get("/api/tableros/mi-grupo").json()
     fila = next(e for e in grupo["estudiantes"] if e["estudiante_id"] == ana.id)
     assert fila["intentos_considerados"] == 10
+
+
+def test_pu_api_12_la_semilla_carga_los_planes_sin_precios_ni_limites_inventados(
+    db: Session, cliente: TestClient
+):
+    assert sembrar_planes(db) == 3
+    assert sembrar_planes(db) == 0
+    planes = cliente.get("/api/planes").json()
+    assert [p["nombre"] for p in planes] == ["Docente", "Institución", "Convenio especial"]
+    assert {p["precio_bs"] for p in planes} == {None}
+    assert {p["limite_docentes"] for p in planes} == {None}
+    assert {p["limite_estudiantes"] for p in planes} == {None}
+    assert [p["destacado"] for p in planes] == [False, True, False]

@@ -13,6 +13,7 @@ from app.modules.identity import router as identity
 from app.modules.identity.deps import exigir_sesion
 from app.modules.institutions import router as institutions
 from app.modules.pedagogy import router as pedagogy
+from app.modules.plans import router as plans
 
 
 def create_app(routers_privados: Sequence[APIRouter] = ()) -> FastAPI:
@@ -23,6 +24,7 @@ def create_app(routers_privados: Sequence[APIRouter] = ()) -> FastAPI:
     publico = APIRouter(prefix="/api")
     publico.include_router(salud.router)
     publico.include_router(identity.publico)
+    publico.include_router(plans.publico)
 
     privado = APIRouter(prefix="/api", dependencies=[Depends(exigir_sesion)])
     modulos = (
@@ -32,6 +34,7 @@ def create_app(routers_privados: Sequence[APIRouter] = ()) -> FastAPI:
         pedagogy.router,
         attempts.router,
         analytics.router,
+        plans.router,
     )
     for router in (*modulos, *routers_privados):
         privado.include_router(router)
