@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "nombre": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "descripcion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "beneficios": {
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160
+      }
+    },
+    "precio_bs": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "periodo": {
+      "type": "string",
+      "enum": [
+        "mensual",
+        "anual"
+      ]
+    },
+    "limite_docentes": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "limite_estudiantes": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "destacado": {
+      "type": "boolean"
+    },
+    "activo": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "nombre",
+    "descripcion",
+    "beneficios",
+    "precio_bs",
+    "periodo",
+    "limite_docentes",
+    "limite_estudiantes",
+    "destacado",
+    "activo"
+  ],
+  "additionalProperties": false,
+  "title": "PlanNuevo"
+}

@@ -5,6 +5,7 @@ from app.modules.catalog.models import ClaseError, Ejercicio, VersionEjercicio
 from app.modules.identity.models import SesionAuth, Usuario
 from app.modules.institutions.models import AsignacionDocente, Institucion, Membresia
 from app.modules.pedagogy.models import Observacion, Tarea
+from app.modules.plans.models import PagoQr, Plan, SolicitudAcceso, Suscripcion
 
 __all__ = [
     "AsignacionDocente",
@@ -16,7 +17,11 @@ __all__ = [
     "Intento",
     "Membresia",
     "Observacion",
+    "PagoQr",
+    "Plan",
     "SesionAuth",
+    "SolicitudAcceso",
+    "Suscripcion",
     "Tarea",
     "Usuario",
     "VersionEjercicio",

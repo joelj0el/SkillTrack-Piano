@@ -20,6 +20,20 @@ import {
   Valoracion,
   ValoracionNueva,
 } from "./pedagogia.ts";
+import {
+  InstitucionCreada,
+  InstitucionListada,
+  InstitucionNueva,
+  MiPlan,
+  Plan,
+  PlanCambio,
+  PlanNuevo,
+  SolicitudAcceso,
+  SolicitudAccesoNueva,
+  Suscripcion,
+  SuscripcionCambio,
+  SuscripcionNueva,
+} from "./planes.ts";
 import { Referencia, ReferenciaPublicada, ReferenciaVigente } from "./referencia.ts";
 import { ConjuntoReglas, ReglasPublicadas, ReglasVigentes } from "./reglas.ts";
 import { Salud } from "./salud.ts";
@@ -34,6 +48,7 @@ export * from "./identidad.ts";
 export * from "./instituciones.ts";
 export * from "./intentos.ts";
 export * from "./pedagogia.ts";
+export * from "./planes.ts";
 export * from "./tableros.ts";
 export { Salud };
 
@@ -71,4 +86,16 @@ export const esquemas = {
   reglas_vigentes: ReglasVigentes,
   mi_progreso: MiProgreso,
   mi_grupo: MiGrupo,
+  plan: Plan,
+  plan_nuevo: PlanNuevo,
+  plan_cambio: PlanCambio,
+  suscripcion: Suscripcion,
+  suscripcion_nueva: SuscripcionNueva,
+  suscripcion_cambio: SuscripcionCambio,
+  mi_plan: MiPlan,
+  institucion_nueva: InstitucionNueva,
+  institucion_creada: InstitucionCreada,
+  institucion_listada: InstitucionListada,
+  solicitud_acceso_nueva: SolicitudAccesoNueva,
+  solicitud_acceso: SolicitudAcceso,
 };

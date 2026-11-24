@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "nombre": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "independiente": {
+      "type": "boolean"
+    },
+    "admin_usuario": {
+      "type": "string",
+      "pattern": "^[a-z0-9._-]{3,64}$"
+    },
+    "admin_nombre": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "admin_email": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 254,
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "nombre",
+    "independiente",
+    "admin_usuario",
+    "admin_nombre",
+    "admin_email"
+  ],
+  "additionalProperties": false,
+  "title": "InstitucionNueva"
+}
