@@ -111,7 +111,7 @@ export async function entrar(page: Page, usuario: string, clave: string): Promis
   await page.goto("/entrar");
   await page.getByLabel("Usuario").fill(usuario);
   await page.getByLabel("Contraseña").fill(clave);
-  await page.getByRole("button", { name: "Entrar" }).click();
+  await page.getByRole("button", { name: "Iniciar sesión" }).click();
   // Espera el resultado: sesión iniciada, cambio de clave obligatorio o mensaje de error.
   await expect(
     page
@@ -119,4 +119,13 @@ export async function entrar(page: Page, usuario: string, clave: string): Promis
       .or(page.getByRole("heading", { name: "Cambiar contraseña" }))
       .or(page.getByRole("alert")),
   ).toBeVisible();
+}
+
+/** Tras entrar (el estudiante llega a su panel), abre Mis tareas desde el menú. */
+export async function irAMisTareas(page: Page): Promise<void> {
+  await page
+    .getByRole("navigation", { name: "Principal" })
+    .getByRole("link", { name: "Mis tareas" })
+    .click();
+  await expect(page.getByRole("heading", { level: 1, name: "Mis tareas" })).toBeVisible();
 }

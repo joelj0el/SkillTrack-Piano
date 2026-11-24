@@ -31,7 +31,7 @@ test("PA-HU17-02: sin red se muestra la app y las secciones del servidor dicen S
 }) => {
   const { estudiante } = await parDocenteEstudiante();
   await entrar(page, estudiante, CLAVE_NUEVA);
-  await expect(page.getByRole("heading", { name: "Mis tareas" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^¡Hola, / })).toBeVisible();
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();
 

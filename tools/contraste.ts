@@ -27,7 +27,13 @@ const textoSobre = (texto: string, fondos: string[]): Par[] =>
 const componenteSobre = (texto: string, fondos: string[]): Par[] =>
   fondos.map((fondo) => ({ texto, fondo, minimo: COMPONENTE }));
 
-const SUPERFICIES = ["--color-fondo", "--color-superficie", "--color-superficie-2"];
+const SUPERFICIES = [
+  "--color-fondo",
+  "--color-fondo-medio",
+  "--color-fondo-2",
+  "--color-superficie",
+  "--color-superficie-2",
+];
 const FAMILIAS = ["correcto", "nota", "tiempo", "mano", "no-evaluable"];
 
 export const PARES: Par[] = [
@@ -36,6 +42,13 @@ export const PARES: Par[] = [
   ...textoSobre("--color-enlace", SUPERFICIES),
   ...textoSobre("--color-peligro", SUPERFICIES),
   ...textoSobre("--color-sobre-acento", ["--color-acento", "--color-acento-pulsado"]),
+  ...textoSobre("--color-sobre-boton", ["--color-boton", "--color-boton-pulsado"]),
+  ...textoSobre("--color-lateral-texto", ["--color-lateral"]),
+  ...textoSobre("--color-lateral-suave", ["--color-lateral"]),
+  ...textoSobre("--color-sobre-lateral-activo", ["--color-lateral-activo"]),
+  ...textoSobre("--color-portada-texto", ["--color-portada", "--color-portada-2"]),
+  ...textoSobre("--color-portada-suave", ["--color-portada", "--color-portada-2"]),
+  ...textoSobre("--color-sobre-portada-boton", ["--color-portada-boton"]),
   ...textoSobre("--color-sobre-peligro", ["--color-peligro"]),
   ...textoSobre("--color-aviso-texto", ["--color-aviso-fondo"]),
   ...textoSobre("--color-texto-sobre-video", ["--color-velo-video"]),

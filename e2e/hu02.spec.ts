@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import { CLAVE_NUEVA, crearTareaApi, entrar, parDocenteEstudiante } from "./ayuda.ts";
+import { CLAVE_NUEVA, crearTareaApi, entrar, parDocenteEstudiante, irAMisTareas } from "./ayuda.ts";
 
 // La partitura de PRUEBA SINTÉTICA (escala de Do, 2 octavas por mano), ya importada por la
 // API: la base de la E2E no tiene cargadas las partituras reales del panel.
@@ -31,6 +31,7 @@ test("PA-HU02-04: el detalle muestra partitura, digitación, tempo y guía, a 2 
   });
 
   await entrar(page, estudiante, CLAVE_NUEVA);
+  await irAMisTareas(page);
   await page.getByRole("link", { name: /EJ-01/ }).click(); // toque 1
   await page.getByRole("link", { name: "Ver el ejercicio" }).click(); // toque 2
 
@@ -66,6 +67,7 @@ test("PU-web-10: sin partitura importada, el detalle lo dice en lugar de mostrar
   await crearTareaApi(docente, estudianteId);
 
   await entrar(page, estudiante, CLAVE_NUEVA);
+  await irAMisTareas(page);
   await page.getByRole("link", { name: /EJ-01/ }).click();
   await page.getByRole("link", { name: "Ver el ejercicio" }).click();
 

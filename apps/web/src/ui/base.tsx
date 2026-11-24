@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type ButtonHTMLAttributes,
+  type KeyboardEvent,
   type ReactNode,
 } from "react";
 import { Link, type LinkProps } from "react-router";
@@ -54,13 +55,18 @@ export function EnlaceBoton({
   variante = "primario",
   icono: Icono,
   children,
+  className,
   ...resto
-}: LinkProps & {
+}: Omit<LinkProps, "className"> & {
   variante?: Exclude<Variante, "peligro">;
   icono?: LucideIcon;
+  className?: string;
 }) {
   return (
-    <Link {...resto} className={["boton-enlace", claseDe(variante)].filter(Boolean).join(" ")}>
+    <Link
+      {...resto}
+      className={["boton-enlace", claseDe(variante, className)].filter(Boolean).join(" ")}
+    >
       {Icono && <Icono aria-hidden="true" />}
       {children}
     </Link>
@@ -159,18 +165,38 @@ export function EstadoVista({
   );
 }
 
+const ENFOCABLES =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Con Tab, el foco da la vuelta dentro de la ventana en lugar de salir al navegador. */
+function mantenerFoco(e: KeyboardEvent, dialogo: HTMLDialogElement | null) {
+  if (e.key !== "Tab" || !dialogo) return;
+  const enfocables = [...dialogo.querySelectorAll<HTMLElement>(ENFOCABLES)];
+  const [primero, ultimo] = [enfocables[0], enfocables.at(-1)];
+  if (!primero || !ultimo) return;
+  if (e.shiftKey && document.activeElement === primero) {
+    e.preventDefault();
+    ultimo.focus();
+  } else if (!e.shiftKey && document.activeElement === ultimo) {
+    e.preventDefault();
+    primero.focus();
+  }
+}
+
 export function Dialogo({
   abierto,
   titulo,
   alCerrar,
   children,
   acciones,
+  className,
 }: {
   abierto: boolean;
   titulo: string;
   alCerrar: () => void;
   children: ReactNode;
   acciones: ReactNode;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -179,7 +205,13 @@ export function Dialogo({
     if (!abierto && dialogo?.open) dialogo.close();
   }, [abierto]);
   return (
-    <dialog ref={ref} className="dialogo" aria-label={titulo} onClose={alCerrar}>
+    <dialog
+      ref={ref}
+      className={["dialogo", className].filter(Boolean).join(" ")}
+      aria-label={titulo}
+      onClose={alCerrar}
+      onKeyDown={(e) => mantenerFoco(e, ref.current)}
+    >
       <h2>{titulo}</h2>
       {children}
       <div className="dialogo-acciones">{acciones}</div>

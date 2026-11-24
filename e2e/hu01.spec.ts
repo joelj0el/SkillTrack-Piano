@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import { Admin, CLAVE_DEMO, entrar, unico } from "./ayuda.ts";
 
 const PANTALLA_INICIAL = [
-  ["estudiante.demo", "Mis tareas"],
-  ["docente.demo", "Mis estudiantes"],
+  ["estudiante.demo", /^¡Hola, /],
+  ["docente.demo", /^¡Hola, /],
   ["admin.demo", "Usuarios"],
   ["investigador.demo", "Modo investigación"],
 ] as const;
@@ -41,7 +41,7 @@ test("PA-HU01-02: con clave temporal no se accede a nada hasta definir una contr
   await page.getByLabel(/Contraseña nueva/).fill("una-clave-nueva-1");
   await page.getByLabel("Repite la contraseña nueva").fill("una-clave-nueva-1");
   await page.getByRole("button", { name: "Guardar contraseña" }).click();
-  await expect(page.getByRole("heading", { name: "Mis tareas" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^¡Hola, / })).toBeVisible();
 });
 
 test("PA-HU01-03: usuario o contraseña incorrectos dan el mismo mensaje genérico", async ({

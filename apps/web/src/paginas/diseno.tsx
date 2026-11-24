@@ -1,6 +1,18 @@
 import type { Ejercicio, ResultadoIntento } from "@skilltrack/contracts";
 import { calificarVariables, diagnosticar, secuenciaEscala } from "@skilltrack/core";
-import { Check, CircleHelp, Hand, Music, Plus, Timer, TriangleAlert } from "lucide-react";
+import {
+  CalendarCheck,
+  Check,
+  CircleHelp,
+  ClipboardList,
+  Hand,
+  Music,
+  Play,
+  Plus,
+  Repeat,
+  Timer,
+  TriangleAlert,
+} from "lucide-react";
 import { useState } from "react";
 import { Navigate, useParams } from "react-router";
 import type { Microfono } from "../audio/microfono.ts";
@@ -20,20 +32,30 @@ import {
   Chip,
   Dialogo,
   Esqueleto,
+  EnlaceBoton,
   EstadoVista,
   PaginaCabecera,
   useAviso,
 } from "../ui/base.tsx";
+import { Portada, SeccionCabecera, TarjetaResumen } from "../ui/portada.tsx";
+import { BotonPlanes, ListaPlanes } from "./planes.tsx";
 import { TecladoEjemplo } from "../ui/ilustraciones.tsx";
 
 const COLORES = [
   "fondo",
+  "fondo-2",
   "superficie",
   "superficie-2",
   "texto",
   "texto-suave",
   "borde",
   "acento",
+  "boton",
+  "lateral",
+  "portada",
+  "portada-2",
+  "dorado",
+  "acento-2",
   "peligro",
   "correcto",
   "nota",
@@ -41,8 +63,8 @@ const COLORES = [
   "mano",
   "no-evaluable",
 ];
-const TEXTOS = ["xs", "sm", "md", "lg", "xl", "2xl"];
-const PIXELES = { xs: 13, sm: 15, md: 17, lg: 20, xl: 28, "2xl": 34 } as const;
+const TEXTOS = ["xs", "sm", "md", "lg", "xl", "2xl", "portada"];
+const PIXELES = { xs: 13, sm: 15, md: 17, lg: 20, xl: 28, "2xl": 34, portada: 44 } as const;
 
 function Muestras() {
   return (
@@ -58,6 +80,10 @@ function Muestras() {
       </div>
       <h2>Tipografía</h2>
       <div className="tarjeta">
+        <p className="muestra-titulo">DM Serif Display · títulos y saludos</p>
+        <p>Inter · texto de la interfaz</p>
+      </div>
+      <div className="tarjeta">
         {TEXTOS.map((t) => (
           <p key={t} style={{ fontSize: `var(--texto-${t})` }}>
             {PIXELES[t as keyof typeof PIXELES]} px · Escala de Do mayor
@@ -71,7 +97,7 @@ function Muestras() {
             Sombra {n}
           </div>
         ))}
-        {["sm", "md", "lg"].map((r) => (
+        {["sm", "md", "lg", "completo"].map((r) => (
           <div key={r} className="tarjeta" style={{ borderRadius: `var(--radio-${r})` }}>
             Radio {r}
           </div>
@@ -157,6 +183,69 @@ function Controles() {
   );
 }
 
+/** Componentes del diseño v2: portada, resumen, vidrio y lista de próximos ejercicios. */
+function ComponentesV2() {
+  return (
+    <>
+      <h2>Portada</h2>
+      <Portada
+        nivel={2}
+        titulo="¡Hola, Ana!"
+        frase={<p>La música también se aprende con constancia.</p>}
+        accion={
+          <EnlaceBoton to="/design" icono={Play} className="boton-portada">
+            Continuar práctica
+          </EnlaceBoton>
+        }
+      />
+      <h2>Tarjetas de resumen (vidrio)</h2>
+      <div className="resumen">
+        <TarjetaResumen icono={ClipboardList} etiqueta="Tareas pendientes" valor={3} />
+        <TarjetaResumen
+          icono={Repeat}
+          etiqueta="Repeticiones de hoy"
+          valor="2 de 3"
+          detalle="Escala de Do mayor"
+        />
+        <TarjetaResumen
+          icono={CalendarCheck}
+          etiqueta="Intentos esta semana"
+          valor={5}
+          detalle="+2 frente a la semana anterior"
+        />
+      </div>
+      <SeccionCabecera titulo="Próximos ejercicios" />
+      <ul className="proximos">
+        <li className="proximo vidrio">
+          <span className="insignia" aria-hidden="true">
+            <Music />
+          </span>
+          <span className="proximo-texto">
+            <span className="proximo-titulo">Escala de Do mayor</span>
+            <span className="suave">Manos juntas · ♩ = 60–70</span>
+          </span>
+          <Boton icono={Play}>Practicar</Boton>
+        </li>
+      </ul>
+      <h2>Planes</h2>
+      <p className="suave">
+        En la página pública, «Ver planes» abre esta lista en una ventana flotante (Esc o «Cerrar»
+        la cierran; el foco no sale de ella). El plan recomendado va destacado.
+      </p>
+      <div className="muestra-fila">
+        <BotonPlanes variante="primario" />
+      </div>
+      <ListaPlanes nivel="h3" />
+      <h2>Menú y movimiento</h2>
+      <p className="suave">
+        En el escritorio, el menú lateral se recoge en íconos con su nombre en una etiqueta
+        flotante. Al pasar el ratón, las tarjetas se elevan y los botones cambian de tono (150–250
+        ms, solo transform y opacity); con «reducir movimiento» no hay desplazamientos.
+      </p>
+    </>
+  );
+}
+
 const ESTADOS = [
   { tipo: "vacio", titulo: "Vacío" },
   { tipo: "error", titulo: "Error" },
@@ -180,8 +269,12 @@ const VISTAS = [
 export function Diseno() {
   return (
     <section>
-      <PaginaCabecera titulo="Sistema de diseño" detalle="Marfil y ébano" />
+      <PaginaCabecera
+        titulo="Sistema de diseño"
+        detalle="v2 · Azul marino y crema (claro) · Índigo y violeta (oscuro)"
+      />
       <Muestras />
+      <ComponentesV2 />
       <Controles />
       <h2>Tarjeta y lista</h2>
       <ul className="lista">

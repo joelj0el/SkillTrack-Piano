@@ -18,7 +18,16 @@ body {
   font-weight: var(--peso-normal);
   line-height: var(--interlineado);
   color: var(--color-texto);
-  background: var(--color-fondo);
+  /* Respaldo sólido para el contraste; encima, el degradado y el pentagrama decorativo. */
+  background-color: var(--color-fondo);
+  background-image: var(--fondo-decorado), var(--degradado-ambiente), var(--degradado-fondo);
+  /* Cuatro capas: pentagrama, los dos halos del ambiente y el degradado de fondo. */
+  background-size:
+    var(--tamano-fondo-decorado) auto,
+    auto,
+    auto,
+    auto;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
 }
 
 h1,
@@ -29,14 +38,15 @@ h3 {
 }
 
 h1 {
+  font-family: var(--fuente-titulo);
   font-size: var(--texto-xl);
-  font-weight: var(--peso-fuerte);
+  font-weight: var(--peso-normal);
 }
 
 h2 {
   font-size: var(--texto-lg);
   font-weight: var(--peso-medio);
-  margin: var(--espacio-8) 0 var(--espacio-3);
+  margin: var(--separacion-secciones) 0 var(--espacio-4);
 }
 
 h3 {
@@ -78,7 +88,8 @@ svg {
   flex: none;
 }
 
-/* Estructura: barra arriba, navegación abajo en el móvil y lateral en el escritorio. */
+/* Estructura (v2): menú lateral azul marino en el escritorio y barra inferior de íconos en el
+   móvil; barra superior con la marca y el cambio de tema. */
 .aplicacion {
   min-height: 100dvh;
 }
@@ -87,8 +98,8 @@ svg {
   position: sticky;
   top: 0;
   z-index: var(--capa-barra);
-  background: var(--color-superficie);
-  box-shadow: var(--sombra-1);
+  background: var(--color-fondo);
+  border-bottom: var(--borde) solid var(--color-borde);
 }
 
 .barra-fila {
@@ -96,15 +107,19 @@ svg {
   align-items: center;
   justify-content: space-between;
   gap: var(--espacio-3);
-  padding: var(--espacio-2) var(--espacio-4);
+  max-width: var(--ancho-amplio);
+  margin: 0 auto;
+  padding: var(--espacio-2) var(--margen-lateral);
 }
 
 .marca {
   display: inline-flex;
   align-items: center;
   gap: var(--espacio-2);
-  font-size: var(--texto-md);
-  font-weight: var(--peso-fuerte);
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-normal);
+  color: var(--color-texto);
 }
 
 .marca svg {
@@ -125,13 +140,23 @@ svg {
 }
 
 .contenedor {
-  max-width: var(--ancho-contenido);
+  max-width: calc(var(--ancho-contenido) + 2 * var(--margen-lateral));
   margin: 0 auto;
-  padding: var(--espacio-6) var(--espacio-4) var(--espacio-12);
+  padding: var(--espacio-6) var(--margen-lateral) var(--espacio-12);
+}
+
+.contenedor:has(> .panel, > .publica, > .entrada-pagina, > .pagina-planes) {
+  max-width: calc(var(--ancho-amplio) + 2 * var(--margen-lateral));
 }
 
 .con-navegacion .contenedor {
   padding-bottom: calc(var(--alto-toque-grande) + var(--espacio-12));
+}
+
+/* Menú: en el móvil solo queda la barra inferior; la marca y la persona se ocultan. */
+.lateral-cabecera,
+.lateral-persona {
+  display: none;
 }
 
 .navegacion {
@@ -141,7 +166,7 @@ svg {
   display: flex;
   overflow-x: auto;
   padding-bottom: env(safe-area-inset-bottom);
-  background: var(--color-superficie);
+  background: var(--color-lateral);
   box-shadow: var(--sombra-2);
 }
 
@@ -155,8 +180,8 @@ svg {
   gap: var(--espacio-1);
   min-width: var(--alto-toque-grande);
   min-height: var(--alto-toque-grande);
-  padding: var(--espacio-1) var(--espacio-3);
-  color: var(--color-texto-suave);
+  padding: var(--espacio-1) var(--espacio-2);
+  color: var(--color-lateral-suave);
   font-size: var(--texto-sm);
   line-height: var(--interlineado-titulo);
   text-align: center;
@@ -168,8 +193,12 @@ svg {
   transform: scale(var(--escala-pulsado));
 }
 
+.navegacion a:focus-visible {
+  outline-color: var(--color-lateral-texto);
+}
+
 .navegacion a[aria-current="page"] {
-  color: var(--color-enlace);
+  color: var(--color-lateral-texto);
   font-weight: var(--peso-medio);
 }
 
@@ -179,7 +208,7 @@ svg {
   inset: 0 var(--espacio-3) auto;
   height: var(--borde-fuerte);
   border-radius: var(--radio-sm);
-  background: var(--color-acento);
+  background: var(--color-dorado);
   opacity: 0;
   transform: scaleX(0.4);
   transition:
@@ -204,23 +233,138 @@ svg {
     grid-template-rows: auto 1fr;
   }
 
+  .con-navegacion .lateral {
+    grid-row: 1 / -1;
+    position: sticky;
+    top: 0;
+    z-index: var(--capa-barra);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-6);
+    height: 100dvh;
+    padding: var(--espacio-6) var(--espacio-4);
+    background: var(--color-lateral);
+    color: var(--color-lateral-texto);
+  }
+
+  /* Franja del menú a toda la altura del documento (también en capturas de página completa). */
+  .con-navegacion {
+    position: relative;
+  }
+
+  .con-navegacion::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: -1;
+    width: var(--ancho-lateral);
+    background: var(--color-lateral);
+  }
+
+  .lateral-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espacio-2);
+  }
+
+  .con-navegacion .lateral .marca {
+    color: var(--color-lateral-texto);
+    padding: 0 var(--espacio-2);
+  }
+
+  .lateral .lateral-recoger,
+  .lateral .lateral-recoger:hover {
+    min-width: var(--alto-toque);
+    padding: var(--espacio-2);
+    background: transparent;
+    border-color: var(--color-lateral-suave);
+    color: var(--color-lateral-texto);
+  }
+
+  .lateral .lateral-recoger:focus-visible {
+    outline-color: var(--color-lateral-texto);
+  }
+
+  /* Menú recogido: solo íconos; el nombre aparece en una etiqueta flotante. */
+  .menu-recogido.con-navegacion {
+    grid-template-columns: var(--ancho-lateral-recogido) minmax(0, 1fr);
+  }
+
+  .menu-recogido.con-navegacion::before {
+    width: var(--ancho-lateral-recogido);
+  }
+
+  .menu-recogido .lateral {
+    padding-inline: var(--espacio-2);
+  }
+
+  .menu-recogido .lateral-cabecera {
+    flex-direction: column;
+  }
+
+  .menu-recogido .lateral .marca {
+    padding: 0;
+  }
+
+  .menu-recogido .lateral .marca-texto,
+  .menu-recogido .lateral-datos {
+    display: none;
+  }
+
+  .menu-recogido .navegacion a {
+    justify-content: center;
+    padding: var(--espacio-2);
+  }
+
+  .menu-recogido .navegacion a > span {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + var(--espacio-3));
+    z-index: var(--capa-aviso);
+    padding: var(--espacio-1) var(--espacio-3);
+    border-radius: var(--radio-sm);
+    background: var(--color-lateral);
+    color: var(--color-lateral-texto);
+    box-shadow: var(--sombra-2);
+    font-size: var(--texto-sm);
+    font-weight: var(--peso-medio);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition: opacity var(--duracion-corta) var(--curva);
+  }
+
+  .menu-recogido .navegacion a:is(:hover, :focus-visible) > span {
+    opacity: 1;
+  }
+
+  .menu-recogido .lateral-persona {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .con-navegacion .barra .marca {
+    visibility: hidden;
+  }
+
   .con-navegacion .barra {
-    grid-column: 1 / -1;
+    grid-column: 2;
   }
 
   .con-navegacion .contenedor {
+    grid-column: 2;
     width: 100%;
     padding-bottom: var(--espacio-12);
   }
 
   .navegacion {
-    position: sticky;
-    top: var(--espacio-12);
-    inset: auto;
-    align-self: start;
+    position: static;
     flex-direction: column;
     gap: var(--espacio-1);
-    padding: var(--espacio-6) var(--espacio-3);
+    padding: 0;
+    overflow: visible;
     background: transparent;
     box-shadow: none;
   }
@@ -231,13 +375,19 @@ svg {
     justify-content: flex-start;
     gap: var(--espacio-3);
     min-height: var(--alto-toque);
-    border-radius: var(--radio-sm);
+    padding: var(--espacio-2) var(--espacio-3);
+    border-radius: var(--radio-md);
     font-size: var(--texto-md);
   }
 
   .navegacion a[aria-current="page"] {
-    background: var(--color-superficie);
+    background: var(--color-lateral-activo);
+    color: var(--color-sobre-lateral-activo);
     box-shadow: var(--sombra-1);
+  }
+
+  .navegacion a:focus-visible {
+    outline-color: var(--color-lateral-texto);
   }
 
   .navegacion a::before {
@@ -250,6 +400,44 @@ svg {
   .navegacion a[aria-current="page"]::before {
     transform: scaleY(1);
   }
+
+  .lateral-persona {
+    display: flex;
+    align-items: center;
+    gap: var(--espacio-3);
+    margin-top: auto;
+    padding: var(--espacio-3) var(--espacio-2) 0;
+    border-top: var(--borde) solid var(--color-lateral-suave);
+  }
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: var(--tamano-insignia);
+  height: var(--tamano-insignia);
+  flex: none;
+  border-radius: var(--radio-completo);
+  background: var(--color-lateral-activo);
+  color: var(--color-sobre-lateral-activo);
+  font-weight: var(--peso-fuerte);
+  font-size: var(--texto-sm);
+}
+
+.lateral-datos,
+.lateral-nombre,
+.lateral-rol {
+  display: block;
+}
+
+.lateral-nombre {
+  font-weight: var(--peso-medio);
+  color: var(--color-lateral-texto);
+}
+
+.lateral-rol {
+  font-size: var(--texto-sm);
+  color: var(--color-lateral-suave);
 }
 
 /* Encabezado de cada pantalla: un título y una acción principal. */
@@ -259,42 +447,128 @@ svg {
   align-items: center;
   justify-content: space-between;
   gap: var(--espacio-3);
-  margin-bottom: var(--espacio-6);
+  margin-bottom: var(--espacio-8);
+}
+
+.pagina-cabecera h1 {
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-2xl);
+  font-weight: var(--peso-normal);
 }
 
 .pagina-cabecera p {
   margin: var(--espacio-1) 0 0;
 }
 
+.entrada-pagina > .volver {
+  margin-bottom: var(--espacio-2);
+}
+
+/* Entrada: tarjeta de vidrio y, en el escritorio, el panel decorativo con el teclado. */
 .entrada {
   max-width: var(--ancho-formulario);
   margin: var(--espacio-6) auto 0;
 }
 
+.entrada-doble {
+  max-width: calc(var(--ancho-formulario) * 2 + var(--espacio-6));
+  display: grid;
+  gap: var(--espacio-6);
+  justify-items: center;
+}
+
+.entrada-tarjeta {
+  width: 100%;
+  max-width: var(--ancho-formulario);
+  padding: var(--espacio-8) var(--espacio-6);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra-3);
+}
+
 .entrada-marca {
-  display: flex;
-  justify-content: center;
-  margin-bottom: var(--espacio-4);
+  display: grid;
+  justify-items: center;
+  gap: var(--espacio-1);
+  margin-bottom: var(--espacio-6);
+  text-align: center;
 }
 
 .entrada-marca svg {
-  width: var(--tamano-ilustracion);
+  width: var(--tamano-insignia);
   height: auto;
+}
+
+.entrada-nombre {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-xl);
+}
+
+.entrada-lema {
+  margin: 0;
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
 }
 
 .entrada h1 {
   margin-bottom: var(--espacio-4);
+  font-size: var(--texto-lg);
   text-align: center;
 }
 
+.entrada-ayuda {
+  margin: var(--espacio-4) 0 0;
+  text-align: center;
+  font-size: var(--texto-sm);
+}
+
+.entrada-decorado {
+  display: none;
+}
+
+@media (min-width: 56rem) {
+  .entrada-doble {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    justify-items: stretch;
+  }
+
+  .entrada-decorado {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--espacio-8);
+    border-radius: var(--radio-lg);
+    background-image:
+      var(--brillo-portada), linear-gradient(160deg, var(--color-portada), var(--color-portada-2));
+    background-color: var(--color-portada);
+    box-shadow: var(--sombra-3), var(--brillo-borde);
+    overflow: hidden;
+  }
+
+  .entrada-decorado svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .entrada-decorado-frase {
+    margin: 0;
+    color: var(--color-portada-texto);
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-portada);
+    line-height: var(--interlineado-portada);
+  }
+}
 /* Tarjetas y listas. */
 .tarjeta {
   display: block;
-  padding: var(--espacio-4);
-  margin-bottom: var(--espacio-3);
+  padding: var(--relleno-tarjeta);
+  margin-bottom: var(--separacion-tarjetas);
   background: var(--color-superficie);
   border: var(--borde) solid var(--color-borde);
-  border-radius: var(--radio-md);
+  border-radius: var(--radio-lg);
   box-shadow: var(--sombra-1);
   color: inherit;
   text-decoration: none;
@@ -302,10 +576,6 @@ svg {
 
 a.tarjeta {
   transition: transform var(--duracion-corta) var(--curva);
-}
-
-a.tarjeta:hover {
-  box-shadow: var(--sombra-2);
 }
 
 a.tarjeta:active {
@@ -532,7 +802,7 @@ button {
   min-height: var(--alto-toque);
   padding: var(--espacio-2) var(--espacio-3);
   border: var(--borde) solid var(--color-borde-control);
-  border-radius: var(--radio-sm);
+  border-radius: var(--radio-md);
   background: var(--color-superficie);
   color: var(--color-texto);
 }
@@ -609,21 +879,15 @@ button,
   gap: var(--espacio-2);
   min-height: var(--alto-toque);
   padding: var(--espacio-2) var(--espacio-4);
-  border: var(--borde) solid var(--color-acento);
-  border-radius: var(--radio-sm);
-  background: var(--color-acento);
-  color: var(--color-sobre-acento);
+  border: var(--borde) solid var(--color-boton);
+  border-radius: var(--radio-md);
+  background: var(--color-boton);
+  color: var(--color-sobre-boton);
   font-size: var(--texto-md);
   font-weight: var(--peso-medio);
   text-decoration: none;
   cursor: pointer;
   transition: transform var(--duracion-corta) var(--curva);
-}
-
-button:hover,
-.boton-enlace:hover {
-  background: var(--color-acento-pulsado);
-  border-color: var(--color-acento-pulsado);
 }
 
 button:active,
@@ -642,12 +906,6 @@ button.secundario,
   background: var(--color-superficie);
   border-color: var(--color-borde-control);
   color: var(--color-enlace);
-}
-
-button.secundario:hover,
-.boton-enlace.secundario:hover {
-  background: var(--color-superficie-2);
-  border-color: var(--color-borde-control);
 }
 
 button.peligro {
@@ -1423,7 +1681,7 @@ form + .lista {
 
 /* P-42: resultados en bloques, en el orden del panel. */
 .resultados > section + section {
-  margin-top: var(--espacio-6);
+  margin-top: var(--separacion-tarjetas);
 }
 
 /* Nota por nota: familia de estado con icono y texto; al tocar, el detalle. */
@@ -1445,4 +1703,598 @@ form + .lista {
 
 .nota-boton[aria-expanded="true"] {
   outline: var(--borde-foco) solid var(--color-foco);
+}
+/* ---- Diseño v2: componentes ---- */
+
+/* Vidrio: superficie sólida por omisión; translúcida solo si el navegador desenfoca el fondo. */
+.vidrio,
+.resultados > section:not(:first-child),
+.dialogo.dialogo-planes {
+  background: var(--brillo-reflejo), var(--color-superficie);
+  border: var(--borde) solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra-2), var(--brillo-borde);
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .vidrio,
+  .resultados > section:not(:first-child) {
+    background: var(--brillo-reflejo), var(--vidrio-fondo);
+    border-color: var(--vidrio-borde);
+    backdrop-filter: blur(var(--vidrio-desenfoque));
+  }
+
+  /* Sobre el velo oscuro, un vidrio casi opaco para que el texto mantenga el contraste. */
+  .dialogo.dialogo-planes {
+    background: var(--brillo-reflejo), var(--vidrio-fondo-fuerte);
+    border-color: var(--vidrio-borde);
+    backdrop-filter: blur(var(--vidrio-desenfoque));
+  }
+}
+
+.resultados > h2 {
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-normal);
+}
+
+.resultados > section:not(:first-child) {
+  padding: var(--relleno-tarjeta);
+  border-radius: var(--radio-lg);
+}
+
+/* Portada (hero). */
+.portada {
+  position: relative;
+  display: grid;
+  gap: var(--espacio-4);
+  min-height: var(--alto-portada);
+  margin-bottom: var(--separacion-secciones);
+  padding: var(--espacio-8) var(--espacio-6) 0;
+  overflow: hidden;
+  border-radius: var(--radio-lg);
+  background-color: var(--color-portada);
+  background-image:
+    var(--brillo-portada), linear-gradient(135deg, var(--color-portada), var(--color-portada-2));
+  color: var(--color-portada-texto);
+  box-shadow: var(--sombra-3), var(--brillo-borde);
+}
+
+.portada-antetitulo {
+  margin: 0 0 var(--espacio-2);
+  color: var(--color-portada-suave);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+.portada-titulo {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-2xl);
+  font-weight: var(--peso-normal);
+  line-height: var(--interlineado-portada);
+}
+
+.portada-raya {
+  display: block;
+  width: var(--espacio-12);
+  height: var(--borde-fuerte);
+  margin: var(--espacio-3) 0;
+  border-radius: var(--radio-sm);
+  background: var(--color-dorado);
+}
+
+.portada-frase {
+  max-width: var(--ancho-formulario);
+  color: var(--color-portada-suave);
+  font-size: var(--texto-lg);
+}
+
+.portada-accion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-3);
+  margin-top: var(--espacio-4);
+}
+
+.portada a:focus-visible,
+.portada button:focus-visible {
+  outline-color: var(--color-portada-texto);
+}
+
+.boton-enlace.boton-portada,
+.boton-enlace.boton-portada:hover {
+  background: var(--color-portada-boton);
+  border-color: var(--color-portada-boton);
+  color: var(--color-sobre-portada-boton);
+}
+
+.boton-enlace.boton-portada:hover {
+  box-shadow: var(--sombra-2);
+}
+
+.portada .boton-enlace.secundario,
+.portada .boton-enlace.secundario:hover {
+  background: transparent;
+  border-color: var(--color-portada-suave);
+  color: var(--color-portada-texto);
+}
+
+.portada-teclado {
+  display: block;
+  width: 100%;
+  height: auto;
+  align-self: end;
+}
+
+@media (min-width: 48rem) {
+  .portada {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    padding: var(--espacio-12) 0 var(--espacio-12) var(--espacio-12);
+  }
+
+  .portada-titulo {
+    font-size: var(--texto-portada);
+  }
+
+  .portada-teclado {
+    align-self: end;
+    margin-bottom: calc(-1 * var(--espacio-12));
+  }
+}
+
+/* Teclado ilustrado: colores por clase (los stops toman los tokens del tema). */
+.ilu-stop-blanca {
+  stop-color: var(--color-tecla-blanca);
+}
+
+.ilu-stop-blanca-sombra {
+  stop-color: var(--color-portada-suave);
+}
+
+.ilu-stop-negra {
+  stop-color: var(--color-tecla-negra);
+}
+
+.ilu-stop-negra-luz {
+  stop-color: var(--color-portada-2);
+}
+
+.ilu-stop-brillo {
+  stop-color: var(--color-portada-texto);
+}
+
+.ilu-cuerpo {
+  fill: var(--color-tecla-negra);
+}
+
+.ilu-tecla-blanca {
+  stroke: var(--color-tecla-borde);
+  stroke-width: var(--borde);
+}
+
+/* Fila de tarjetas de resumen. */
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--ancho-tarjeta-min), 1fr));
+  gap: var(--separacion-tarjetas);
+  margin-bottom: var(--separacion-secciones);
+}
+
+.tarjeta-resumen {
+  display: grid;
+  align-content: start;
+  gap: var(--espacio-1);
+  padding: var(--relleno-tarjeta);
+}
+
+.insignia {
+  display: inline-grid;
+  place-items: center;
+  width: var(--tamano-insignia);
+  height: var(--tamano-insignia);
+  flex: none;
+  margin-bottom: var(--espacio-2);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie-2);
+  color: var(--color-acento);
+}
+
+.insignia svg {
+  width: var(--tamano-icono-grande);
+  height: var(--tamano-icono-grande);
+}
+
+.tarjeta-resumen-etiqueta {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.tarjeta-resumen-valor {
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-fuerte);
+  line-height: var(--interlineado-titulo);
+}
+
+.tarjeta-resumen-detalle {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.seccion-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  margin: var(--separacion-secciones) 0 var(--espacio-4);
+}
+
+.seccion-cabecera h2 {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-normal);
+}
+
+/* Calificación por variable del último intento. */
+.calificaciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--ancho-tarjeta-min), 1fr));
+  gap: var(--separacion-tarjetas);
+  padding: 0;
+  list-style: none;
+}
+
+.calificacion {
+  display: grid;
+  gap: var(--espacio-1);
+  padding: var(--relleno-tarjeta);
+  border-radius: var(--radio-lg);
+}
+
+.calificacion-variable {
+  font-weight: var(--peso-medio);
+}
+
+.calificacion-nivel {
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-fuerte);
+}
+
+.calificacion[data-nivel="logrado"] .calificacion-nivel {
+  color: var(--color-correcto);
+}
+
+.calificacion[data-nivel="en-desarrollo"] .calificacion-nivel {
+  color: var(--color-tiempo);
+}
+
+.calificacion[data-nivel="por-mejorar"] .calificacion-nivel {
+  color: var(--color-nota);
+}
+
+.calificacion[data-nivel="no-evaluado"] .calificacion-nivel {
+  color: var(--color-no-evaluable);
+}
+
+/* Próximos ejercicios (y estudiantes en el panel del docente). */
+.proximos {
+  display: grid;
+  gap: var(--espacio-4);
+  padding: 0;
+  list-style: none;
+}
+
+.proximo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2) var(--espacio-4);
+  padding: var(--espacio-4) var(--relleno-tarjeta);
+  border-radius: var(--radio-lg);
+}
+
+.proximo .insignia {
+  margin: 0;
+}
+
+.proximo-texto {
+  display: grid;
+  flex: 1 1 var(--ancho-tarjeta-min);
+}
+
+.proximo-titulo {
+  color: var(--color-texto);
+  font-weight: var(--peso-medio);
+}
+
+/* Página pública. */
+.pasos,
+.planes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--ancho-tarjeta-min), 1fr));
+  gap: var(--separacion-tarjetas);
+  padding: 0;
+  list-style: none;
+}
+
+.paso,
+.plan {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--espacio-2);
+  padding: var(--relleno-tarjeta);
+}
+
+.paso h3,
+.plan :is(h2, h3) {
+  margin: 0;
+}
+
+.paso-numero {
+  position: absolute;
+  top: var(--relleno-tarjeta);
+  right: var(--relleno-tarjeta);
+  color: var(--color-texto-suave);
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-2xl);
+}
+
+.privacidad {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-4);
+  margin: var(--separacion-secciones) 0;
+  padding: var(--relleno-tarjeta);
+}
+
+.privacidad h2 {
+  margin-top: 0;
+}
+
+.plan :is(h2, h3) {
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-normal);
+}
+
+/* Columna flexible: el botón de cada plan queda abajo, a la misma altura en las tres. */
+.plan {
+  display: flex;
+  flex-direction: column;
+}
+
+/* El plan recomendado: borde de acento, sombra mayor e insignia. */
+.plan[data-destacado="true"] {
+  border: var(--borde-foco) solid var(--color-acento);
+  box-shadow: var(--sombra-3);
+}
+
+.plan-insignia {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--espacio-1);
+  padding: var(--espacio-1) var(--espacio-3);
+  border-radius: var(--radio-completo);
+  background: var(--color-boton);
+  color: var(--color-sobre-boton);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+.plan-insignia svg {
+  width: var(--tamano-icono);
+  height: var(--tamano-icono);
+}
+
+.plan-incluye {
+  flex: 1;
+  display: grid;
+  align-content: start;
+  gap: var(--espacio-2);
+  margin: var(--espacio-2) 0 var(--espacio-4);
+  padding: 0;
+  list-style: none;
+}
+
+.plan-incluye li {
+  display: flex;
+  gap: var(--espacio-2);
+}
+
+.plan-incluye svg {
+  flex: none;
+  width: var(--tamano-icono);
+  height: var(--tamano-icono);
+  margin-top: var(--espacio-1);
+  color: var(--color-correcto);
+}
+
+.planes-nota {
+  margin-top: var(--espacio-4);
+}
+
+.dialogo.dialogo-planes > h2 {
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-2xl);
+  font-weight: var(--peso-normal);
+  margin-bottom: var(--espacio-4);
+}
+
+.dialogo.dialogo-planes {
+  width: min(100% - var(--espacio-4), var(--ancho-amplio));
+  max-height: calc(100dvh - var(--espacio-8));
+  overflow-y: auto;
+  padding: var(--relleno-tarjeta);
+}
+
+.plan-precio {
+  margin: 0;
+  font-size: var(--texto-2xl);
+  font-weight: var(--peso-fuerte);
+}
+
+.cierre {
+  display: grid;
+  justify-items: center;
+  gap: var(--espacio-4);
+  margin-top: var(--separacion-secciones);
+  padding: var(--espacio-8) var(--relleno-tarjeta);
+  text-align: center;
+}
+
+.cierre h2 {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-2xl);
+  font-weight: var(--peso-normal);
+}
+
+.cierre-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--espacio-3);
+}
+
+/* Perfil. */
+.perfil-datos {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+}
+
+.perfil-datos dt {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.perfil-datos dd {
+  margin: 0;
+  font-weight: var(--peso-medio);
+}
+
+.perfil-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-3);
+  margin: var(--espacio-4) 0;
+}
+
+.muestra-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-xl);
+}
+
+/* ---- Movimiento v2: solo transform y opacity (DS-07), 150–250 ms ---- */
+
+/* Botones e ítems del menú: el cambio de tono es una capa que aparece por opacidad. */
+button,
+.boton-enlace,
+.navegacion a {
+  position: relative;
+  isolation: isolate;
+}
+
+button::after,
+.boton-enlace::after,
+.navegacion a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracion-corta) var(--curva);
+}
+
+/* Tarjetas: se elevan un poco; la sombra mayor aparece por opacidad. */
+a.tarjeta,
+.tarjeta-resumen,
+.proximo,
+.paso,
+.plan,
+.calificacion {
+  position: relative;
+  transition: transform var(--duracion-media) var(--curva);
+}
+
+a.tarjeta::after,
+.tarjeta-resumen::after,
+.proximo::after,
+.paso::after,
+.plan::after,
+.calificacion::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--sombra-3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracion-media) var(--curva);
+}
+
+@media (hover: hover) {
+  button:not(:disabled):hover::after,
+  .boton-enlace:hover::after {
+    opacity: var(--opacidad-realce);
+  }
+
+  .navegacion a:hover::after {
+    opacity: var(--opacidad-realce);
+  }
+
+  a.tarjeta:hover,
+  .tarjeta-resumen:hover,
+  .proximo:hover,
+  .paso:hover,
+  .plan:hover,
+  .calificacion:hover {
+    transform: translateY(calc(-1 * var(--elevacion)));
+  }
+
+  a.tarjeta:hover::after,
+  .tarjeta-resumen:hover::after,
+  .proximo:hover::after,
+  .paso:hover::after,
+  .plan:hover::after,
+  .calificacion:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Entrada suave de las secciones al cargar (nunca en la calibración ni en la práctica). */
+.contenedor > :not(.practica, :has(.practica)),
+:is(.panel, .publica) > * {
+  animation: aparecer var(--duracion-media) var(--curva) both;
+}
+
+:is(.panel, .publica) > :nth-child(2) {
+  animation-delay: var(--retardo-lista);
+}
+
+:is(.panel, .publica) > :nth-child(3) {
+  animation-delay: calc(2 * var(--retardo-lista));
+}
+
+:is(.panel, .publica) > :nth-child(n + 4) {
+  animation-delay: calc(3 * var(--retardo-lista));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.tarjeta:hover,
+  .tarjeta-resumen:hover,
+  .proximo:hover,
+  .paso:hover,
+  .plan:hover,
+  .calificacion:hover {
+    transform: none;
+  }
 }

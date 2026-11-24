@@ -5,11 +5,14 @@ import {
   ClipboardList,
   FlaskConical,
   GraduationCap,
+  House,
   LogOut,
-  Mic,
   Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
   Sun,
   TableProperties,
+  UserRound,
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
@@ -20,14 +23,17 @@ import { SinConexion } from "./componentes.tsx";
 import { Usuarios } from "./paginas/admin.tsx";
 import { DetalleEjercicio, Catalogo } from "./paginas/catalogo.tsx";
 import { DetalleEstudiante, MisEstudiantes } from "./paginas/docente.tsx";
-import { CambiarClave, Entrar } from "./paginas/entrada.tsx";
+import { CambiarClave, Entrar, Perfil } from "./paginas/entrada.tsx";
+import { PanelDocente, PanelEstudiante } from "./paginas/panel.tsx";
+import { BotonPlanes, PaginaPlanes } from "./paginas/planes.tsx";
+import { InicioPublico } from "./paginas/publica.tsx";
 import { DetalleTarea, MisTareas } from "./paginas/estudiante.tsx";
 import { ModoInvestigacion } from "./paginas/investigacion.tsx";
 import { PaginaMiGrupo, PaginaMiProgreso } from "./paginas/tableros.tsx";
-import { roles, rutaInicial, useSesion } from "./sesion.tsx";
+import { NOMBRE_ROL, roles, rutaInicial, useSesion } from "./sesion.tsx";
 import { aplicarTema, temaGuardado, type Tema } from "./tema.ts";
 import { Boton, Esqueleto, ProveedorAvisos } from "./ui/base.tsx";
-import { LogoTeclas, TiraTeclas } from "./ui/ilustraciones.tsx";
+import { LogoTeclas } from "./ui/ilustraciones.tsx";
 
 const Diseno = lazy(() => import("./paginas/diseno.tsx").then((m) => ({ default: m.Diseno })));
 const VistaEjemplo = lazy(() =>
@@ -53,12 +59,29 @@ function Protegida({ rol, children }: { rol?: Rol; children: ReactNode }) {
   return <>{children}</>;
 }
 
+/** La app instalada (PWA) abre directamente la entrada; en el navegador, la página pública. */
+function instalada(): boolean {
+  return window.matchMedia?.("(display-mode: standalone)").matches ?? false;
+}
+
 function Inicio() {
   const { estado } = useSesion();
   if (estado.tipo === "activo") return <Navigate to={rutaInicial(estado.usuario)} replace />;
-  if (estado.tipo === "anonimo") return <Navigate to="/entrar" replace />;
+  if (estado.tipo === "anonimo") {
+    return instalada() ? <Navigate to="/entrar" replace /> : <InicioPublico />;
+  }
   if (estado.tipo === "sin-conexion") return <SinConexion />;
   return <Esqueleto />;
+}
+
+/** Panel de inicio: el del docente si lo es; si no, el del estudiante. */
+function PanelDelRol() {
+  const { estado } = useSesion();
+  if (estado.tipo !== "activo") return null;
+  const r = roles(estado.usuario);
+  if (r.has("docente")) return <PanelDocente />;
+  if (r.has("estudiante")) return <PanelEstudiante />;
+  return <Navigate to={rutaInicial(estado.usuario)} replace />;
 }
 
 function BotonTema() {
@@ -79,17 +102,49 @@ function BotonTema() {
   );
 }
 
+function Marca() {
+  return (
+    <span className="marca">
+      <LogoTeclas />
+      <span className="marca-texto">SkillTrack-Piano</span>
+    </span>
+  );
+}
+
+const CLAVE_MENU = "skilltrack.menu";
+
+/** Preferencia del menú lateral (recogido o abierto), recordada en este navegador. */
+function useMenuRecogido(): [boolean, () => void] {
+  const [recogido, setRecogido] = useState(() => {
+    try {
+      return localStorage.getItem(CLAVE_MENU) === "recogido";
+    } catch {
+      return false;
+    }
+  });
+  const alternar = () =>
+    setRecogido((r) => {
+      try {
+        localStorage.setItem(CLAVE_MENU, r ? "abierto" : "recogido");
+      } catch {
+        // Sin almacenamiento disponible: la preferencia dura hasta recargar.
+      }
+      return !r;
+    });
+  return [recogido, alternar];
+}
+
+/** Barra superior: la marca (cuando no hay menú lateral), el cambio de tema y la salida. */
 function Barra() {
   const { estado, salir } = useSesion();
+  const { pathname } = useLocation();
   const activo = estado.tipo === "activo" && !estado.usuario.clave_temporal;
   return (
     <header className="barra">
       <div className="barra-fila">
-        <span className="marca">
-          <LogoTeclas />
-          SkillTrack-Piano
-        </span>
+        <Marca />
         <div className="barra-acciones">
+          {estado.tipo === "anonimo" && pathname === "/" && <BotonPlanes />}
           <BotonTema />
           {activo && (
             <Boton variante="secundario" icono={LogOut} onClick={() => void salir()}>
@@ -98,39 +153,76 @@ function Barra() {
           )}
         </div>
       </div>
-      <TiraTeclas />
     </header>
   );
 }
 
 function Destino({ a, icono: Icono, texto }: { a: string; icono: LucideIcon; texto: string }) {
   return (
-    <NavLink to={a}>
+    <NavLink to={a} end={a === "/inicio"}>
       <Icono aria-hidden="true" />
-      {texto}
+      <span>{texto}</span>
     </NavLink>
   );
 }
 
-function Navegacion() {
+const iniciales = (nombre: string) =>
+  nombre
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]!.toUpperCase())
+    .join("");
+
+/**
+ * Menú de cada rol: lateral (azul marino) en el escritorio, con la marca arriba y la persona con
+ * su rol abajo; barra inferior de íconos en el móvil. Solo secciones que existen.
+ */
+function Navegacion({ recogido, alternar }: { recogido: boolean; alternar: () => void }) {
   const { estado } = useSesion();
   if (estado.tipo !== "activo" || estado.usuario.clave_temporal) return null;
   const r = roles(estado.usuario);
+  const conInicio = r.has("estudiante") || r.has("docente");
+  const rol = [...r].map((x) => NOMBRE_ROL[x]).join(" · ");
   return (
-    <nav className="navegacion" aria-label="Principal">
-      {r.has("estudiante") && <Destino a="/tareas" icono={ClipboardList} texto="Mis tareas" />}
-      {r.has("estudiante") && <Destino a="/microfono" icono={Mic} texto="Micrófono" />}
-      {r.has("estudiante") && <Destino a="/mi-progreso" icono={ChartLine} texto="Mi progreso" />}
-      {r.has("docente") && (
-        <Destino a="/estudiantes" icono={GraduationCap} texto="Mis estudiantes" />
-      )}
-      {r.has("docente") && <Destino a="/mi-grupo" icono={TableProperties} texto="Mi grupo" />}
-      {r.has("admin_inst") && <Destino a="/usuarios" icono={UsersRound} texto="Usuarios" />}
-      {r.has("investigador") && (
-        <Destino a="/investigacion" icono={FlaskConical} texto="Modo investigación" />
-      )}
-      <Destino a="/catalogo" icono={BookOpen} texto="Catálogo" />
-    </nav>
+    <aside className="lateral">
+      <div className="lateral-cabecera">
+        <Marca />
+        <button
+          type="button"
+          className="secundario lateral-recoger"
+          aria-expanded={!recogido}
+          aria-label={recogido ? "Expandir el menú" : "Contraer el menú"}
+          onClick={alternar}
+        >
+          {recogido ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
+        </button>
+      </div>
+      <nav className="navegacion" aria-label="Principal">
+        {conInicio && <Destino a="/inicio" icono={House} texto="Inicio" />}
+        {r.has("estudiante") && <Destino a="/tareas" icono={ClipboardList} texto="Mis tareas" />}
+        {r.has("docente") && (
+          <Destino a="/estudiantes" icono={GraduationCap} texto="Mis estudiantes" />
+        )}
+        {r.has("docente") && <Destino a="/mi-grupo" icono={TableProperties} texto="Mi grupo" />}
+        {conInicio && <Destino a="/catalogo" icono={BookOpen} texto="Ejercicios" />}
+        {r.has("estudiante") && <Destino a="/mi-progreso" icono={ChartLine} texto="Mi progreso" />}
+        {r.has("admin_inst") && <Destino a="/usuarios" icono={UsersRound} texto="Usuarios" />}
+        {r.has("investigador") && (
+          <Destino a="/investigacion" icono={FlaskConical} texto="Investigación" />
+        )}
+        <Destino a="/perfil" icono={UserRound} texto="Perfil" />
+      </nav>
+      <div className="lateral-persona">
+        <span className="avatar" aria-hidden="true">
+          {iniciales(estado.usuario.nombre_visible)}
+        </span>
+        <span className="lateral-datos">
+          <span className="lateral-nombre">{estado.usuario.nombre_visible}</span>
+          <span className="lateral-rol">{rol}</span>
+        </span>
+      </div>
+    </aside>
   );
 }
 
@@ -154,11 +246,13 @@ export function App() {
   const { estado } = useSesion();
   const mostrada = useUbicacionConTransicion();
   const conNavegacion = estado.tipo === "activo" && !estado.usuario.clave_temporal;
+  const [recogido, alternar] = useMenuRecogido();
+  const clases = ["aplicacion", conNavegacion && "con-navegacion", recogido && "menu-recogido"];
   return (
     <ProveedorAvisos>
-      <div className={conNavegacion ? "aplicacion con-navegacion" : "aplicacion"}>
+      <div className={clases.filter(Boolean).join(" ")}>
+        <Navegacion recogido={recogido} alternar={alternar} />
         <Barra />
-        <Navegacion />
         <main className="contenedor">
           <Routes location={mostrada}>
             <Route
@@ -194,7 +288,24 @@ export function App() {
               }
             />
             <Route path="/" element={<Inicio />} />
+            <Route
+              path="/inicio"
+              element={
+                <Protegida>
+                  <PanelDelRol />
+                </Protegida>
+              }
+            />
+            <Route
+              path="/perfil"
+              element={
+                <Protegida>
+                  <Perfil />
+                </Protegida>
+              }
+            />
             <Route path="/entrar" element={<Entrar />} />
+            <Route path="/planes" element={<PaginaPlanes />} />
             <Route path="/cambiar-clave" element={<CambiarClave />} />
             <Route
               path="/tareas"

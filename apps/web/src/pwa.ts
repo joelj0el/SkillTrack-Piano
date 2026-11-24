@@ -25,5 +25,7 @@ export const opcionesPwa = {
     navigateFallbackDenylist: [/^\/api\//],
     // El detector (WASM y modelo, decenas de MB) se descarga al usar la cámara, no al instalar.
     globIgnores: ["**/mediapipe/**"],
+    // Las fuentes autoalojadas también quedan disponibles sin red.
+    globPatterns: ["**/*.{js,css,html,woff2}"],
   },
 } satisfies Partial<VitePWAOptions>;

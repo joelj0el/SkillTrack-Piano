@@ -9,6 +9,7 @@ import {
   parDocenteEstudiante,
   sesionApi,
   unico,
+  irAMisTareas,
 } from "./ayuda.ts";
 
 test("PA-HU29-01: tres tareas ordenadas por plazo, cada una con sus datos y estado", async ({
@@ -19,6 +20,7 @@ test("PA-HU29-01: tres tareas ordenadas por plazo, cada una con sus datos y esta
   for (const plazo of plazos) await crearTareaApi(docente, estudianteId, { fecha_limite: plazo });
 
   await entrar(page, estudiante, CLAVE_NUEVA);
+  await irAMisTareas(page);
   const tarjetas = page.getByRole("region", { name: "Pendientes" }).getByRole("link");
   await expect(tarjetas).toHaveCount(3);
   const ordenados = [...plazos].sort();
@@ -47,7 +49,7 @@ test("PA-HU29-02: observaciones de la más reciente a la más antigua, a un toqu
   }
 
   await entrar(page, estudiante, CLAVE_NUEVA);
-  await expect(page.getByRole("heading", { name: "Mis tareas" })).toBeVisible();
+  await irAMisTareas(page);
   await page.getByRole("link", { name: /EJ-01/ }).click(); // toque 1
   const items = page.getByRole("list", { name: "Observaciones" }).getByRole("listitem");
   await expect(items).toHaveCount(3);
@@ -63,6 +65,7 @@ test("PA-HU29-04: sin tareas, Mis tareas explica el estado vacío y ofrece el ca
   await admin.crearListo(estudiante, "estudiante");
 
   await entrar(page, estudiante, CLAVE_NUEVA);
+  await irAMisTareas(page);
   await expect(page.getByText("Tu docente aún no te asignó tareas")).toBeVisible();
   await page.getByRole("link", { name: "Ver el catálogo de ejercicios" }).click();
   await expect(page.getByRole("heading", { name: "Catálogo de ejercicios" })).toBeVisible();
