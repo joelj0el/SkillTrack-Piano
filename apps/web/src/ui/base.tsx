@@ -54,13 +54,18 @@ export function EnlaceBoton({
   variante = "primario",
   icono: Icono,
   children,
+  className,
   ...resto
-}: LinkProps & {
+}: Omit<LinkProps, "className"> & {
   variante?: Exclude<Variante, "peligro">;
   icono?: LucideIcon;
+  className?: string;
 }) {
   return (
-    <Link {...resto} className={["boton-enlace", claseDe(variante)].filter(Boolean).join(" ")}>
+    <Link
+      {...resto}
+      className={["boton-enlace", claseDe(variante, className)].filter(Boolean).join(" ")}
+    >
       {Icono && <Icono aria-hidden="true" />}
       {children}
     </Link>

@@ -1,21 +1,26 @@
-/* Sistema de diseño "Marfil y ébano". La interfaz solo usa estas variables: nada de valores
-   sueltos. Las reglas están en docs/04-interfaz/sistema-diseno.md. */
+/* Sistema de diseño v2: "Azul marino y crema" (claro) e "Índigo y violeta" (oscuro). La interfaz
+   solo usa estas variables: nada de valores sueltos. Las reglas están en
+   docs/04-interfaz/sistema-diseno.md; el tamaño de portada y el radio extra, en ADR-003. */
 :root {
   color-scheme: light;
 
-  /* Tipografía: fuente del sistema; escala 13 / 15 / 17 / 20 / 28 / 34. */
-  --fuente-texto: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Tipografía autoalojada (OFL): Inter para el texto, DM Serif Display para títulos y saludos.
+     Escala 13 / 15 / 17 / 20 / 28 / 34 y 44 solo para portadas (ADR-003). */
+  --fuente-texto: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fuente-titulo: "DM Serif Display", Georgia, "Times New Roman", serif;
   --texto-xs: 0.8125rem;
   --texto-sm: 0.9375rem;
   --texto-md: 1.0625rem;
   --texto-lg: 1.25rem;
   --texto-xl: 1.75rem;
   --texto-2xl: 2.125rem;
+  --texto-portada: 2.75rem;
   --peso-normal: 400;
   --peso-medio: 600;
   --peso-fuerte: 700;
   --interlineado: 1.45;
   --interlineado-titulo: 1.25;
+  --interlineado-portada: 1.1;
 
   /* Espaciado: retícula de 4 px. */
   --espacio-1: 0.25rem;
@@ -28,20 +33,25 @@
 
   /* Medidas. */
   --ancho-contenido: 48rem;
+  --ancho-amplio: 72rem;
   --ancho-lateral: 16rem;
   --ancho-formulario: 26rem;
+  --ancho-tarjeta-min: 13rem;
   --alto-toque: 3rem;
   --alto-toque-grande: 3.5rem;
   --alto-tira-teclas: 0.75rem;
+  --alto-portada: 15rem;
   --tamano-icono: 1.25rem;
   --tamano-icono-grande: 1.5rem;
+  --tamano-insignia: 2.75rem;
   --tamano-ilustracion: 7.5rem;
   --escala-conteo: 3;
 
-  /* Formas. */
+  /* Formas: 8 / 12 / 20 y 28 para tarjetas de portada y vidrio (ADR-003). */
   --radio-sm: 0.5rem;
   --radio-md: 0.75rem;
   --radio-lg: 1.25rem;
+  --radio-xl: 1.75rem;
   --radio-completo: 62.5rem;
   --borde: 1px;
   --borde-foco: 2px;
@@ -66,30 +76,59 @@
   --capa-conteo: 20;
   --capa-aviso: 30;
 
-  /* Sombras cálidas: tres niveles. */
-  --sombra-1: 0 1px 2px rgb(58 42 18 / 0.08), 0 1px 3px rgb(58 42 18 / 0.06);
-  --sombra-2: 0 2px 6px rgb(58 42 18 / 0.1), 0 6px 16px rgb(58 42 18 / 0.08);
-  --sombra-3: 0 8px 24px rgb(58 42 18 / 0.16), 0 16px 48px rgb(58 42 18 / 0.12);
+  /* Sombras suaves teñidas de azul marino: tres niveles. */
+  --sombra-1: 0 1px 2px rgb(11 31 68 / 0.06), 0 2px 6px rgb(11 31 68 / 0.05);
+  --sombra-2: 0 4px 12px rgb(11 31 68 / 0.08), 0 12px 32px rgb(11 31 68 / 0.08);
+  --sombra-3: 0 12px 32px rgb(11 31 68 / 0.14), 0 24px 64px rgb(11 31 68 / 0.12);
 
-  /* Neutros: marfil. */
-  --color-fondo: #f6f0e4;
-  --color-superficie: #fffcf5;
-  --color-superficie-2: #ede5d5;
-  --color-texto: #211c15;
-  --color-texto-suave: #5b5245;
-  --color-borde: #ddd2bf;
-  --color-borde-control: #877b69;
+  /* Vidrio (solo inicio, entrada, panel y resultados): siempre sobre --color-fondo sólido; sin
+     backdrop-filter cae a --color-superficie, que cumple el contraste. */
+  --vidrio-fondo: rgb(255 253 248 / 0.72);
+  --vidrio-borde: rgb(255 255 255 / 0.7);
+  --vidrio-desenfoque: 16px;
+  --degradado-ambiente:
+    radial-gradient(60rem 30rem at 85% -10%, rgb(30 58 138 / 0.12), transparent 70%),
+    radial-gradient(40rem 24rem at -10% 110%, rgb(212 175 55 / 0.14), transparent 70%);
 
-  /* Acento: azul cobalto. */
-  --color-acento: #1f49b6;
-  --color-acento-pulsado: #183a92;
+  /* Neutros: crema. */
+  --color-fondo: #f7f3e9;
+  --color-superficie: #fffdf8;
+  --color-superficie-2: #ece4d2;
+  --color-texto: #0b1f44;
+  --color-texto-suave: #4b5768;
+  --color-borde: #e2d9c6;
+  --color-borde-control: #64748b;
+
+  /* Acento: azul. Botones: azul marino. El dorado es solo decorativo (nunca texto sobre crema). */
+  --color-acento: #1e3a8a;
+  --color-acento-pulsado: #0b1f44;
   --color-sobre-acento: #ffffff;
-  --color-enlace: #1f49b6;
-  --color-foco: #1f49b6;
+  --color-boton: #0b1f44;
+  --color-boton-pulsado: #1e3a8a;
+  --color-sobre-boton: #ffffff;
+  --color-enlace: #1e3a8a;
+  --color-foco: #1e3a8a;
+  --color-dorado: #d4af37;
+  --color-acento-2: #1e3a8a;
   --color-peligro: #a12a24;
   --color-sobre-peligro: #ffffff;
   --color-aviso-fondo: #f9eacb;
   --color-aviso-texto: #6a4400;
+
+  /* Menú lateral. */
+  --color-lateral: #0b1f44;
+  --color-lateral-texto: #e8edf7;
+  --color-lateral-suave: #b8c3da;
+  --color-lateral-activo: #f7f3e9;
+  --color-sobre-lateral-activo: #0b1f44;
+
+  /* Portada (hero): degradado sobre un fondo sólido que asegura el contraste. */
+  --color-portada: #0b1f44;
+  --color-portada-2: #1e3a8a;
+  --color-portada-texto: #f7f3e9;
+  --color-portada-suave: #c9d3e8;
+  --color-portada-boton: #d4af37;
+  --color-sobre-portada-boton: #0b1f44;
 
   /* Cinco familias semánticas: siempre con icono y texto. */
   --color-correcto: #1b6638;
@@ -100,8 +139,8 @@
   --color-tiempo-fondo: #f9eacb;
   --color-mano: #653a9c;
   --color-mano-fondo: #eee5f6;
-  --color-no-evaluable: #575248;
-  --color-no-evaluable-fondo: #e8e1d3;
+  --color-no-evaluable: #4b5768;
+  --color-no-evaluable-fondo: #e6e2d8;
 
   /* Semáforo de cámara y micrófono. */
   --color-verde: #1b6638;
@@ -109,9 +148,9 @@
   --color-rojo: #a12a24;
 
   /* Teclado. */
-  --color-tecla-blanca: #fffcf5;
-  --color-tecla-negra: #211c15;
-  --color-tecla-borde: #ddd2bf;
+  --color-tecla-blanca: #fffdf8;
+  --color-tecla-negra: #0b1f44;
+  --color-tecla-borde: #c8bea9;
   --color-tecla-activa: #3a63d8;
 
   /* Dibujo sobre el video: no cambian con el tema. */
@@ -120,60 +159,84 @@
   --color-tecla-esperada: rgb(31 73 182 / 0.25);
   --color-tecla-bajo-dedo: rgb(255 196 61 / 0.55);
   --color-texto-sobre-video: #ffffff;
-  --color-velo-video: #17130e;
-  --color-velo: rgb(23 19 14 / 0.55);
+  --color-velo-video: #0b1120;
+  --color-velo: rgb(11 17 32 / 0.55);
 
   --icono-aviso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4M12 8h.01'/%3E%3C/svg%3E");
   --icono-error: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z'/%3E%3C/svg%3E");
   --icono-desplegar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
-  --icono-selector: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%235b5245' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --icono-selector: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%234b5768' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
-/* Ébano profundo: lo elige la persona en el menú; el claro es el predeterminado. */
+/* Índigo y violeta: lo elige la persona en la barra; el claro es el predeterminado. */
 :root[data-tema="oscuro"] {
   color-scheme: dark;
 
-  --sombra-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.3);
-  --sombra-2: 0 2px 6px rgb(0 0 0 / 0.45), 0 6px 16px rgb(0 0 0 / 0.35);
-  --sombra-3: 0 8px 24px rgb(0 0 0 / 0.55), 0 16px 48px rgb(0 0 0 / 0.45);
+  --sombra-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.3);
+  --sombra-2: 0 4px 12px rgb(0 0 0 / 0.4), 0 12px 32px rgb(0 0 0 / 0.3);
+  --sombra-3: 0 12px 32px rgb(0 0 0 / 0.5), 0 24px 64px rgb(0 0 0 / 0.4);
 
-  --color-fondo: #14110e;
-  --color-superficie: #1f1b17;
-  --color-superficie-2: #2b2620;
-  --color-texto: #f3ecdf;
-  --color-texto-suave: #c2b8a8;
-  --color-borde: #3e372e;
-  --color-borde-control: #8f8473;
+  --vidrio-fondo: rgb(30 41 59 / 0.66);
+  --vidrio-borde: rgb(148 163 184 / 0.2);
+  --degradado-ambiente:
+    radial-gradient(60rem 30rem at 85% -10%, rgb(79 70 229 / 0.28), transparent 70%),
+    radial-gradient(40rem 24rem at -10% 110%, rgb(139 92 246 / 0.22), transparent 70%);
 
-  --color-acento: #a3b8ff;
-  --color-acento-pulsado: #bccbff;
-  --color-sobre-acento: #14110e;
-  --color-enlace: #a3b8ff;
-  --color-foco: #a3b8ff;
-  --color-peligro: #ffa99e;
-  --color-sobre-peligro: #14110e;
-  --color-aviso-fondo: #3a2a10;
+  --color-fondo: #0f172a;
+  --color-superficie: #1e293b;
+  --color-superficie-2: #273449;
+  --color-texto: #f8fafc;
+  --color-texto-suave: #cbd5e1;
+  --color-borde: #334155;
+  --color-borde-control: #94a3b8;
+
+  --color-acento: #818cf8;
+  --color-acento-pulsado: #a5b4fc;
+  --color-sobre-acento: #0f172a;
+  --color-boton: #4f46e5;
+  --color-boton-pulsado: #4338ca;
+  --color-sobre-boton: #ffffff;
+  --color-enlace: #a5b4fc;
+  --color-foco: #a5b4fc;
+  --color-dorado: #8b5cf6;
+  --color-acento-2: #8b5cf6;
+  --color-peligro: #fca5a5;
+  --color-sobre-peligro: #0f172a;
+  --color-aviso-fondo: #3a2c12;
   --color-aviso-texto: #f6d08c;
 
-  --color-correcto: #82d9a3;
-  --color-correcto-fondo: #16301f;
-  --color-nota: #ffa99e;
-  --color-nota-fondo: #3d1c18;
-  --color-tiempo: #f5c26c;
-  --color-tiempo-fondo: #382910;
-  --color-mano: #cfb2f6;
-  --color-mano-fondo: #2d2141;
-  --color-no-evaluable: #c8c1b4;
-  --color-no-evaluable-fondo: #2f2a24;
+  --color-lateral: #131a3a;
+  --color-lateral-texto: #e0e7ff;
+  --color-lateral-suave: #b4bce0;
+  --color-lateral-activo: #4f46e5;
+  --color-sobre-lateral-activo: #ffffff;
 
-  --color-verde: #82d9a3;
-  --color-ambar: #f5c26c;
-  --color-rojo: #ffa99e;
+  --color-portada: #1e1b4b;
+  --color-portada-2: #4f46e5;
+  --color-portada-texto: #ffffff;
+  --color-portada-suave: #e0e7ff;
+  --color-portada-boton: #f8fafc;
+  --color-sobre-portada-boton: #312e81;
 
-  --color-tecla-blanca: #f3ecdf;
-  --color-tecla-negra: #0b0907;
-  --color-tecla-borde: #8f8473;
-  --color-tecla-activa: #a3b8ff;
+  --color-correcto: #86efac;
+  --color-correcto-fondo: #14312a;
+  --color-nota: #fca5a5;
+  --color-nota-fondo: #3b1d2a;
+  --color-tiempo: #fcd34d;
+  --color-tiempo-fondo: #3a2c12;
+  --color-mano: #c4b5fd;
+  --color-mano-fondo: #2e2552;
+  --color-no-evaluable: #cbd5e1;
+  --color-no-evaluable-fondo: #2b3446;
 
-  --icono-selector: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%23c2b8a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --color-verde: #86efac;
+  --color-ambar: #fcd34d;
+  --color-rojo: #fca5a5;
+
+  --color-tecla-blanca: #f8fafc;
+  --color-tecla-negra: #0b1120;
+  --color-tecla-borde: #94a3b8;
+  --color-tecla-activa: #818cf8;
+
+  --icono-selector: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }

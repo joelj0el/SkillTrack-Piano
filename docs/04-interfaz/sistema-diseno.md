@@ -1,6 +1,8 @@
-# Sistema de diseño "Marfil y ébano"
+# Sistema de diseño v2: "Azul marino y crema" e "Índigo y violeta"
 
-La interfaz de SkillTrack-Piano toma su identidad del teclado: un fondo marfil cálido, superficies de ébano en el modo oscuro y las teclas blanca y negra como motivo. El tono es elegante, musical y académico. No hay elementos de juego, estrellas ni puntajes.
+La interfaz de SkillTrack-Piano toma su identidad del teclado. En el modo claro, fondo crema, menú lateral azul marino y el dorado solo como acento decorativo; en el oscuro, fondo azul noche con índigo y violeta. Las portadas llevan un teclado ilustrado en perspectiva. El tono es elegante, musical y académico. No hay elementos de juego, estrellas, rachas, niveles ni puntajes globales.
+
+La v2 reemplaza a la v0 "Marfil y ébano"; las ampliaciones de la escala y los radios, las fuentes autoalojadas y el uso del vidrio están en [ADR-003](../adr/ADR-003-diseno-v2.md).
 
 La fuente de verdad son `apps/web/src/design/tokens.css` y `apps/web/src/design/base.css`. La ruta `/design` muestra todos los tokens y componentes en funcionamiento.
 
@@ -17,29 +19,31 @@ La fuente de verdad son `apps/web/src/design/tokens.css` y `apps/web/src/design/
 
 ### Tipografía
 
-Fuente del sistema, con la escala y los pesos siguientes. El interlineado es 1,45 en los textos de 13 a 17 px y 1,25 en los de 20 a 34 px.
+Inter para el texto y DM Serif Display para títulos de pantalla, saludos y cifras de portada, ambas autoalojadas (OFL). Escala y pesos: El interlineado es 1,45 en los textos de 13 a 17 px y 1,25 en los de 20 a 34 px.
 
-| Token         | Tamaño | Uso                                                      |
-| ------------- | ------ | -------------------------------------------------------- |
-| `--texto-xs`  | 13 px  | Solo metadatos del docente o del investigador            |
-| `--texto-sm`  | 15 px  | Texto secundario; es el mínimo para el estudiante        |
-| `--texto-md`  | 17 px  | Texto principal                                          |
-| `--texto-lg`  | 20 px  | Subtítulos                                               |
-| `--texto-xl`  | 28 px  | Títulos de pantalla                                      |
-| `--texto-2xl` | 34 px  | Cifras destacadas; el conteo previo se amplía con escala |
+| Token             | Tamaño | Uso                                                      |
+| ----------------- | ------ | -------------------------------------------------------- |
+| `--texto-xs`      | 13 px  | Solo metadatos del docente o del investigador            |
+| `--texto-sm`      | 15 px  | Texto secundario; es el mínimo para el estudiante        |
+| `--texto-md`      | 17 px  | Texto principal                                          |
+| `--texto-lg`      | 20 px  | Subtítulos                                               |
+| `--texto-xl`      | 28 px  | Títulos de pantalla                                      |
+| `--texto-2xl`     | 34 px  | Cifras destacadas; el conteo previo se amplía con escala |
+| `--texto-portada` | 44 px  | Solo el título de las portadas (ADR-003)                 |
 
 Los pesos son 400, 600 y 700 (`--peso-normal`, `--peso-medio` y `--peso-fuerte`).
 
 ### Espaciado, radios y sombras
 
 - **Espaciado:** retícula de 4 px, con los valores 4, 8, 12, 16, 24, 32 y 48 (`--espacio-1` a `--espacio-12`). El margen lateral en el móvil es de 16 px y la separación entre secciones, de 32 px.
-- **Radios:** 8, 12 y 20 px (`--radio-sm`, `--radio-md` y `--radio-lg`).
+- **Radios:** 8, 12 y 20 px (`--radio-sm`, `--radio-md` y `--radio-lg`), y 28 px (`--radio-xl`) para portadas, vidrio y la tarjeta de la entrada (ADR-003).
+- **Vidrio:** solo en inicio, entrada, paneles y resultados (`.vidrio`); siempre con un color sólido de respaldo que cumple AA. Nunca en la calibración ni en la práctica.
 - **Sombras:** tres niveles suaves (`--sombra-1` a `--sombra-3`), con valores propios en el modo oscuro.
 - **Áreas táctiles:** al menos 48 px (`--alto-toque`). "Cancelar" durante la ejecución mide al menos 56 px (`--alto-toque-grande`) y queda lejos de los bordes.
 
 ### Color
 
-Paleta completa en claro y en oscuro: neutros cálidos, un solo acento (azul cobalto) y cinco familias semánticas. Cada familia tiene un color de texto y uno de fondo.
+Paleta completa en claro y en oscuro: neutros crema (claro) o azul noche (oscuro), el acento azul (claro) o índigo (oscuro), los colores propios del botón principal, del menú lateral y de la portada, y cinco familias semánticas. Cada familia tiene un color de texto y uno de fondo.
 
 | Familia      | Tokens                                               | Significado                                  | Icono habitual |
 | ------------ | ---------------------------------------------------- | -------------------------------------------- | -------------- |
