@@ -38,10 +38,12 @@ import {
   useAviso,
 } from "../ui/base.tsx";
 import { Portada, SeccionCabecera, TarjetaResumen } from "../ui/portada.tsx";
+import { BotonPlanes, ListaPlanes } from "./planes.tsx";
 import { TecladoEjemplo } from "../ui/ilustraciones.tsx";
 
 const COLORES = [
   "fondo",
+  "fondo-2",
   "superficie",
   "superficie-2",
   "texto",
@@ -225,6 +227,21 @@ function ComponentesV2() {
           <Boton icono={Play}>Practicar</Boton>
         </li>
       </ul>
+      <h2>Planes</h2>
+      <p className="suave">
+        En la página pública, «Ver planes» abre esta lista en una ventana flotante (Esc o «Cerrar»
+        la cierran; el foco no sale de ella). El plan recomendado va destacado.
+      </p>
+      <div className="muestra-fila">
+        <BotonPlanes variante="primario" />
+      </div>
+      <ListaPlanes nivel="h3" />
+      <h2>Menú y movimiento</h2>
+      <p className="suave">
+        En el escritorio, el menú lateral se recoge en íconos con su nombre en una etiqueta
+        flotante. Al pasar el ratón, las tarjetas se elevan y los botones cambian de tono (150–250
+        ms, solo transform y opacity); con «reducir movimiento» no hay desplazamientos.
+      </p>
     </>
   );
 }
