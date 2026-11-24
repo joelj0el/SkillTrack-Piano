@@ -31,6 +31,25 @@ const tarea = {
   valoracion: null,
 };
 
+// Datos SINTÉTICOS con la forma de la semilla: sin precios ni límites definidos.
+const plan = (id: number, nombre: string, destacado: boolean, beneficios: string[]) => ({
+  id,
+  nombre,
+  descripcion: `Plan ${nombre}`,
+  beneficios,
+  precio_bs: null,
+  periodo: "mensual",
+  limite_docentes: null,
+  limite_estudiantes: null,
+  destacado,
+  activo: true,
+});
+const PLANES_API = [
+  plan(1, "Docente", false, ["1 docente", "Seguimiento de cada estudiante"]),
+  plan(2, "Institución", true, ["Varios docentes"]),
+  plan(3, "Convenio especial", false, ["Precio según el convenio"]),
+];
+
 function servidor(respuestas: Respuestas) {
   vi.stubGlobal(
     "fetch",
@@ -140,7 +159,7 @@ describe("diseño v2: inicio público, panel y menú", () => {
       within(menuAdmin)
         .getAllByRole("link")
         .map((a) => a.textContent),
-    ).toEqual(["Usuarios", "Perfil"]);
+    ).toEqual(["Usuarios", "Mi plan", "Perfil"]);
     expect(screen.getByText("Administración", { selector: "dd" })).toBeDefined();
   });
 
@@ -151,11 +170,14 @@ describe("diseño v2: inicio público, panel y menú", () => {
     expect(volver.getAttribute("href")).toBe("/");
   });
 
-  it("PU-web-36: /planes muestra los 3 planes, la Institución como recomendada y los límites sin definir como —", async () => {
-    servidor({ "/api/auth/me": { estado: 401, cuerpo: { detail: "Se requiere sesión" } } });
+  it("PU-web-36: /planes muestra los planes de la API, la Institución como recomendada y los límites sin definir como —", async () => {
+    servidor({
+      "/api/auth/me": { estado: 401, cuerpo: { detail: "Se requiere sesión" } },
+      "/api/planes": { estado: 200, cuerpo: PLANES_API },
+    });
     abrir("/planes");
     expect(await screen.findByRole("heading", { level: 1, name: "Planes" })).toBeDefined();
-    const planes = screen.getAllByRole("article");
+    const planes = await screen.findAllByRole("article");
     expect(planes.map((p) => p.querySelector("h2")?.textContent)).toEqual([
       "Docente",
       "Institución",
@@ -164,11 +186,17 @@ describe("diseño v2: inicio público, panel y menú", () => {
     expect(planes.map((p) => p.getAttribute("data-destacado"))).toEqual(["false", "true", "false"]);
     expect(within(planes[1]!).getByText("Recomendado")).toBeDefined();
     for (const p of planes) expect(within(p).getByText("Bs —")).toBeDefined();
-    expect(within(planes[0]!).getByText("Hasta — estudiantes")).toBeDefined();
-    expect(within(planes[1]!).getByText(/— docentes, — estudiantes/)).toBeDefined();
-    // Ningún límite inventado: la única cifra es el docente del plan Docente.
+    for (const p of planes) {
+      expect(within(p).getByText(/Hasta — docentes y — estudiantes/)).toBeDefined();
+    }
+    // Ningún precio ni límite inventado: la única cifra es el docente del plan Docente.
     expect(planes.map((p) => p.textContent?.match(/\d+/g) ?? [])).toEqual([["1"], [], []]);
-    expect(screen.getAllByRole("button", { name: /Solicitar información/ })).toHaveLength(3);
+    const enlaces = screen.getAllByRole("link", { name: /Solicitar información/ });
+    expect(enlaces.map((a) => a.getAttribute("href"))).toEqual([
+      "/solicitar-acceso?plan=1",
+      "/solicitar-acceso?plan=2",
+      "/solicitar-acceso?plan=3",
+    ]);
   });
 
   it("PU-web-37: Ver planes abre la ventana con su título; ya no hay planes al final de la página", async () => {
@@ -178,7 +206,10 @@ describe("diseño v2: inicio público, panel y menú", () => {
     HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
       this.open = false;
     };
-    servidor({ "/api/auth/me": { estado: 401, cuerpo: { detail: "Se requiere sesión" } } });
+    servidor({
+      "/api/auth/me": { estado: 401, cuerpo: { detail: "Se requiere sesión" } },
+      "/api/planes": { estado: 200, cuerpo: PLANES_API },
+    });
     abrir("/");
     await screen.findByRole("heading", { level: 1, name: /Aprende piano/ });
     expect(screen.queryByRole("region", { name: "Planes" })).toBeNull();
@@ -186,7 +217,7 @@ describe("diseño v2: inicio público, panel y menú", () => {
     expect(botones.length).toBe(2);
     fireEvent.click(botones[0]!);
     const ventana = screen.getByRole("dialog", { name: "Planes" });
-    expect(within(ventana).getAllByRole("article")).toHaveLength(3);
+    expect(await within(ventana).findAllByRole("article")).toHaveLength(3);
     expect(within(ventana).getByRole("button", { name: "Cerrar" })).toBeDefined();
   });
 

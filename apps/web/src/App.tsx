@@ -1,6 +1,9 @@
 import type { Rol } from "@skilltrack/contracts";
 import {
   BookOpen,
+  Building2,
+  CreditCard,
+  Inbox,
   ChartLine,
   ClipboardList,
   FlaskConical,
@@ -26,6 +29,8 @@ import { DetalleEstudiante, MisEstudiantes } from "./paginas/docente.tsx";
 import { CambiarClave, Entrar, Perfil } from "./paginas/entrada.tsx";
 import { PanelDocente, PanelEstudiante } from "./paginas/panel.tsx";
 import { BotonPlanes, PaginaPlanes } from "./paginas/planes.tsx";
+import { GestionPlanes, MiPlanPagina, Solicitudes } from "./paginas/gestion.tsx";
+import { PaginaSolicitarAcceso } from "./paginas/solicitud.tsx";
 import { InicioPublico } from "./paginas/publica.tsx";
 import { DetalleTarea, MisTareas } from "./paginas/estudiante.tsx";
 import { ModoInvestigacion } from "./paginas/investigacion.tsx";
@@ -47,7 +52,7 @@ const PaginaPractica = lazy(() =>
   import("./captura/PaginaPractica.tsx").then((m) => ({ default: m.PaginaPractica })),
 );
 
-function Protegida({ rol, children }: { rol?: Rol; children: ReactNode }) {
+function Protegida({ rol, children }: { rol?: Rol | "superadmin"; children: ReactNode }) {
   const { estado } = useSesion();
   const ubicacion = useLocation();
   if (estado.tipo === "cargando") return <Esqueleto />;
@@ -55,7 +60,9 @@ function Protegida({ rol, children }: { rol?: Rol; children: ReactNode }) {
   if (estado.tipo === "anonimo") return <Navigate to="/entrar" state={{ desde: ubicacion }} />;
   // Con clave temporal no se accede a ninguna otra pantalla (PA-HU01-02).
   if (estado.usuario.clave_temporal) return <Navigate to="/cambiar-clave" />;
-  if (rol && !roles(estado.usuario).has(rol)) return <Navigate to={rutaInicial(estado.usuario)} />;
+  const permitido =
+    !rol || (rol === "superadmin" ? estado.usuario.superadmin : roles(estado.usuario).has(rol));
+  if (!permitido) return <Navigate to={rutaInicial(estado.usuario)} />;
   return <>{children}</>;
 }
 
@@ -183,7 +190,10 @@ function Navegacion({ recogido, alternar }: { recogido: boolean; alternar: () =>
   if (estado.tipo !== "activo" || estado.usuario.clave_temporal) return null;
   const r = roles(estado.usuario);
   const conInicio = r.has("estudiante") || r.has("docente");
-  const rol = [...r].map((x) => NOMBRE_ROL[x]).join(" · ");
+  const rol = [
+    ...(estado.usuario.superadmin ? ["Superadministración"] : []),
+    ...[...r].map((x) => NOMBRE_ROL[x]),
+  ].join(" · ");
   return (
     <aside className="lateral">
       <div className="lateral-cabecera">
@@ -208,6 +218,13 @@ function Navegacion({ recogido, alternar }: { recogido: boolean; alternar: () =>
         {conInicio && <Destino a="/catalogo" icono={BookOpen} texto="Ejercicios" />}
         {r.has("estudiante") && <Destino a="/mi-progreso" icono={ChartLine} texto="Mi progreso" />}
         {r.has("admin_inst") && <Destino a="/usuarios" icono={UsersRound} texto="Usuarios" />}
+        {r.has("admin_inst") && <Destino a="/mi-plan" icono={CreditCard} texto="Mi plan" />}
+        {estado.usuario.superadmin && (
+          <Destino a="/admin/planes" icono={Building2} texto="Planes y convenios" />
+        )}
+        {estado.usuario.superadmin && (
+          <Destino a="/admin/solicitudes" icono={Inbox} texto="Solicitudes" />
+        )}
         {r.has("investigador") && (
           <Destino a="/investigacion" icono={FlaskConical} texto="Investigación" />
         )}
@@ -306,6 +323,31 @@ export function App() {
             />
             <Route path="/entrar" element={<Entrar />} />
             <Route path="/planes" element={<PaginaPlanes />} />
+            <Route path="/solicitar-acceso" element={<PaginaSolicitarAcceso />} />
+            <Route
+              path="/mi-plan"
+              element={
+                <Protegida rol="admin_inst">
+                  <MiPlanPagina />
+                </Protegida>
+              }
+            />
+            <Route
+              path="/admin/planes"
+              element={
+                <Protegida rol="superadmin">
+                  <GestionPlanes />
+                </Protegida>
+              }
+            />
+            <Route
+              path="/admin/solicitudes"
+              element={
+                <Protegida rol="superadmin">
+                  <Solicitudes />
+                </Protegida>
+              }
+            />
             <Route path="/cambiar-clave" element={<CambiarClave />} />
             <Route
               path="/tareas"

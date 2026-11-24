@@ -11,7 +11,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "react-router";
-import { CORREO_CONTACTO } from "../config/planes.ts";
 import { EnlaceBoton } from "../ui/base.tsx";
 import { Portada, SeccionCabecera } from "../ui/portada.tsx";
 import { BotonPlanes } from "./planes.tsx";
@@ -52,18 +51,10 @@ const PUBLICO: { icono: LucideIcon; titulo: string; texto: string }[] = [
   },
 ];
 
+/** Lleva al formulario de solicitud de acceso (lo atiende el superadministrador). */
 function SolicitarAcceso({ variante }: { variante?: "secundario" }) {
-  return CORREO_CONTACTO ? (
-    <a
-      className={["boton-enlace", variante].filter(Boolean).join(" ")}
-      href={`mailto:${CORREO_CONTACTO}?subject=${encodeURIComponent("Acceso para mi institución")}`}
-    >
-      <Mail aria-hidden="true" />
-      Solicitar acceso para mi institución
-    </a>
-  ) : (
-    // Sin correo definido todavía: lleva a los planes, que explican cómo se obtiene el acceso.
-    <Link className={["boton-enlace", variante].filter(Boolean).join(" ")} to="/planes">
+  return (
+    <Link className={["boton-enlace", variante].filter(Boolean).join(" ")} to="/solicitar-acceso">
       <Mail aria-hidden="true" />
       Solicitar acceso para mi institución
     </Link>
