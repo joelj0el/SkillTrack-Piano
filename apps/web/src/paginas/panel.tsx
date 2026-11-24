@@ -28,7 +28,12 @@ import { NOMBRE_NIVEL, NOMBRE_VARIABLE } from "../captura/resultados.ts";
 import { useSesion } from "../sesion.tsx";
 import { EnlaceBoton, EstadoVista } from "../ui/base.tsx";
 import { Portada, SeccionCabecera, TarjetaResumen } from "../ui/portada.tsx";
+import { serieSemanal } from "../graficos/datos.ts";
+import { MiniTendencia } from "../graficos/graficos.tsx";
+import { intentosDelEstudiante } from "../graficos/intentos.ts";
 import { filasDeProgreso, tendencia } from "./tableros.tsx";
+
+const SEMANAS_MINIGRAFICO = 8;
 
 /**
  * Paneles de inicio (diseño v2). Solo datos que ya existen: tareas, repeticiones de hoy,
@@ -201,6 +206,12 @@ export function PanelEstudiante() {
                   etiqueta="Intentos esta semana"
                   valor={semana.esta}
                   detalle={cambioSemanal(semana)}
+                  grafico={
+                    <MiniTendencia
+                      titulo={`Tus intentos por semana, últimas ${SEMANAS_MINIGRAFICO} semanas`}
+                      serie={serieSemanal(intentos, new Date(), SEMANAS_MINIGRAFICO)}
+                    />
+                  }
                   data-resumen="semana"
                 />
               </section>
@@ -229,6 +240,21 @@ export function PanelEstudiante() {
         }}
       </Cargado>
     </div>
+  );
+}
+
+/** Intentos por semana de los estudiantes asignados (suma del grupo; no separa a nadie). */
+function IntentosDelGrupo({ ids }: { ids: number[] }) {
+  const { carga } = useCarga(
+    async () => (await Promise.all(ids.map(intentosDelEstudiante))).flat(),
+    [ids.join(",")],
+  );
+  if (carga.tipo !== "listo" || ids.length === 0) return null;
+  return (
+    <MiniTendencia
+      titulo={`Intentos del grupo por semana, últimas ${SEMANAS_MINIGRAFICO} semanas`}
+      serie={serieSemanal(carga.datos, new Date(), SEMANAS_MINIGRAFICO)}
+    />
   );
 }
 
@@ -276,6 +302,7 @@ export function PanelDocente() {
                   etiqueta="Con intentos evaluados"
                   valor={`${conIntentos} de ${grupo.estudiantes.length}`}
                   detalle="En sus últimos 10 intentos"
+                  grafico={<IntentosDelGrupo ids={estudiantes.map((e) => e.id)} />}
                   data-resumen="con-intentos"
                 />
                 <TarjetaResumen

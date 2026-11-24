@@ -18,6 +18,8 @@ import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import { z } from "zod";
 import { ErrorApi, pedir } from "../api.ts";
+import { intentosDelEstudiante } from "../graficos/intentos.ts";
+import { ErroresFrecuentes, TendenciaPorVariable } from "./tableros.tsx";
 import { Cargado, NOMBRE_MANOS, fechaLegible, useCarga } from "../componentes.tsx";
 import { Boton, EstadoVista, PaginaCabecera, useAviso } from "../ui/base.tsx";
 import { NOMBRE_INDICADOR, NOMBRE_NIVEL, NOMBRE_VARIABLE } from "../captura/resultados.ts";
@@ -564,6 +566,28 @@ function ValorarTarea({
   );
 }
 
+/** Errores recurrentes y tendencia de cada variable del estudiante (sin compararlo con otros). */
+function GraficosDelEstudiante({ id, nombre }: { id: number; nombre: string }) {
+  const { carga } = useCarga(() => intentosDelEstudiante(id), [id]);
+  return (
+    <section className="tarjeta pila-secciones" aria-labelledby="ficha-progreso">
+      <h2 id="ficha-progreso">Progreso</h2>
+      <Cargado carga={carga}>
+        {(intentos) => (
+          <>
+            <ErroresFrecuentes
+              intentos={intentos}
+              ultimos={10}
+              titulo={`Errores en los últimos 10 intentos evaluados de ${nombre}`}
+            />
+            <TendenciaPorVariable intentos={intentos} nombre={nombre} />
+          </>
+        )}
+      </Cargado>
+    </section>
+  );
+}
+
 export function DetalleEstudiante() {
   const { id } = useParams();
   const estudianteId = Number(id);
@@ -582,6 +606,7 @@ export function DetalleEstudiante() {
       {([estudiante, tareas, ejercicios, aspectos]) => (
         <section>
           <PaginaCabecera titulo={estudiante.nombre_visible} />
+          <GraficosDelEstudiante id={estudianteId} nombre={estudiante.nombre_visible} />
           <details className="tarjeta" open={tareas.length === 0}>
             <summary>Asignar tarea</summary>
             <FormularioTarea

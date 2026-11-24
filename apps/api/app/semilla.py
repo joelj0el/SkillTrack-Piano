@@ -4,17 +4,23 @@ Solo actúa si SEMILLA_DEMO=1. Crea una institución con 1 administrador, 2 doce
 y 1 investigador, 1 superadministrador (publica la referencia y las reglas), las asignaciones y tareas con observaciones (una de ellas vencida). La
 contraseña común sale de SEMILLA_CLAVE (solo para desarrollo). Los nombres son inventados.
 
+Los intentos de demostración (solo los del estudiante demo, a lo largo de 6 semanas) son
+FICTICIOS: llevan MARCA_DEMO en la versión del núcleo y en la clase de dispositivo, y no cuentan
+para ninguna tarea. Sirven para que los gráficos se vean en una demostración local.
+
 Uso: python -m app.semilla
 """
 
 import os
-from datetime import UTC, date, datetime, timedelta
+import uuid
+from datetime import UTC, date, datetime, time, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.db import crear_engine
-from app.modules.catalog.models import ClaseError
+from app.modules.attempts.models import Intento
+from app.modules.catalog.models import ClaseError, VersionEjercicio
 from app.modules.identity.models import Usuario
 from app.modules.identity.service import hash_clave
 from app.modules.institutions.models import AsignacionDocente, Institucion, Membresia
@@ -176,6 +182,86 @@ def sembrar(db: Session, clave: str, hoy: date) -> bool:
     return True
 
 
+MARCA_DEMO = "demostración"
+SEMANAS_DEMO = 6
+INTENTOS_POR_SEMANA = 3
+# % de partida y mejora semanal de cada variable evaluable (ficticios). E y F quedan sin evaluar,
+# como en la plantilla de reglas v1 ("no evaluable por diseño").
+BASE_DEMO = {"ER-A": (72, 4), "ER-B": (52, 6), "ER-C": (64, 5), "ER-D": (76, 3)}
+INDICADOR_DEMO = {"ER-A": "IND-A1", "ER-B": "IND-B2", "ER-C": "IND-C1", "ER-D": "IND-D1"}
+
+
+def _nivel(pct: float) -> str:
+    return "logrado" if pct >= 90 else "en-desarrollo" if pct >= 70 else "por-mejorar"
+
+
+def sembrar_intentos_demo(db: Session, hoy: date) -> int:
+    """Intentos ficticios del estudiante demo en las 2 primeras tareas. Devuelve cuántos creó."""
+    ana = db.scalar(select(Usuario).where(Usuario.username == "estudiante.demo"))
+    if ana is None:
+        return 0
+    ya = db.scalar(
+        select(Intento.id).where(
+            Intento.estudiante_id == ana.id, Intento.clase_dispositivo == MARCA_DEMO
+        )
+    )
+    if ya is not None:
+        return 0
+    tareas = list(
+        db.scalars(select(Tarea).where(Tarea.estudiante_id == ana.id).order_by(Tarea.id).limit(2))
+    )
+    if not tareas:
+        return 0
+    creados = 0
+    for semana in range(SEMANAS_DEMO):
+        for k in range(INTENTOS_POR_SEMANA):
+            n = semana * INTENTOS_POR_SEMANA + k
+            tarea = tareas[n % len(tareas)]
+            version = db.scalar(
+                select(VersionEjercicio.id)
+                .where(VersionEjercicio.ejercicio_id == tarea.ejercicio_id)
+                .order_by(VersionEjercicio.version.desc())
+            )
+            dia = hoy - timedelta(days=7 * (SEMANAS_DEMO - 1 - semana) + 2 * k)
+            calificacion = []
+            indicadores = []
+            for clase, (base, mejora) in BASE_DEMO.items():
+                pct = float(min(98, base + mejora * semana + (n * 3) % 7 - 3))
+                calificacion.append({"clase": clase, "nivel": _nivel(pct), "pct": pct})
+                if pct < 90:
+                    indicadores.append(INDICADOR_DEMO[clase])
+            for clase in ("ER-E", "ER-F"):
+                calificacion.append({"clase": clase, "nivel": "no-evaluado", "pct": None})
+            db.add(
+                Intento(
+                    client_uuid=str(uuid.uuid5(uuid.NAMESPACE_URL, f"skilltrack-demo/{n}")),
+                    estudiante_id=ana.id,
+                    version_ejercicio_id=version,
+                    tarea_id=tarea.id,
+                    version_nucleo=MARCA_DEMO,
+                    version_modelo_mano=MARCA_DEMO,
+                    instrumento="digital",
+                    manos=tarea.manos,
+                    clase_dispositivo=MARCA_DEMO,
+                    modo="VA",
+                    modo_metronomo="con",
+                    tempo_elegido_bpm=tarea.tempo_min_bpm,
+                    tempo_medido_bpm=None,
+                    estado="evaluado",
+                    cuenta_para_tarea=False,
+                    motivo_no_cuenta="Dato de demostración",
+                    iniciado_en=datetime.combine(dia, time(21, 0), UTC),
+                    duracion_ms=0,
+                    eventos=[],
+                    calificacion=calificacion,
+                    indicadores_deficientes=sorted(indicadores),
+                )
+            )
+            creados += 1
+    db.commit()
+    return creados
+
+
 def main() -> None:
     if os.environ.get("SEMILLA_DEMO") != "1":
         return
@@ -184,7 +270,10 @@ def main() -> None:
         raise SystemExit("SEMILLA_CLAVE debe tener al menos 8 caracteres.")
     with sessionmaker(crear_engine())() as db:
         creada = sembrar(db, clave, date.today())
+        intentos = sembrar_intentos_demo(db, date.today())
     print("Demostración creada." if creada else "La demostración ya existía.")
+    if intentos:
+        print(f"Intentos de demostración agregados: {intentos}.")
 
 
 if __name__ == "__main__":

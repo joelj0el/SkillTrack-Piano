@@ -22,6 +22,15 @@ import { Link } from "react-router";
 import { z } from "zod";
 import { pedir } from "../api.ts";
 import { fechaLegible } from "../componentes.tsx";
+import { desfasesDelPulso, serieDeVariable } from "../graficos/datos.ts";
+import {
+  BarrasNivel,
+  Figura,
+  GraficoDesfase,
+  LineasPorVariable,
+  NOTA_UMBRALES,
+  TablaDatos,
+} from "../graficos/graficos.tsx";
 import { Boton, Chip, EstadoVista, type Tono } from "../ui/base.tsx";
 import {
   accionSugerida,
@@ -147,6 +156,20 @@ export function PantallaResultados(d: DatosResultados) {
 
       <section data-bloque="variables" aria-labelledby="b-variables">
         <h3 id="b-variables">Calificación por variable</h3>
+        <Figura
+          titulo="Porcentaje de notas sin error en cada variable"
+          nota={`${NOTA_UMBRALES} La tabla de abajo tiene los mismos datos.`}
+        >
+          <BarrasNivel
+            filas={variables.map((v) => ({
+              clase: v.clase,
+              nombre: NOMBRE_VARIABLE[v.clase],
+              nivel: v.nivel,
+              pct: v.pct,
+              motivo: v.motivo ?? undefined,
+            }))}
+          />
+        </Figura>
         <div
           className="tabla-contenedor"
           tabIndex={0}
@@ -186,7 +209,7 @@ export function PantallaResultados(d: DatosResultados) {
 
       <Resumen resultado={resultado} tarea={d.tarea} intentos={intentos} />
       <TuDocente tarea={d.tarea} />
-      <Progreso resultado={resultado} intentos={intentos} />
+      <Progreso resultado={resultado} intentos={intentos} variables={variables} />
 
       <Boton icono={RotateCcw} onClick={d.reintentar}>
         Reintentar
@@ -240,6 +263,7 @@ function NotaPorNota({
   return (
     <section data-bloque="notas" aria-labelledby="b-notas">
       <h3 id="b-notas">Cómo lo ejecutaste, nota por nota</h3>
+      <LineaDeTiempo eventos={eventos} />
       <ol className="notas-linea">
         {eventos.map((e) => {
           const f = FAMILIA[familiaDeEvento(e, diagnosticos)];
@@ -307,6 +331,40 @@ function NotaPorNota({
         )}
       </div>
     </section>
+  );
+}
+
+/** Desfase de cada ataque respecto del pulso, con la franja de tolerancia de PRM-10. */
+function LineaDeTiempo({ eventos }: { eventos: EventoMostrable[] }) {
+  const puntos = desfasesDelPulso(eventos);
+  const etiqueta = (idx: number) => {
+    const e = eventos.find((x) => x.idx === idx);
+    return `Nota ${idx + 1}${e ? ` (${notaDe(e)})` : ""}`;
+  };
+  return (
+    <Figura
+      titulo="Desfase de cada ataque respecto del pulso (ms)"
+      data-figura="desfase"
+      nota="Hacia arriba, la nota llegó tarde; hacia abajo, antes. El pulso de cada nota es el punto medio entre la anterior y la siguiente de la misma mano; la franja es la tolerancia (25 % del intervalo, la misma con que se marca un tropiezo). Las barras fuera de la franja van en otro tono y la tabla lo dice en palabras."
+      tabla={
+        <TablaDatos
+          titulo="Desfase de cada ataque"
+          columnas={["Nota", "Mano", "Desfase", "Tolerancia", "Dentro de la franja"]}
+          filas={puntos.map((p) => ({
+            clave: String(p.idx),
+            celdas: [
+              etiqueta(p.idx),
+              p.mano ? MANO[p.mano] : "—",
+              p.ms === null ? "sin dato" : `${p.ms > 0 ? "+" : ""}${p.ms} ms`,
+              p.tolerancia === null ? "—" : `±${p.tolerancia} ms`,
+              p.dentro === null ? "—" : p.dentro ? "Sí" : "No",
+            ],
+          }))}
+        />
+      }
+    >
+      <GraficoDesfase puntos={puntos} etiqueta={etiqueta} />
+    </Figura>
   );
 }
 
@@ -416,9 +474,11 @@ const CLASES_PROGRESO = ["ER-A", "ER-B", "ER-C", "ER-D", "ER-E", "ER-F"] as cons
 function Progreso({
   resultado,
   intentos,
+  variables,
 }: {
   resultado: ResultadoIntento;
   intentos: IntentoGuardado[] | null;
+  variables: CalificacionVariable[];
 }) {
   const anteriores = (intentos ?? [])
     .filter(
@@ -437,34 +497,61 @@ function Progreso({
       ) : anteriores.length === 0 ? (
         <p>Aún no hay intentos anteriores de este ejercicio con estas manos.</p>
       ) : (
-        <div
-          className="tabla-contenedor"
-          tabIndex={0}
-          role="region"
-          aria-label="Tabla de los últimos intentos"
-        >
-          <table className="tabla" aria-label="Últimos intentos">
-            <thead>
-              <tr>
-                <th>Intento</th>
-                {CLASES_PROGRESO.map((c) => (
-                  <th key={c}>{NOMBRE_VARIABLE[c]}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {anteriores.map((i) => (
-                <tr key={i.id} data-intento={i.id}>
-                  <td>{fechaLegible(i.iniciado_en)}</td>
-                  {CLASES_PROGRESO.map((c) => {
-                    const v = i.calificacion!.find((x) => x.clase === c);
-                    return <td key={c}>{v ? NIVEL[v.nivel] : NIVEL["no-evaluado"]}</td>;
-                  })}
+        <>
+          <Figura
+            titulo="Tu % en cada variable, de los intentos anteriores a este"
+            nota={`${NOTA_UMBRALES} El punto resaltado es este intento. La tabla de abajo muestra el nivel de cada intento anterior.`}
+            data-figura="comparacion"
+          >
+            <LineasPorVariable
+              sufijo=" en los intentos anteriores y este"
+              series={CLASES_PROGRESO.map((c) => {
+                const valores = [
+                  ...serieDeVariable(anteriores, c).map((p) => p.valor),
+                  variables.find((v) => v.clase === c)?.pct ?? null,
+                ];
+                const ultimo = valores.at(-1);
+                return {
+                  clase: c,
+                  nombre: NOMBRE_VARIABLE[c],
+                  valores,
+                  ultimoTexto:
+                    ultimo === null || ultimo === undefined
+                      ? "Este intento: No evaluado"
+                      : `Este intento: ${ultimo} %`,
+                };
+              })}
+            />
+          </Figura>
+          <div
+            className="tabla-contenedor"
+            tabIndex={0}
+            role="region"
+            aria-label="Tabla de los últimos intentos"
+          >
+            <table className="tabla" aria-label="Últimos intentos">
+              <thead>
+                <tr>
+                  <th>Intento</th>
+                  {CLASES_PROGRESO.map((c) => (
+                    <th key={c}>{NOMBRE_VARIABLE[c]}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {anteriores.map((i) => (
+                  <tr key={i.id} data-intento={i.id}>
+                    <td>{fechaLegible(i.iniciado_en)}</td>
+                    {CLASES_PROGRESO.map((c) => {
+                      const v = i.calificacion!.find((x) => x.clase === c);
+                      return <td key={c}>{v ? NIVEL[v.nivel] : NIVEL["no-evaluado"]}</td>;
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </section>
   );

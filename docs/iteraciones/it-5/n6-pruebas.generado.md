@@ -1,14 +1,14 @@
 # n.6 Pruebas — it-5 (generado)
 
-Generado por `pnpm docs:tests it-5` el 2026-11-13 14:36 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-5` el 2026-11-24 08:12 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
-| Playwright  | 59    | 58        | 0        | 1        |
-| Vitest      | 363   | 363       | 0        | 0        |
-| pytest      | 127   | 127       | 0        | 0        |
+| Playwright  | 66    | 65        | 0        | 1        |
+| Vitest      | 395   | 395       | 0        | 0        |
+| pytest      | 128   | 128       | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
 
@@ -24,6 +24,7 @@ Generado por `pnpm docs:tests it-5` el 2026-11-13 14:36 UTC a partir de los repo
 | PA-HU02-04 | Playwright          | 1     | aprobada  | PA-HU02-04: el detalle muestra partitura, digitación, tempo y guía, a 2 toques de Mis tareas                                                                 |
 | PA-HU03-03 | Playwright          | 1     | aprobada  | PA-HU03-03: sin permiso de cámara se explica cómo habilitarlo y se ofrece Reintentar                                                                         |
 | PA-HU03-05 | Playwright          | 1     | aprobada  | PA-HU03-05: durante 30 s de encuadre no sale ninguna imagen ni video por la red                                                                              |
+| PA-HU04-01 | Playwright          | 1     | aprobada  | PA-HU04-01: al tocar, el análisis empieza solo al terminar: Conteo → Tocando → Analizando, sin botón Enviar                                                  |
 | PA-HU05-05 | pytest              | 1     | aprobada  | test_pa_hu05_05_el_intento_registra_versiones_de_nucleo_y_modelo_de_mano                                                                                     |
 | PA-HU06-01 | Vitest              | 1     | aprobada  | golden del diagnóstico (plantilla de reglas v1) > PA-HU06-01: cada fixture golden es sintética y el diagnóstico da exactamente sus clases e indicadores      |
 | PA-HU06-02 | Playwright          | 1     | aprobada  | PA-HU06-02: diagnosticar no descarga ni carga ningún modelo de aprendizaje automático                                                                        |
@@ -89,13 +90,13 @@ Generado por `pnpm docs:tests it-5` el 2026-11-13 14:36 UTC a partir de los repo
 | align         | 7   | 7         | 0        |
 | alineacion    | 6   | 6         | 0        |
 | analytics     | 3   | 3         | 0        |
-| api           | 10  | 10        | 0        |
+| api           | 11  | 11        | 0        |
 | attempts      | 10  | 10        | 0        |
 | audio         | 25  | 25        | 0        |
 | aumento       | 4   | 4         | 0        |
 | bandas        | 20  | 20        | 0        |
-| cadena        | 4   | 4         | 0        |
-| capture       | 18  | 18        | 0        |
+| cadena        | 6   | 6         | 0        |
+| capture       | 20  | 20        | 0        |
 | catalog       | 13  | 13        | 0        |
 | catalogo      | 2   | 2         | 0        |
 | ci            | 8   | 8         | 0        |
@@ -107,7 +108,7 @@ Generado por `pnpm docs:tests it-5` el 2026-11-13 14:36 UTC a partir de los repo
 | desfase       | 5   | 5         | 0        |
 | design        | 5   | 5         | 0        |
 | diagnostico   | 18  | 18        | 0        |
-| diseno        | 3   | 3         | 0        |
+| diseno        | 4   | 4         | 0        |
 | docs          | 6   | 6         | 0        |
 | esperadas     | 3   | 3         | 0        |
 | eventos       | 4   | 4         | 0        |
@@ -115,6 +116,7 @@ Generado por `pnpm docs:tests it-5` el 2026-11-13 14:36 UTC a partir de los repo
 | features      | 20  | 20        | 0        |
 | fusion        | 2   | 2         | 0        |
 | geometry      | 16  | 16        | 0        |
+| graficos      | 5   | 5         | 0        |
 | hooks         | 2   | 2         | 0        |
 | identity      | 12  | 12        | 0        |
 | infra         | 12  | 12        | 0        |
@@ -123,7 +125,7 @@ Generado por `pnpm docs:tests it-5` el 2026-11-13 14:36 UTC a partir de los repo
 | pedagogy      | 12  | 12        | 0        |
 | quality       | 9   | 9         | 0        |
 | registro      | 3   | 3         | 0        |
-| research      | 79  | 79        | 0        |
+| research      | 93  | 93        | 0        |
 | tempo         | 5   | 5         | 0        |
 | ui            | 6   | 6         | 0        |
-| web           | 28  | 28        | 0        |
+| web           | 42  | 42        | 0        |

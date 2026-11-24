@@ -109,12 +109,15 @@ export function TarjetaResumen({
   etiqueta,
   valor,
   detalle,
+  grafico,
   ...resto
 }: {
   icono: LucideIcon;
   etiqueta: string;
   valor: ReactNode;
   detalle?: ReactNode;
+  /** Minigráfico de tendencia (opcional). */
+  grafico?: ReactNode;
 } & Record<`data-${string}`, string | number | undefined>) {
   return (
     <div className="tarjeta-resumen vidrio" {...resto}>
@@ -124,6 +127,7 @@ export function TarjetaResumen({
       <span className="tarjeta-resumen-etiqueta">{etiqueta}</span>
       <span className="tarjeta-resumen-valor">{valor}</span>
       {detalle && <span className="tarjeta-resumen-detalle">{detalle}</span>}
+      {grafico}
     </div>
   );
 }
