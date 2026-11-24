@@ -3,6 +3,7 @@ import {
   CuentaPendiente,
   InstitucionCreada,
   InstitucionListada,
+  MiPago,
   MiPlan,
   Plan,
   SolicitudAcceso,
@@ -21,12 +22,13 @@ import {
   Save,
   Sparkles,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { z } from "zod";
 import { ErrorApi, pedir } from "../api.ts";
 import { Cargado, fechaLegible, useCarga } from "../componentes.tsx";
 import { useSesion } from "../sesion.tsx";
 import { Boton, Chip, EstadoVista, PaginaCabecera, useAviso } from "../ui/base.tsx";
+import { PagoConQr } from "./pago.tsx";
 import { limiteTexto, precioTexto } from "./planes.tsx";
 
 /**
@@ -687,13 +689,55 @@ export function Solicitudes() {
 const usado = (n: number, limite: number | null) =>
   limite === null ? `${n} (límite: —)` : `${n} de ${limite}`;
 
+/** Pago o renovación por QR con el banco (PAGOS_PROVEEDOR=baneco). */
+function PagarDesdeMiPlan({
+  institucionId,
+  alPagar,
+}: {
+  institucionId: number;
+  alPagar: () => void;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const [confirmado, setConfirmado] = useState<string | null>(null);
+  const avisar = useAviso();
+  const alActivar = useCallback(
+    (pago: MiPago | null) => {
+      const fin = pago?.vence_plan ? ` hasta el ${fechaLegible(pago.vence_plan)}` : "";
+      setConfirmado(`Pago confirmado: tu plan está activo${fin}.`);
+      avisar("Pago confirmado");
+      setAbierto(false);
+      alPagar();
+    },
+    [avisar, alPagar],
+  );
+  return (
+    <section className="pila-secciones" aria-labelledby="t-pagar">
+      <h2 id="t-pagar">Pagar con QR</h2>
+      {confirmado && (
+        <p className="aviso" role="status">
+          {confirmado}
+        </p>
+      )}
+      {abierto ? (
+        <PagoConQr base={`/instituciones/${institucionId}/pago`} automatico alActivar={alActivar} />
+      ) : (
+        <div>
+          <Boton icono={QrCode} onClick={() => setAbierto(true)}>
+            Pagar con QR
+          </Boton>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function MiPlanPagina() {
   const { estado } = useSesion();
   const institucionId =
     estado.tipo === "activo"
       ? estado.usuario.membresias.find((m) => m.rol === "admin_inst")?.institucion_id
       : undefined;
-  const { carga } = useCarga(
+  const { carga, recargar } = useCarga(
     () => pedir("GET", `/instituciones/${institucionId}/mi-plan`, MiPlan),
     [institucionId],
   );
@@ -724,16 +768,20 @@ export function MiPlanPagina() {
                 <p className="suave">Condiciones: {d.suscripcion.condiciones}</p>
               )}
             </div>
-            <EstadoVista tipo="vacio" titulo="Pago por QR en integración con el banco">
-              <p>
-                Pronto podrás pagar tu plan con un código QR del Banco Económico desde esta
-                pantalla. Mientras tanto, la activación y la renovación las hace el
-                superadministrador.
-              </p>
-              <Boton icono={QrCode} disabled>
-                Pagar con QR
-              </Boton>
-            </EstadoVista>
+            {d.pago_qr ? (
+              <PagarDesdeMiPlan institucionId={institucionId!} alPagar={recargar} />
+            ) : (
+              <EstadoVista tipo="vacio" titulo="Pago por QR en integración con el banco">
+                <p>
+                  Pronto podrás pagar tu plan con un código QR del Banco Económico desde esta
+                  pantalla. Mientras tanto, la activación y la renovación las hace el
+                  superadministrador.
+                </p>
+                <Boton icono={QrCode} disabled>
+                  Pagar con QR
+                </Boton>
+              </EstadoVista>
+            )}
           </>
         )}
       </Cargado>

@@ -6,7 +6,7 @@ export default defineConfig({
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,
-  reporter: [["list"], ["junit", { outputFile: "reports/e2e.xml" }]],
+  reporter: [["list"], ["junit", { outputFile: process.env.E2E_JUNIT ?? "reports/e2e.xml" }]],
   use: {
     baseURL: process.env.E2E_URL ?? "https://localhost",
     ignoreHTTPSErrors: true,

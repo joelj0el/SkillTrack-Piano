@@ -45,10 +45,13 @@ const PAGO = {
   monto_bs: 50,
   codigo_convenio: null,
   estado: "pendiente",
+  vence_plan: null,
+  proveedor: "simulado",
   qr: null,
 };
 const QR = {
-  id_transaccion: "SIM-000001",
+  id_transaccion: "ST-000001",
+  estado: "pendiente",
   simulado: true,
   imagen_png: null,
   vence_en: "2100-01-01T00:00:00Z",
@@ -215,6 +218,75 @@ describe("registro de compradores y cuenta pendiente de pago (HU-40)", () => {
 
     expect(await screen.findByRole("heading", { level: 1, name: "Usuarios" })).toBeDefined();
     expect(localStorage.getItem("skilltrack.asistente.7")).toBe("visto");
+  });
+
+  it("PU-web-50: con el banco, muestra el QR real, consulta cada 5 s y al pagarse entra a la app", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    let pagado = false;
+    const qrBanco = {
+      ...QR,
+      simulado: false,
+      imagen_png: "iVBORw0KGgo=",
+      vence_en: "2026-11-25T23:59:59-04:00",
+    };
+    const pendiente = { ...PAGO, proveedor: "baneco", qr: qrBanco };
+    const llamadas = servidor({
+      "GET /api/auth/me": () => ({ estado: 200, cuerpo: yo({ pago_pendiente: !pagado }) }),
+      "GET /api/mi-pago": { estado: 200, cuerpo: pendiente },
+      "POST /api/mi-pago/verificar": () => ({
+        estado: 200,
+        cuerpo: pagado
+          ? { ...pendiente, estado: "activa", vence_plan: "2026-12-24", qr: null }
+          : pendiente,
+      }),
+      "GET /api/instituciones/3/usuarios": { estado: 200, cuerpo: [] },
+      "GET /api/instituciones/3/asignaciones": { estado: 200, cuerpo: [] },
+    });
+    try {
+      abrir("/pago");
+      const imagen = await screen.findByRole("img", {
+        name: "Código QR para pagar Bs 50,00 al mes",
+      });
+      expect(imagen.getAttribute("src")).toBe("data:image/png;base64,iVBORw0KGgo=");
+      expect(screen.getByText("Esperando el pago…")).toBeDefined();
+      expect(screen.getByText("Vence el 25/11/2026.")).toBeDefined();
+      expect(screen.getByRole("button", { name: "Cancelar" })).toBeDefined();
+      expect(screen.queryByRole("button", { name: "Ya pagué: verificar" })).toBeNull();
+
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(llamadas.filter((l) => l.ruta === "POST /api/mi-pago/verificar")).toHaveLength(1);
+      pagado = true;
+      await vi.advanceTimersByTimeAsync(5000);
+      // Institución vacía: entra al asistente del primer ingreso.
+      expect(
+        await screen.findByRole("region", { name: "Asistente de primer ingreso" }),
+      ).toBeDefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("PU-web-51: un QR vencido ofrece generar uno nuevo; si el banco no responde se avisa", async () => {
+    const vencido = {
+      ...PAGO,
+      proveedor: "baneco",
+      qr: { ...QR, simulado: false, estado: "vencido" },
+    };
+    servidor({
+      "GET /api/auth/me": { estado: 200, cuerpo: yo() },
+      "GET /api/mi-pago": { estado: 200, cuerpo: vencido },
+      "POST /api/mi-pago/qr": {
+        estado: 503,
+        cuerpo: { detail: "No pudimos generar el QR. Intenta de nuevo en unos minutos." },
+      },
+    });
+    abrir("/pago");
+    expect(await screen.findByRole("heading", { name: "El QR venció" })).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Generar nuevo QR" }));
+    expect(
+      await screen.findByText("No pudimos generar el QR. Intenta de nuevo en unos minutos."),
+    ).toBeDefined();
+    expect(screen.getByText(/el superadministrador puede activar tu plan/)).toBeDefined();
   });
 
   it("PU-web-49: términos y privacidad están marcados pendientes de revisión legal", async () => {
