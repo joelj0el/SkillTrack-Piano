@@ -4,8 +4,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.modules.attempts.models import Intento
 from app.modules.identity.models import Usuario
-from app.semilla import sembrar
+from app.semilla import MARCA_DEMO, sembrar, sembrar_intentos_demo
 from tests.conftest import Reloj
 
 
@@ -37,3 +38,30 @@ def como_con(cliente: TestClient, usuario: Usuario) -> TestClient:
     )
     assert respuesta.status_code == 200, respuesta.text
     return cliente
+
+
+def test_pu_api_11_la_semilla_agrega_intentos_de_demostracion_marcados_en_varias_semanas(
+    db: Session, cliente: TestClient, reloj: Reloj
+):
+    hoy = date(2026, 11, 10)
+    sembrar(db, "clave-demo-larga", hoy)
+    creados = sembrar_intentos_demo(db, hoy)
+    assert creados > 0
+    assert sembrar_intentos_demo(db, hoy) == 0
+
+    intentos = list(db.scalars(select(Intento)))
+    assert len(intentos) == creados
+    # Todos marcados como datos de demostración y fuera del conteo de las tareas.
+    assert {i.clase_dispositivo for i in intentos} == {MARCA_DEMO}
+    assert {i.version_nucleo for i in intentos} == {MARCA_DEMO}
+    assert not any(i.cuenta_para_tarea for i in intentos)
+
+    ana = db.scalars(select(Usuario).where(Usuario.username == "estudiante.demo")).one()
+    assert {i.estudiante_id for i in intentos} == {ana.id}
+    semanas = como_con(cliente, ana).get("/api/tableros/mi-progreso").json()["semanas"]
+    assert len({s["semana"] for s in semanas}) >= 4
+
+    docente = db.scalars(select(Usuario).where(Usuario.username == "docente.demo")).one()
+    grupo = como_con(cliente, docente).get("/api/tableros/mi-grupo").json()
+    fila = next(e for e in grupo["estudiantes"] if e["estudiante_id"] == ana.id)
+    assert fila["intentos_considerados"] == 10
