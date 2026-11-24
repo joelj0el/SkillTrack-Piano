@@ -247,10 +247,14 @@ svg {
     color: var(--color-lateral-texto);
   }
 
-  /* Franja fija del menú a toda la altura (también en capturas de página completa). */
+  /* Franja del menú a toda la altura del documento (también en capturas de página completa). */
+  .con-navegacion {
+    position: relative;
+  }
+
   .con-navegacion::before {
     content: "";
-    position: fixed;
+    position: absolute;
     inset: 0 auto 0 0;
     z-index: -1;
     width: var(--ancho-lateral);
