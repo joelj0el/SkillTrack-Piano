@@ -21,11 +21,13 @@ body {
   /* Respaldo sólido para el contraste; encima, el degradado y el pentagrama decorativo. */
   background-color: var(--color-fondo);
   background-image: var(--fondo-decorado), var(--degradado-ambiente), var(--degradado-fondo);
+  /* Cuatro capas: pentagrama, los dos halos del ambiente y el degradado de fondo. */
   background-size:
     var(--tamano-fondo-decorado) auto,
     auto,
+    auto,
     auto;
-  background-repeat: repeat, no-repeat, no-repeat;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
 }
 
 h1,
@@ -2110,6 +2112,13 @@ form + .lista {
 
 .planes-nota {
   margin-top: var(--espacio-4);
+}
+
+.dialogo.dialogo-planes > h2 {
+  font-family: var(--fuente-titulo);
+  font-size: var(--texto-2xl);
+  font-weight: var(--peso-normal);
+  margin-bottom: var(--espacio-4);
 }
 
 .dialogo.dialogo-planes {
