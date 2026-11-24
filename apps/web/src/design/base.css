@@ -2558,3 +2558,96 @@ a.tarjeta::after,
   position: relative;
   display: block;
 }
+
+/* Registro de compradores y pago (ADR-005). */
+.plan-acciones {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+fieldset.opciones {
+  display: grid;
+  gap: var(--espacio-1);
+  margin: 0;
+  padding: var(--espacio-3);
+  border: var(--borde) solid var(--color-borde);
+  border-radius: var(--radio-md);
+}
+
+fieldset.opciones legend {
+  padding: 0 var(--espacio-1);
+  font-weight: var(--peso-medio);
+}
+
+input[type="radio"] {
+  width: var(--espacio-6);
+  min-height: 0;
+  height: var(--espacio-6);
+  padding: 0;
+  accent-color: var(--color-acento);
+}
+
+label.fila > input[type="radio"] {
+  flex: none;
+}
+
+.pago-qr {
+  display: grid;
+  justify-items: center;
+  gap: var(--espacio-3);
+  text-align: center;
+}
+
+.qr-pago {
+  width: var(--tamano-qr);
+  height: var(--tamano-qr);
+  border-radius: var(--radio-md);
+  background: var(--color-tecla-blanca);
+}
+
+.qr-simulado {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--espacio-2);
+  border: var(--borde-fuerte) dashed var(--color-borde-control);
+  background: var(--color-superficie-2);
+  color: var(--color-texto-suave);
+  font-weight: var(--peso-medio);
+}
+
+.qr-simulado svg {
+  width: var(--tamano-icono-grande);
+  height: var(--tamano-icono-grande);
+}
+
+.asistente-icono {
+  width: var(--tamano-icono-grande);
+  height: var(--tamano-icono-grande);
+  color: var(--color-acento);
+}
+
+.legal-texto {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.legal-texto h2 {
+  font-size: var(--texto-lg);
+}
+
+@media (max-width: 30rem) {
+  .barra-acciones .boton-enlace span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .barra-acciones .boton-enlace {
+    min-width: var(--alto-toque);
+    padding: var(--espacio-2);
+  }
+}

@@ -42,7 +42,7 @@ test("PU-diseno-04: la ventana de planes tiene título, mantiene el foco y se ci
   const activos = (await (await page.request.get("/api/planes")).json()).length;
   expect(activos).toBeGreaterThanOrEqual(3);
   await page.goto("/");
-  await page.getByRole("banner").getByRole("button", { name: "Ver planes" }).click();
+  await page.getByRole("banner").getByRole("button", { name: "Empezar ahora" }).click();
   const ventana = page.getByRole("dialog", { name: "Planes" });
   await expect(ventana).toBeVisible();
   await expect(ventana.getByRole("article")).toHaveCount(activos);

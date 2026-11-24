@@ -13,6 +13,9 @@ class Usuario(Base):
     username: Mapped[str] = mapped_column(String(64), unique=True)
     nombre_visible: Mapped[str] = mapped_column(String(120))
     email: Mapped[str | None] = mapped_column(String(254))
+    # Contacto del comprador registrado (ADR-005): solo lo ven el propio usuario y el superadmin.
+    telefono: Mapped[str | None] = mapped_column(String(20))
+    terminos_aceptados_en: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     hash_clave: Mapped[str] = mapped_column(String(255))
     es_menor: Mapped[bool] = mapped_column(Boolean, default=False)
     activo: Mapped[bool] = mapped_column(Boolean, default=True)

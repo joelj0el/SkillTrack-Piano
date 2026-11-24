@@ -92,3 +92,19 @@ def verificar_limite(db: Session, institucion_id: int, rol: str, hoy: date) -> N
             f"Llegaste al límite de {ROLES_CON_LIMITE[rol]} {nombre}: permite {limite} y ya "
             f"hay {usados}. Para agregar más, pide ampliar el plan al superadministrador."
         )
+
+
+def institucion_pendiente_de_pago(db: Session, institucion_id: int, hoy: date) -> bool:
+    """Sin suscripción vigente y con la última pendiente: la cuenta espera el pago (ADR-005)."""
+    if suscripcion_vigente(db, institucion_id, hoy) is not None:
+        return False
+    ultima = ultima_suscripcion(db, institucion_id)
+    return ultima is not None and ultima.estado == "pendiente"
+
+
+def pago_pendiente(db: Session, usuario_id: int, hoy: date) -> bool:
+    """El usuario pertenece a una institución cuyo plan espera el pago."""
+    instituciones = db.scalars(
+        select(Membresia.institucion_id).where(Membresia.usuario_id == usuario_id).distinct()
+    )
+    return any(institucion_pendiente_de_pago(db, i, hoy) for i in instituciones)

@@ -24,6 +24,9 @@ describe("contratos de identidad", () => {
       nombre_visible: "Ana",
       superadmin: false,
       clave_temporal: false,
+      correo: null,
+      telefono: null,
+      pago_pendiente: false,
     };
     expect(
       UsuarioActual.safeParse({ ...base, membresias: [{ institucion_id: 1, rol: "docente" }] })

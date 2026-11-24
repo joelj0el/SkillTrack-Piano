@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "institucion": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "string"
+    },
+    "periodo": {
+      "type": "string",
+      "enum": [
+        "mensual",
+        "anual"
+      ]
+    },
+    "monto_bs": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "codigo_convenio": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "pendiente",
+        "activa",
+        "vencida",
+        "cancelada"
+      ]
+    },
+    "qr": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id_transaccion": {
+              "type": "string"
+            },
+            "simulado": {
+              "type": "boolean"
+            },
+            "imagen_png": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "vence_en": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+            }
+          },
+          "required": [
+            "id_transaccion",
+            "simulado",
+            "imagen_png",
+            "vence_en"
+          ],
+          "additionalProperties": false,
+          "title": "QrDePago"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "institucion",
+    "plan",
+    "periodo",
+    "monto_bs",
+    "codigo_convenio",
+    "estado",
+    "qr"
+  ],
+  "additionalProperties": false,
+  "title": "MiPago"
+}

@@ -1,5 +1,5 @@
 import { Plan } from "@skilltrack/contracts";
-import { Check, Send, Sparkles, X } from "lucide-react";
+import { Check, Send, ShoppingBag, Sparkles, X } from "lucide-react";
 import { useId, useState } from "react";
 import { Link } from "react-router";
 import { z } from "zod";
@@ -48,16 +48,26 @@ function TarjetaPlan({ plan, nivel }: { plan: Plan; nivel: "h2" | "h3" }) {
           {limiteTexto(plan.limite_estudiantes)} estudiantes
         </li>
       </ul>
-      <Link
-        className={["boton-enlace", plan.destacado ? undefined : "secundario"]
-          .filter(Boolean)
-          .join(" ")}
-        to={`/solicitar-acceso?plan=${plan.id}`}
-        aria-label={`Solicitar información sobre el plan ${plan.nombre}`}
-      >
-        <Send aria-hidden="true" />
-        Solicitar información
-      </Link>
+      <div className="plan-acciones">
+        <Link
+          className={["boton-enlace", plan.destacado ? undefined : "secundario"]
+            .filter(Boolean)
+            .join(" ")}
+          to={`/registro?plan=${plan.id}`}
+          aria-label={`Elegir el plan ${plan.nombre}`}
+        >
+          <ShoppingBag aria-hidden="true" />
+          Elegir este plan
+        </Link>
+        <Link
+          className="boton-enlace secundario"
+          to={`/solicitar-acceso?plan=${plan.id}`}
+          aria-label={`Solicitar información sobre el plan ${plan.nombre}`}
+        >
+          <Send aria-hidden="true" />
+          Solicitar información
+        </Link>
+      </div>
     </article>
   );
 }
@@ -80,8 +90,9 @@ export function ListaPlanes({ nivel = "h2" }: { nivel?: "h2" | "h3" }) {
               ))}
             </div>
             <p className="suave planes-nota">
-              El acceso lo crea el administrador de tu institución después de tu solicitud. Los
-              precios y límites con «—» todavía no están definidos.
+              Elige un plan para registrarte como docente independiente o como institución. Los
+              estudiantes no se registran solos: los crea su docente o su institución. Los precios y
+              límites con «—» todavía no están definidos.
             </p>
           </>
         )
@@ -94,9 +105,11 @@ export function ListaPlanes({ nivel = "h2" }: { nivel?: "h2" | "h3" }) {
 export function BotonPlanes({
   variante = "secundario",
   className,
+  texto = "Ver planes",
 }: {
   variante?: "primario" | "secundario";
   className?: string;
+  texto?: string;
 }) {
   const [abierto, setAbierto] = useState(false);
   return (
@@ -108,7 +121,7 @@ export function BotonPlanes({
         aria-haspopup="dialog"
         onClick={() => setAbierto(true)}
       >
-        Ver planes
+        {texto}
       </Boton>
       <Dialogo
         abierto={abierto}

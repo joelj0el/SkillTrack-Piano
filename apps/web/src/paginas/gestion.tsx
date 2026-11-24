@@ -1,4 +1,6 @@
 import {
+  ConvenioCodigo,
+  CuentaPendiente,
   InstitucionCreada,
   InstitucionListada,
   MiPlan,
@@ -9,8 +11,10 @@ import {
 } from "@skilltrack/contracts";
 import {
   Building2,
+  BadgeCheck,
   CheckCheck,
   CircleCheck,
+  TicketPercent,
   CircleOff,
   Plus,
   QrCode,
@@ -50,6 +54,10 @@ function mensajeDe(e: unknown): string {
   }
   return "No se pudo completar la operación. Revisa tu conexión.";
 }
+
+/** Monto en Bs sin periodo; null es "sin definir". */
+const montoTexto = (monto: number | null) =>
+  monto === null ? "Bs —" : `Bs ${monto.toLocaleString("es-BO", { minimumFractionDigits: 2 })}`;
 
 const texto = (d: FormData, campo: string) => String(d.get(campo) ?? "").trim();
 const numeroONulo = (d: FormData, campo: string) => {
@@ -145,6 +153,7 @@ export function GestionPlanes() {
         pedir("GET", "/admin/planes", z.array(Plan)),
         pedir("GET", "/admin/instituciones", z.array(InstitucionListada)),
         pedir("GET", "/admin/suscripciones", z.array(Suscripcion)),
+        pedir("GET", "/admin/convenios", z.array(ConvenioCodigo)),
       ]),
     [],
   );
@@ -185,7 +194,7 @@ export function GestionPlanes() {
         </div>
       )}
       <Cargado carga={carga}>
-        {([planes, instituciones, suscripciones]) => (
+        {([planes, instituciones, suscripciones, convenios]) => (
           <>
             <section aria-labelledby="t-planes" className="pila-secciones">
               <h2 id="t-planes">Planes</h2>
@@ -402,6 +411,82 @@ export function GestionPlanes() {
               </details>
             </section>
 
+            <section aria-labelledby="t-convenios" className="pila-secciones">
+              <h2 id="t-convenios">Convenios con código</h2>
+              <p className="suave">
+                Un código válido en el registro asigna el plan y el precio del convenio; con precio
+                0, la cuenta queda activa sin pago.
+              </p>
+              {convenios.length > 0 && (
+                <ul className="lista" aria-label="Convenios con código">
+                  {convenios.map((c) => (
+                    <li key={c.id} className="tarjeta" data-convenio={c.codigo}>
+                      <span className="tarjeta-titulo">{c.codigo}</span>
+                      <span className="suave">
+                        {c.plan} · {montoTexto(c.precio_bs)} · Vence: {fechaLegible(c.vence)}
+                      </span>
+                      <span data-usados="convenio">
+                        Usados: {c.usados} de {c.cupos}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <details className="tarjeta">
+                <summary>Nuevo convenio con código</summary>
+                <form
+                  aria-label="Nuevo convenio con código"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const f = e.currentTarget;
+                    const d = new FormData(f);
+                    void enviar(
+                      () =>
+                        pedir("POST", "/admin/convenios", ConvenioCodigo, {
+                          codigo: texto(d, "codigo").toUpperCase(),
+                          plan_id: Number(texto(d, "plan_id")),
+                          precio_bs: Number(texto(d, "precio_bs")),
+                          cupos: Number(texto(d, "cupos")),
+                          vence: texto(d, "vence"),
+                        }),
+                      "Convenio creado",
+                      f,
+                    );
+                  }}
+                >
+                  <label>
+                    Código (letras, números o guion)
+                    <input name="codigo" required pattern="[A-Za-z0-9\-]{4,32}" maxLength={32} />
+                  </label>
+                  <label>
+                    Plan
+                    <select name="plan_id" required>
+                      {planes.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Precio especial en Bs (0: sin pago)
+                    <input name="precio_bs" type="number" min={0} step="0.01" required />
+                  </label>
+                  <label>
+                    Cupos
+                    <input name="cupos" type="number" min={1} required />
+                  </label>
+                  <label>
+                    Vence
+                    <input name="vence" type="date" required />
+                  </label>
+                  <Boton type="submit" icono={TicketPercent}>
+                    Crear convenio
+                  </Boton>
+                </form>
+              </details>
+            </section>
+
             <section aria-labelledby="t-instituciones" className="pila-secciones">
               <h2 id="t-instituciones">Instituciones</h2>
               <ul className="lista" aria-label="Instituciones">
@@ -476,17 +561,80 @@ export function GestionPlanes() {
   );
 }
 
+/** Cuentas registradas que esperan la verificación del pago (ADR-005). */
+function CuentasPendientes() {
+  const { carga, recargar } = useCarga(
+    () => pedir("GET", "/admin/cuentas-pendientes", z.array(CuentaPendiente)),
+    [],
+  );
+  const avisar = useAviso();
+  return (
+    <section aria-labelledby="t-cuentas" className="pila-secciones">
+      <h2 id="t-cuentas">Cuentas pendientes de pago</h2>
+      <Cargado carga={carga}>
+        {(cuentas) =>
+          cuentas.length === 0 ? (
+            <p className="suave" data-vacio="cuentas">
+              No hay cuentas esperando la verificación del pago.
+            </p>
+          ) : (
+            <ul className="lista" aria-label="Cuentas pendientes de pago">
+              {cuentas.map((c) => (
+                <li key={c.suscripcion_id} className="tarjeta" data-cuenta={c.institucion}>
+                  <span className="tarjeta-titulo">
+                    {c.institucion} · {c.plan}
+                  </span>
+                  <span className="suave">
+                    {fechaLegible(c.creada_en)} · {c.nombre} ({c.usuario})
+                    {c.correo && ` · ${c.correo}`}
+                    {c.telefono && ` · ${c.telefono}`}
+                  </span>
+                  <span>
+                    Monto: {montoTexto(c.monto_bs)}
+                    {c.codigo_convenio && ` · convenio ${c.codigo_convenio}`}
+                    {c.qr_generado ? " · QR generado" : " · sin QR"}
+                  </span>
+                  <div className="tarjeta-pie">
+                    <Boton
+                      icono={BadgeCheck}
+                      aria-label={`Activar el plan de ${c.institucion}`}
+                      onClick={() =>
+                        void pedir(
+                          "POST",
+                          `/admin/suscripciones/${c.suscripcion_id}/activar`,
+                          Suscripcion,
+                        ).then(() => {
+                          avisar("Plan activado");
+                          return recargar();
+                        })
+                      }
+                    >
+                      Activar plan
+                    </Boton>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </Cargado>
+    </section>
+  );
+}
+
 export function Solicitudes() {
   const { carga, recargar } = useCarga(
     () => pedir("GET", "/admin/solicitudes-acceso", z.array(SolicitudAcceso)),
     [],
   );
   return (
-    <section>
+    <section className="pila-secciones">
       <PaginaCabecera
-        titulo="Solicitudes de acceso"
-        detalle="Pedidos enviados desde la página de inicio. Las pendientes van primero."
+        titulo="Solicitudes"
+        detalle="Cuentas registradas que esperan la verificación del pago y pedidos de información enviados desde la página de inicio."
       />
+      <CuentasPendientes />
+      <h2>Solicitudes de acceso</h2>
       <Cargado carga={carga}>
         {(solicitudes) =>
           solicitudes.length === 0 ? (

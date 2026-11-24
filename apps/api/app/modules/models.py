@@ -5,11 +5,18 @@ from app.modules.catalog.models import ClaseError, Ejercicio, VersionEjercicio
 from app.modules.identity.models import SesionAuth, Usuario
 from app.modules.institutions.models import AsignacionDocente, Institucion, Membresia
 from app.modules.pedagogy.models import Observacion, Tarea
-from app.modules.plans.models import PagoQr, Plan, SolicitudAcceso, Suscripcion
+from app.modules.plans.models import (
+    ConvenioCodigo,
+    PagoQr,
+    Plan,
+    SolicitudAcceso,
+    Suscripcion,
+)
 
 __all__ = [
     "AsignacionDocente",
     "AuditoriaAcceso",
+    "ConvenioCodigo",
     "ClaseError",
     "Diagnostico",
     "Ejercicio",

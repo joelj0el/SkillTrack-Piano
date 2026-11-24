@@ -7,15 +7,15 @@ cada pocos segundos (`consultar_pago`) en lugar de esperar un aviso del banco.
 """
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from itertools import count
 from typing import Literal, Protocol
+from uuid import uuid4
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.modules.plans.models import PagoQr, Plan, Suscripcion
+from app.modules.plans.models import ConvenioCodigo, PagoQr, Plan, Suscripcion
 
 EstadoBanco = Literal["pendiente", "pagado", "vencido", "anulado"]
 
@@ -47,21 +47,51 @@ class PasarelaSimulada:
 
     def __init__(self) -> None:
         self._estados: dict[str, EstadoBanco] = {}
-        self._siguiente = count(1)
 
     def generar_qr(self, *, monto_bs: Decimal, glosa: str, referencia: str) -> QrGenerado:
-        id_transaccion = f"SIM-{next(self._siguiente):06d}"
+        # Aleatorio: tras reiniciar la API no choca con los pagos ya guardados.
+        id_transaccion = f"SIM-{uuid4().hex[:16].upper()}"
         self._estados[id_transaccion] = "pendiente"
-        return QrGenerado(id_transaccion, "QR SIMULADO", datetime(2100, 1, 1))
+        return QrGenerado(id_transaccion, "QR SIMULADO", datetime(2100, 1, 1, tzinfo=UTC))
 
     def consultar(self, id_transaccion: str) -> EstadoBanco:
-        return self._estados[id_transaccion]
+        # Tras reiniciar la API el simulado olvida sus QR: siguen pendientes.
+        return self._estados.get(id_transaccion, "pendiente")
 
     def marcar(self, id_transaccion: str, estado: EstadoBanco) -> None:
         self._estados[id_transaccion] = estado
 
 
 DURACION = {"mensual": timedelta(days=30), "anual": timedelta(days=365)}
+
+# Adaptador vigente: el simulado, hasta tener la documentación técnica de la API del banco.
+_PASARELA_VIGENTE = PasarelaSimulada()
+
+
+def pasarela_vigente() -> PasarelaQr:
+    """Dependencia de FastAPI; las pruebas la reemplazan por su propio simulado."""
+    return _PASARELA_VIGENTE
+
+
+def es_simulada(pasarela: PasarelaQr) -> bool:
+    return isinstance(pasarela, PasarelaSimulada)
+
+
+def monto_de(db: Session, suscripcion: Suscripcion) -> Decimal | None:
+    """El precio del convenio con código, si lo hay; si no, el del plan (None = sin definir)."""
+    if suscripcion.convenio_codigo_id is not None:
+        convenio = db.get(ConvenioCodigo, suscripcion.convenio_codigo_id)
+        return convenio.precio_bs if convenio else None
+    plan = db.get(Plan, suscripcion.plan_id)
+    return plan.precio_bs if plan else None
+
+
+def pago_pendiente_de(db: Session, suscripcion_id: int) -> PagoQr | None:
+    return db.scalars(
+        select(PagoQr)
+        .where(PagoQr.suscripcion_id == suscripcion_id, PagoQr.estado == "pendiente")
+        .order_by(PagoQr.id.desc())
+    ).first()
 
 
 def iniciar_pago(
@@ -73,16 +103,17 @@ def iniciar_pago(
     if pasarela is None:
         raise PasarelaNoDisponible
     plan = db.get(Plan, suscripcion.plan_id)
-    if plan is None or plan.precio_bs is None or plan.precio_bs <= 0:
+    monto = monto_de(db, suscripcion)
+    if plan is None or monto is None or monto <= 0:
         raise SinPrecio
     qr = pasarela.generar_qr(
-        monto_bs=plan.precio_bs,
+        monto_bs=monto,
         glosa=f"SkillTrack-Piano · {plan.nombre} ({plan.periodo})",
         referencia=f"suscripcion-{suscripcion.id}",
     )
     pago = PagoQr(
         suscripcion_id=suscripcion.id,
-        monto_bs=plan.precio_bs,
+        monto_bs=monto,
         id_transaccion=qr.id_transaccion,
         estado="pendiente",
         creado_en=instante,
@@ -125,8 +156,14 @@ def confirmar_pago(db: Session, pago_id: int, hoy: date, instante: datetime) -> 
     suscripcion = db.scalars(
         select(Suscripcion).where(Suscripcion.id == fila.suscripcion_id).with_for_update()
     ).one()
+    activar(db, suscripcion, hoy)
+    return True
+
+
+def activar(db: Session, suscripcion: Suscripcion, hoy: date) -> None:
+    """Activa por un periodo del plan. Una renovación sobre una suscripción activa se suma a su
+    fin; si no, empieza hoy."""
     plan = db.get(Plan, suscripcion.plan_id)
-    # Una renovación sobre una suscripción activa se suma a su fin; si no, empieza hoy.
     renovacion = suscripcion.estado == "activa" and suscripcion.fin is not None
     desde = max(hoy, suscripcion.fin) if renovacion else hoy
     if not renovacion:
@@ -134,4 +171,24 @@ def confirmar_pago(db: Session, pago_id: int, hoy: date, instante: datetime) -> 
     suscripcion.estado = "activa"
     suscripcion.fin = desde + DURACION[plan.periodo if plan else "mensual"]
     db.flush()
+
+
+def activar_por_superadmin(db: Session, suscripcion_id: int, hoy: date, instante: datetime) -> bool:
+    """El superadministrador verificó el pago: activa una sola vez una suscripción pendiente.
+
+    Los QR pendientes quedan pagados, así una confirmación posterior del banco no la vuelve a
+    extender. Devuelve False si ya estaba activa."""
+    suscripcion = db.scalars(
+        select(Suscripcion).where(Suscripcion.id == suscripcion_id).with_for_update()
+    ).first()
+    if suscripcion is None:
+        raise LookupError(suscripcion_id)
+    if suscripcion.estado == "activa":
+        return False
+    db.execute(
+        update(PagoQr)
+        .where(PagoQr.suscripcion_id == suscripcion_id, PagoQr.estado == "pendiente")
+        .values(estado="pagado", confirmado_en=instante)
+    )
+    activar(db, suscripcion, hoy)
     return True

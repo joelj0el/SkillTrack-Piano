@@ -19,6 +19,21 @@
     "clave_temporal": {
       "type": "boolean"
     },
+    "correo": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "telefono": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "pago_pendiente": {
+      "type": "boolean"
+    },
     "membresias": {
       "type": "array",
       "items": {
@@ -54,6 +69,9 @@
     "nombre_visible",
     "superadmin",
     "clave_temporal",
+    "correo",
+    "telefono",
+    "pago_pendiente",
     "membresias"
   ],
   "additionalProperties": false,

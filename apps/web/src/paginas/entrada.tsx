@@ -179,6 +179,18 @@ export function Perfil() {
             <dt>{r.size === 1 ? "Rol" : "Roles"}</dt>
             <dd>{[...r].map((x) => NOMBRE_ROL[x]).join(" · ")}</dd>
           </div>
+          {estado.usuario.correo && (
+            <div>
+              <dt>Correo</dt>
+              <dd>{estado.usuario.correo}</dd>
+            </div>
+          )}
+          {estado.usuario.telefono && (
+            <div>
+              <dt>Teléfono</dt>
+              <dd>{estado.usuario.telefono}</dd>
+            </div>
+          )}
         </dl>
       </div>
       <div className="perfil-acciones">

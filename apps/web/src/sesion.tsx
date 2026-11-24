@@ -69,6 +69,8 @@ export const NOMBRE_ROL: Record<Rol, string> = {
 
 /** Pantalla inicial de cada rol (PA-HU01-01): el panel de inicio para docentes y estudiantes. */
 export function rutaInicial(usuario: UsuarioActual): string {
+  // Cuenta registrada cuyo plan espera el pago: solo su pantalla de pago (ADR-005).
+  if (usuario.pago_pendiente) return "/pago";
   const r = roles(usuario);
   // El superadministrador sin institución gestiona planes, convenios y solicitudes (ADR-004).
   if (usuario.superadmin && r.size === 0) return "/admin/planes";

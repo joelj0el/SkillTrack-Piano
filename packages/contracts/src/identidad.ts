@@ -21,6 +21,11 @@ export const UsuarioActual = z
     nombre_visible: z.string(),
     superadmin: z.boolean(),
     clave_temporal: z.boolean(),
+    // Datos de contacto: solo los ve el propio usuario (y el superadministrador) (ADR-005).
+    correo: z.string().nullable(),
+    telefono: z.string().nullable(),
+    /** Cuenta registrada cuyo plan espera el pago: solo puede pagar o cerrar sesión. */
+    pago_pendiente: z.boolean(),
     membresias: z.array(
       z.strictObject({ institucion_id: z.int().positive(), rol: Rol }).meta({ title: "Membresia" }),
     ),

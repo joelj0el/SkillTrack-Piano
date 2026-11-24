@@ -41,7 +41,16 @@ def test_pu_api_10_los_eventos_v1_guardados_pasan_a_v2_y_vuelven(url_migrada: st
     command.downgrade(config, "0006")
     try:
         with Session(motor) as sesion:
-            estudiante = fabricas.usuario(sesion, "migracion.eventos")
+            # SQL directo: el modelo actual tiene columnas que el esquema 0006 todavía no tiene.
+            estudiante_id = sesion.execute(
+                text(
+                    "INSERT INTO app.usuario (username, nombre_visible, hash_clave, es_menor,"
+                    " activo, superadmin, clave_temporal)"
+                    " VALUES ('migracion.eventos', 'Migración', :h, false, true, false, false)"
+                    " RETURNING id"
+                ),
+                {"h": fabricas.hash_clave(fabricas.CLAVE)},
+            ).scalar_one()
             sesion.commit()
             v1 = [
                 {
@@ -62,7 +71,7 @@ def test_pu_api_10_los_eventos_v1_guardados_pasan_a_v2_y_vuelven(url_migrada: st
                     " VALUES (gen_random_uuid(), :e, 1, '0.1.0', 'm', 'digital', 'MD', 'x', 'V',"
                     " 'evaluado', false, now(), 0, CAST(:ev AS jsonb))"
                 ),
-                {"e": estudiante.id, "ev": json.dumps(v1)},
+                {"e": estudiante_id, "ev": json.dumps(v1)},
             )
             sesion.commit()
         command.upgrade(config, "0007")

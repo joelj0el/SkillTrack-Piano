@@ -34,6 +34,13 @@ import {
   SuscripcionCambio,
   SuscripcionNueva,
 } from "./planes.ts";
+import {
+  ConvenioCodigo,
+  ConvenioCodigoNuevo,
+  CuentaPendiente,
+  MiPago,
+  RegistroNuevo,
+} from "./registro.ts";
 import { Referencia, ReferenciaPublicada, ReferenciaVigente } from "./referencia.ts";
 import { ConjuntoReglas, ReglasPublicadas, ReglasVigentes } from "./reglas.ts";
 import { Salud } from "./salud.ts";
@@ -49,6 +56,7 @@ export * from "./instituciones.ts";
 export * from "./intentos.ts";
 export * from "./pedagogia.ts";
 export * from "./planes.ts";
+export * from "./registro.ts";
 export * from "./tableros.ts";
 export { Salud };
 
@@ -98,4 +106,9 @@ export const esquemas = {
   institucion_listada: InstitucionListada,
   solicitud_acceso_nueva: SolicitudAccesoNueva,
   solicitud_acceso: SolicitudAcceso,
+  registro_nuevo: RegistroNuevo,
+  convenio_codigo_nuevo: ConvenioCodigoNuevo,
+  convenio_codigo: ConvenioCodigo,
+  mi_pago: MiPago,
+  cuenta_pendiente: CuentaPendiente,
 };
