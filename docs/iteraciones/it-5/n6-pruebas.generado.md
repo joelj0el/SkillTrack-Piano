@@ -1,14 +1,14 @@
 # n.6 Pruebas — it-5 (generado)
 
-Generado por `pnpm docs:tests it-5` el 2026-11-24 19:30 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-5` el 2026-11-24 20:56 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
-| Playwright  | 70    | 69        | 0        | 1        |
-| Vitest      | 406   | 406       | 0        | 0        |
-| pytest      | 162   | 162       | 0        | 0        |
+| Playwright  | 71    | 69        | 0        | 2        |
+| Vitest      | 409   | 409       | 0        | 0        |
+| pytest      | 181   | 181       | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
 
@@ -97,10 +97,10 @@ Generado por `pnpm docs:tests it-5` el 2026-11-24 19:30 UTC a partir de los repo
 | PA-HU40-01 | pytest              | 1     | aprobada  | test_pa_hu40_01_el_registro_crea_institucion_suscripcion_pendiente_y_administrador                                                                           |
 | PA-HU40-02 | pytest              | 1     | aprobada  | test_pa_hu40_02_un_codigo_de_convenio_valido_asigna_el_convenio_y_con_precio_0_activa                                                                        |
 | PA-HU40-03 | pytest              | 1     | aprobada  | test_pa_hu40_03_la_cuenta_pendiente_entra_pero_solo_puede_pagar_o_salir                                                                                      |
-| PA-HU40-04 | pytest              | 2     | aprobada  | test_pa_hu40_04_confirmado_el_pago_por_el_adaptador_el_plan_se_activa_una_vez                                                                                |
-| PA-HU40-05 | pytest              | 1     | aprobada  | test_pa_hu40_05_el_registro_y_las_solicitudes_tienen_limite_por_minuto_e_ip                                                                                  |
+| PA-HU40-04 | Playwright + pytest | 9     | omitida   | PA-HU40-04: con el banco (servidor falso), registrarse → QR → pagado → entra a la app                                                                        |
+| PA-HU40-05 | pytest              | 2     | aprobada  | test_pa_hu40_05_el_registro_y_las_solicitudes_tienen_limite_por_minuto_e_ip                                                                                  |
 | PA-HU40-06 | pytest              | 1     | aprobada  | test_pa_hu40_06_el_superadministrador_crea_convenios_y_ve_cuantos_se_usaron                                                                                  |
-| PA-HU40-07 | pytest              | 5     | aprobada  | test_pa_hu40_07_solo_el_superadministrador_gestiona_convenios_y_cuentas_pendientes[get-/api/admin/convenios-None]                                            |
+| PA-HU40-07 | pytest              | 7     | aprobada  | test_pa_hu40_07_solo_el_superadministrador_gestiona_convenios_y_cuentas_pendientes[get-/api/admin/convenios-None]                                            |
 | PA-HU40-08 | pytest              | 1     | aprobada  | test_pa_hu40_08_sin_datos_de_tarjeta_y_contacto_solo_para_el_usuario_y_el_superadmin                                                                         |
 | PA-HU40-09 | Playwright          | 1     | aprobada  | PA-HU40-09: elegir plan → registrarse → pagar (simulado) → activar → entrar                                                                                  |
 | PA-HU40-10 | Playwright          | 1     | aprobada  | PA-HU40-10: inicio con Iniciar sesión y Empezar ahora, textos legales y asistente con un convenio gratuito                                                   |
@@ -118,6 +118,7 @@ Generado por `pnpm docs:tests it-5` el 2026-11-24 19:30 UTC a partir de los repo
 | audio         | 25  | 25        | 0        |
 | aumento       | 4   | 4         | 0        |
 | bandas        | 20  | 20        | 0        |
+| baneco        | 10  | 10        | 0        |
 | cadena        | 6   | 6         | 0        |
 | capture       | 20  | 20        | 0        |
 | catalog       | 13  | 13        | 0        |
@@ -125,7 +126,7 @@ Generado por `pnpm docs:tests it-5` el 2026-11-24 19:30 UTC a partir de los repo
 | ci            | 8   | 8         | 0        |
 | clasificador  | 12  | 12        | 0        |
 | classifier    | 2   | 2         | 0        |
-| contracts     | 37  | 37        | 0        |
+| contracts     | 38  | 38        | 0        |
 | core          | 1   | 1         | 0        |
 | dataset       | 5   | 5         | 0        |
 | desfase       | 5   | 5         | 0        |
@@ -151,4 +152,4 @@ Generado por `pnpm docs:tests it-5` el 2026-11-24 19:30 UTC a partir de los repo
 | research      | 93  | 93        | 0        |
 | tempo         | 5   | 5         | 0        |
 | ui            | 6   | 6         | 0        |
-| web           | 47  | 47        | 0        |
+| web           | 49  | 49        | 0        |
