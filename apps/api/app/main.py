@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, FastAPI
 
 from app import __version__
 from app.core import salud
+from app.core.config_pagos import ConfiguracionPagos, cargar_configuracion_pagos
 from app.core.csrf import ExigirCabeceraCsrf
 from app.core.limite_ip import LimitePorIp
 from app.core.limites import LimitarCuerpo
@@ -16,10 +17,17 @@ from app.modules.institutions import router as institutions
 from app.modules.pedagogy import router as pedagogy
 from app.modules.plans import router as plans
 from app.modules.plans.deps import exigir_cuenta_al_dia
+from app.modules.plans.proveedor import construir_pasarela
 
 
-def create_app(routers_privados: Sequence[APIRouter] = ()) -> FastAPI:
+def create_app(
+    routers_privados: Sequence[APIRouter] = (), config_pagos: ConfiguracionPagos | None = None
+) -> FastAPI:
+    # Con PAGOS_PROVEEDOR=baneco y una variable faltante, la API no arranca: el error la nombra.
+    config_pagos = config_pagos or cargar_configuracion_pagos()
     app = FastAPI(title="SkillTrack-Piano API", version=__version__)
+    app.state.config_pagos = config_pagos
+    app.state.pasarela = construir_pasarela(config_pagos)
     app.add_middleware(ExigirCabeceraCsrf)
     app.add_middleware(LimitarCuerpo)
     app.state.limite_ip = LimitePorIp()

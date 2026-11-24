@@ -44,3 +44,4 @@ class MiPlan(BaseModel):
     limite_estudiantes: conint(ge=1, le=100000) | None
     docentes: conint(ge=0, le=9007199254740991)
     estudiantes: conint(ge=0, le=9007199254740991)
+    pago_qr: bool

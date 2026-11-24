@@ -63,10 +63,17 @@ export const ConvenioCodigo = z
   .meta({ title: "ConvenioCodigo" });
 export type ConvenioCodigo = z.infer<typeof ConvenioCodigo>;
 
-/** QR del adaptador vigente; el simulado no sirve para pagar y se muestra como tal. */
+export const EstadoQr = z.enum(["pendiente", "pagado", "vencido", "anulado"]);
+export type EstadoQr = z.infer<typeof EstadoQr>;
+
+export const ProveedorPagos = z.enum(["simulado", "baneco"]);
+export type ProveedorPagos = z.infer<typeof ProveedorPagos>;
+
+/** QR del proveedor vigente; el simulado no sirve para pagar y se muestra como tal. */
 export const QrDePago = z
   .strictObject({
     id_transaccion: z.string(),
+    estado: EstadoQr,
     simulado: z.boolean(),
     // Imagen PNG en base64 tal como la entregue el banco; null en el simulado.
     imagen_png: z.string().nullable(),
@@ -84,6 +91,10 @@ export const MiPago = z
     monto_bs: Monto.nullable(),
     codigo_convenio: z.string().nullable(),
     estado: EstadoSuscripcion,
+    /** Fin del plan vigente (para avisar la renovación); null si todavía no se activó. */
+    vence_plan: Fecha.nullable(),
+    proveedor: ProveedorPagos,
+    /** El QR más reciente sin pagar (pendiente, vencido o anulado). */
     qr: QrDePago.nullable(),
   })
   .meta({ title: "MiPago" });
@@ -106,3 +117,17 @@ export const CuentaPendiente = z
   })
   .meta({ title: "CuentaPendiente" });
 export type CuentaPendiente = z.infer<typeof CuentaPendiente>;
+
+/**
+ * Aviso de pago que envía el banco (preparado, apagado por defecto). Se acepta con campos extra y
+ * sin distinguir mayúsculas; nunca activa el plan por sí solo: siempre se reconfirma el estado.
+ */
+export const AvisoPagoQr = z
+  .looseObject({ payment: z.looseObject({}) })
+  .meta({ title: "AvisoPagoQr" });
+export type AvisoPagoQr = z.infer<typeof AvisoPagoQr>;
+
+export const RespuestaAvisoQr = z
+  .strictObject({ responseCode: z.int(), message: z.string() })
+  .meta({ title: "RespuestaAvisoQr" });
+export type RespuestaAvisoQr = z.infer<typeof RespuestaAvisoQr>;

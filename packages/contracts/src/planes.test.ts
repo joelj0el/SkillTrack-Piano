@@ -46,6 +46,7 @@ describe("planes (HU-39)", () => {
         limite_estudiantes: null,
         docentes: 0,
         estudiantes: 0,
+        pago_qr: false,
       }).success,
     ).toBe(true);
   });

@@ -6,13 +6,15 @@ Todo lo demás exige sesión: la gestión es del superadministrador, "Mi plan" d
 la institución y "Mi pago" del administrador de una cuenta pendiente de pago.
 """
 
-from datetime import datetime
+import logging
+from datetime import date, datetime, time
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
 
+from app.contracts_gen.aviso_pago_qr import AvisoPagoQr
 from app.contracts_gen.convenio_codigo import ConvenioCodigo as ConvenioDto
 from app.contracts_gen.convenio_codigo_nuevo import ConvenioCodigoNuevo
 from app.contracts_gen.cuenta_pendiente import CuentaPendiente
@@ -25,14 +27,16 @@ from app.contracts_gen.plan import Plan as PlanDto
 from app.contracts_gen.plan_cambio import PlanCambio
 from app.contracts_gen.plan_nuevo import PlanNuevo
 from app.contracts_gen.registro_nuevo import RegistroNuevo
+from app.contracts_gen.respuesta_aviso_qr import RespuestaAvisoQr
 from app.contracts_gen.solicitud_acceso import SolicitudAcceso as SolicitudDto
 from app.contracts_gen.solicitud_acceso_nueva import SolicitudAccesoNueva
 from app.contracts_gen.suscripcion import Suscripcion as SuscripcionDto
 from app.contracts_gen.suscripcion_cambio import SuscripcionCambio
 from app.contracts_gen.suscripcion_nueva import SuscripcionNueva
 from app.contracts_gen.usuario_actual import UsuarioActual
-from app.core.limite_ip import limitar_por_ip
-from app.core.reloj import hoy_local
+from app.core.config_pagos import ConfiguracionPagos
+from app.core.limite_ip import ip_del_cliente, limitar_por_ip
+from app.core.reloj import ZONA_LOCAL, hoy_local
 from app.modules.audit import service as auditoria
 from app.modules.identity import service as identidad
 from app.modules.identity.deps import Superadmin, UsuarioEnSesion
@@ -42,7 +46,10 @@ from app.modules.institutions import service as instituciones
 from app.modules.institutions.deps import AdminDeInstitucion, Ahora, Db
 from app.modules.institutions.models import Institucion, Membresia
 from app.modules.plans import pagos, registro, service
+from app.modules.plans.baneco import campo as campo_del_banco
 from app.modules.plans.models import ConvenioCodigo, PagoQr, Plan, SolicitudAcceso, Suscripcion
+
+registro_api = logging.getLogger("app.pagos")
 
 publico = APIRouter(tags=["plans"])
 router = APIRouter(tags=["plans"])
@@ -400,7 +407,7 @@ def activar_suscripcion(
     return _suscripcion(db, db.get(Suscripcion, suscripcion_id))
 
 
-# --- Cuenta pendiente de pago -----------------------------------------------------------------
+# --- Pago por QR: cuenta pendiente ("Mi pago") y renovación ("Mi plan") -----------------------
 
 
 def _suscripcion_por_pagar(db: Db, usuario: Usuario, instante: datetime) -> Suscripcion:
@@ -417,31 +424,52 @@ def _suscripcion_por_pagar(db: Db, usuario: Usuario, instante: datetime) -> Susc
         return service.ultima_suscripcion(db, administradas[0].institucion_id)
     if pendientes:
         raise HTTPException(
-            status.HTTP_403_FORBIDDEN, "Solo la administración de la institución paga el plan"
+            status.HTTP_403_FORBIDDEN,
+            "Solo la administración de la institución paga el plan",
         )
     raise HTTPException(status.HTTP_404_NOT_FOUND, "No tienes un pago pendiente")
 
 
-# Imagen y vencimiento del QR de cada transacción mientras la API está en marcha: la imagen no se
-# guarda en la base.
+def _suscripcion_de_institucion(db: Db, institucion_id: int) -> Suscripcion:
+    """Para renovar desde "Mi plan": la suscripción vigente o, si no hay, la última."""
+    s = service.ultima_suscripcion(db, institucion_id)
+    if s is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "La institución no tiene un plan")
+    return s
+
+
+# Imagen del QR de cada transacción mientras la API está en marcha: no se guarda en la base ni se
+# escribe en el registro.
 _QR_GENERADOS: dict[str, pagos.QrGenerado] = {}
+
+NO_SE_PUDO_GENERAR = "No pudimos generar el QR. Intenta de nuevo en unos minutos."
 
 
 def _qr(pago: PagoQr, pasarela: pagos.PasarelaQr) -> QrDePago:
     simulado = pagos.es_simulada(pasarela)
     generado = _QR_GENERADOS.get(pago.id_transaccion)
+    if pago.vence is not None:
+        # Vence al terminar ese día en La Paz.
+        vence_en = datetime.combine(pago.vence, time(23, 59, 59), ZONA_LOCAL)
+    else:
+        vence_en = pago.creado_en
     return QrDePago(
         id_transaccion=pago.id_transaccion,
+        estado=pago.estado,
         simulado=simulado,
         imagen_png=generado.imagen if generado and not simulado else None,
-        vence_en=generado.vence_en if generado else pago.creado_en,
+        vence_en=vence_en,
     )
 
 
-def _mi_pago(db: Db, s: Suscripcion, pasarela: pagos.PasarelaQr) -> MiPago:
+def _mi_pago(db: Db, s: Suscripcion, pasarela: pagos.PasarelaQr, hoy: date) -> MiPago:
     plan = db.get(Plan, s.plan_id)
     convenio = db.get(ConvenioCodigo, s.convenio_codigo_id) if s.convenio_codigo_id else None
-    pago = pagos.pago_pendiente_de(db, s.id)
+    pago = pagos.ultimo_pago_sin_confirmar(db, s.id)
+    # Un QR pendiente cuya fecha pasó se muestra vencido sin consultar al banco.
+    if pago is not None and pago.estado == "pendiente" and pago.vence and hoy > pago.vence:
+        pago.estado = "vencido"
+        db.commit()
     return MiPago(
         institucion=db.get(Institucion, s.institucion_id).nombre,
         plan=plan.nombre,
@@ -449,20 +477,31 @@ def _mi_pago(db: Db, s: Suscripcion, pasarela: pagos.PasarelaQr) -> MiPago:
         monto_bs=_monto(pagos.monto_de(db, s)),
         codigo_convenio=convenio.codigo if convenio else None,
         estado=s.estado,
+        vence_plan=s.fin if s.estado == "activa" else None,
+        proveedor=pasarela.proveedor,
         qr=_qr(pago, pasarela) if pago else None,
     )
 
 
-@router.get("/mi-pago", response_model=MiPago)
-def mi_pago(usuario: UsuarioEnSesion, db: Db, instante: Ahora, pasarela: Pasarela) -> MiPago:
-    return _mi_pago(db, _suscripcion_por_pagar(db, usuario, instante), pasarela)
-
-
-@router.post("/mi-pago/qr", response_model=MiPago)
-def generar_qr(usuario: UsuarioEnSesion, db: Db, instante: Ahora, pasarela: Pasarela) -> MiPago:
+def _generar(db: Db, s: Suscripcion, pasarela: pagos.PasarelaQr, instante: datetime) -> MiPago:
     """Genera el QR del monto del plan (o del convenio); si ya hay uno pendiente, lo reutiliza."""
-    s = _suscripcion_por_pagar(db, usuario, instante)
-    if pagos.pago_pendiente_de(db, s.id) is None:
+    hoy = hoy_local(instante)
+    pendiente = pagos.pago_pendiente_de(db, s.id)
+    if pendiente is not None and pendiente.vence and hoy > pendiente.vence:
+        pendiente.estado = "vencido"
+        db.commit()
+        pendiente = None
+    sin_imagen = pendiente is not None and pendiente.id_transaccion not in _QR_GENERADOS
+    if sin_imagen and not pagos.es_simulada(pasarela):
+        # La API se reinició y la imagen ya no está en memoria: se anula ese QR y se genera otro.
+        try:
+            pagos.cancelar_pago(db, pasarela, pendiente)
+        except pagos.BancoNoDisponible as error:
+            db.rollback()
+            registro_api.warning("No se anuló el QR sin imagen: %s", error)
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, NO_SE_PUDO_GENERAR) from None
+        pendiente = None
+    if pendiente is None:
         try:
             pago, qr = pagos.iniciar_pago(db, pasarela, s, instante)
         except pagos.SinPrecio:
@@ -471,27 +510,131 @@ def generar_qr(usuario: UsuarioEnSesion, db: Db, instante: Ahora, pasarela: Pasa
                 "El monto de tu plan todavía no está definido: el superadministrador verificará "
                 "tu cuenta y la activará.",
             ) from None
+        except pagos.BancoNoDisponible as error:
+            db.rollback()
+            registro_api.warning("No se generó el QR: %s", error)
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, NO_SE_PUDO_GENERAR) from None
         _QR_GENERADOS[pago.id_transaccion] = qr
         db.commit()
-    return _mi_pago(db, s, pasarela)
+    return _mi_pago(db, s, pasarela, hoy)
+
+
+def _verificar(db: Db, s: Suscripcion, pasarela: pagos.PasarelaQr, instante: datetime) -> MiPago:
+    """Consulta al banco como mucho una vez cada 5 s por pago; si se pagó, activa una vez."""
+    hoy = hoy_local(instante)
+    pago = pagos.pago_pendiente_de(db, s.id)
+    if pago is not None and pagos.toca_consultar(pago, instante):
+        try:
+            pagos.consultar_pago(db, pasarela, pago.id, hoy, instante)
+        except pagos.BancoNoDisponible as error:
+            # Sin respuesta del banco el pago sigue pendiente; se reintenta en la próxima consulta.
+            db.rollback()
+            registro_api.warning("No se consultó el estado del QR: %s", error)
+        db.refresh(s)
+    return _mi_pago(db, s, pasarela, hoy)
+
+
+def _cancelar(db: Db, s: Suscripcion, pasarela: pagos.PasarelaQr, instante: datetime) -> MiPago:
+    pago = pagos.pago_pendiente_de(db, s.id)
+    if pago is not None:
+        try:
+            pagos.cancelar_pago(db, pasarela, pago)
+        except pagos.BancoNoDisponible as error:
+            db.rollback()
+            registro_api.warning("No se anuló el QR: %s", error)
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "No pudimos anular el QR. Intenta de nuevo en unos minutos.",
+            ) from None
+    return _mi_pago(db, s, pasarela, hoy_local(instante))
+
+
+@router.get("/mi-pago", response_model=MiPago)
+def mi_pago(usuario: UsuarioEnSesion, db: Db, instante: Ahora, pasarela: Pasarela) -> MiPago:
+    s = _suscripcion_por_pagar(db, usuario, instante)
+    return _mi_pago(db, s, pasarela, hoy_local(instante))
+
+
+@router.post("/mi-pago/qr", response_model=MiPago)
+def generar_qr(usuario: UsuarioEnSesion, db: Db, instante: Ahora, pasarela: Pasarela) -> MiPago:
+    return _generar(db, _suscripcion_por_pagar(db, usuario, instante), pasarela, instante)
 
 
 @router.post("/mi-pago/verificar", response_model=MiPago)
 def verificar_pago(usuario: UsuarioEnSesion, db: Db, instante: Ahora, pasarela: Pasarela) -> MiPago:
-    """Consulta el estado del QR en el adaptador; si se pagó, activa el plan una sola vez."""
-    s = _suscripcion_por_pagar(db, usuario, instante)
-    pago = pagos.pago_pendiente_de(db, s.id)
-    if pago is not None:
-        pagos.consultar_pago(db, pasarela, pago.id, hoy_local(instante), instante)
-        db.refresh(s)
-    return _mi_pago(db, s, pasarela)
+    return _verificar(db, _suscripcion_por_pagar(db, usuario, instante), pasarela, instante)
+
+
+@router.post("/mi-pago/cancelar", response_model=MiPago)
+def cancelar_qr(usuario: UsuarioEnSesion, db: Db, instante: Ahora, pasarela: Pasarela) -> MiPago:
+    return _cancelar(db, _suscripcion_por_pagar(db, usuario, instante), pasarela, instante)
+
+
+@router.get("/instituciones/{institucion_id}/pago", response_model=MiPago)
+def pago_de_institucion(
+    institucion_id: AdminDeInstitucion, db: Db, instante: Ahora, pasarela: Pasarela
+) -> MiPago:
+    s = _suscripcion_de_institucion(db, institucion_id)
+    return _mi_pago(db, s, pasarela, hoy_local(instante))
+
+
+@router.post("/instituciones/{institucion_id}/pago/qr", response_model=MiPago)
+def generar_qr_de_institucion(
+    institucion_id: AdminDeInstitucion, db: Db, instante: Ahora, pasarela: Pasarela
+) -> MiPago:
+    return _generar(db, _suscripcion_de_institucion(db, institucion_id), pasarela, instante)
+
+
+@router.post("/instituciones/{institucion_id}/pago/verificar", response_model=MiPago)
+def verificar_pago_de_institucion(
+    institucion_id: AdminDeInstitucion, db: Db, instante: Ahora, pasarela: Pasarela
+) -> MiPago:
+    return _verificar(db, _suscripcion_de_institucion(db, institucion_id), pasarela, instante)
+
+
+@router.post("/instituciones/{institucion_id}/pago/cancelar", response_model=MiPago)
+def cancelar_qr_de_institucion(
+    institucion_id: AdminDeInstitucion, db: Db, instante: Ahora, pasarela: Pasarela
+) -> MiPago:
+    return _cancelar(db, _suscripcion_de_institucion(db, institucion_id), pasarela, instante)
+
+
+# --- Aviso de pago del banco (preparado, apagado por defecto) ----------------------------------
+
+
+@publico.post(
+    "/qrsimple/notifyPaymentQR",
+    response_model=RespuestaAvisoQr,
+    dependencies=[Depends(limitar_por_ip)],
+)
+def aviso_de_pago(
+    datos: AvisoPagoQr, request: Request, db: Db, instante: Ahora, pasarela: Pasarela
+) -> RespuestaAvisoQr:
+    """El banco avisa un pago. Nunca activa el plan con el aviso: reconfirma consultando el
+    estado del QR (el mismo camino que la consulta de la pantalla). Idempotente por qrId."""
+    config: ConfiguracionPagos = request.app.state.config_pagos
+    if not config.baneco_aviso_activo:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No encontrado")
+    if ip_del_cliente(request) not in config.ips_del_aviso:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "No autorizado")
+    qr_id = campo_del_banco(datos.payment, "qrId")
+    pago = db.scalars(select(PagoQr).where(PagoQr.qr_id == str(qr_id))).first() if qr_id else None
+    if pago is not None and pago.estado == "pendiente":
+        try:
+            pagos.consultar_pago(db, pasarela, pago.id, hoy_local(instante), instante)
+        except pagos.BancoNoDisponible as error:
+            db.rollback()
+            registro_api.warning("Aviso de pago sin reconfirmar: %s", error)
+    return RespuestaAvisoQr(responseCode=0, message="")
 
 
 # --- Administrador de la institución ----------------------------------------------------------
 
 
 @router.get("/instituciones/{institucion_id}/mi-plan", response_model=MiPlan)
-def mi_plan(institucion_id: AdminDeInstitucion, db: Db, instante: Ahora) -> MiPlan:
+def mi_plan(
+    institucion_id: AdminDeInstitucion, db: Db, instante: Ahora, pasarela: Pasarela
+) -> MiPlan:
     vigente = service.suscripcion_vigente(db, institucion_id, hoy_local(instante))
     mostrada = vigente or service.ultima_suscripcion(db, institucion_id)
     limites = service.limites(db, vigente)
@@ -502,4 +645,5 @@ def mi_plan(institucion_id: AdminDeInstitucion, db: Db, instante: Ahora) -> MiPl
         limite_estudiantes=limites.estudiantes,
         docentes=service.miembros_con_rol(db, institucion_id, "docente"),
         estudiantes=service.miembros_con_rol(db, institucion_id, "estudiante"),
+        pago_qr=not pagos.es_simulada(pasarela),
     )
