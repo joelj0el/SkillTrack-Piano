@@ -445,9 +445,10 @@ svg {
     width: 100%;
     padding: var(--espacio-8);
     border-radius: var(--radio-lg);
-    background: linear-gradient(160deg, var(--color-portada), var(--color-portada-2));
+    background-image:
+      var(--brillo-portada), linear-gradient(160deg, var(--color-portada), var(--color-portada-2));
     background-color: var(--color-portada);
-    box-shadow: var(--sombra-3);
+    box-shadow: var(--sombra-3), var(--brillo-borde);
     overflow: hidden;
   }
 
@@ -1628,17 +1629,25 @@ form + .lista {
 
 /* Vidrio: superficie sólida por omisión; translúcida solo si el navegador desenfoca el fondo. */
 .vidrio,
-.resultados > section:not(:first-child) {
-  background: var(--color-superficie);
+.resultados > section:not(:first-child),
+.dialogo.dialogo-planes {
+  background: var(--brillo-reflejo), var(--color-superficie);
   border: var(--borde) solid var(--color-borde);
   border-radius: var(--radio-lg);
-  box-shadow: var(--sombra-2);
+  box-shadow: var(--sombra-2), var(--brillo-borde);
 }
 
 @supports (backdrop-filter: blur(1px)) {
   .vidrio,
   .resultados > section:not(:first-child) {
-    background: var(--vidrio-fondo);
+    background: var(--brillo-reflejo), var(--vidrio-fondo);
+    border-color: var(--vidrio-borde);
+    backdrop-filter: blur(var(--vidrio-desenfoque));
+  }
+
+  /* Sobre el velo oscuro, un vidrio casi opaco para que el texto mantenga el contraste. */
+  .dialogo.dialogo-planes {
+    background: var(--brillo-reflejo), var(--vidrio-fondo-fuerte);
     border-color: var(--vidrio-borde);
     backdrop-filter: blur(var(--vidrio-desenfoque));
   }
@@ -1666,9 +1675,10 @@ form + .lista {
   overflow: hidden;
   border-radius: var(--radio-lg);
   background-color: var(--color-portada);
-  background-image: linear-gradient(135deg, var(--color-portada), var(--color-portada-2));
+  background-image:
+    var(--brillo-portada), linear-gradient(135deg, var(--color-portada), var(--color-portada-2));
   color: var(--color-portada-texto);
-  box-shadow: var(--sombra-3);
+  box-shadow: var(--sombra-3), var(--brillo-borde);
 }
 
 .portada-antetitulo {
