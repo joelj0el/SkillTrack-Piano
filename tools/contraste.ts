@@ -27,7 +27,13 @@ const textoSobre = (texto: string, fondos: string[]): Par[] =>
 const componenteSobre = (texto: string, fondos: string[]): Par[] =>
   fondos.map((fondo) => ({ texto, fondo, minimo: COMPONENTE }));
 
-const SUPERFICIES = ["--color-fondo", "--color-superficie", "--color-superficie-2"];
+const SUPERFICIES = [
+  "--color-fondo",
+  "--color-fondo-medio",
+  "--color-fondo-2",
+  "--color-superficie",
+  "--color-superficie-2",
+];
 const FAMILIAS = ["correcto", "nota", "tiempo", "mano", "no-evaluable"];
 
 export const PARES: Par[] = [

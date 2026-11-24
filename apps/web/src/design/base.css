@@ -18,7 +18,14 @@ body {
   font-weight: var(--peso-normal);
   line-height: var(--interlineado);
   color: var(--color-texto);
-  background: var(--color-fondo);
+  /* Respaldo sólido para el contraste; encima, el degradado y el pentagrama decorativo. */
+  background-color: var(--color-fondo);
+  background-image: var(--fondo-decorado), var(--degradado-ambiente), var(--degradado-fondo);
+  background-size:
+    var(--tamano-fondo-decorado) auto,
+    auto,
+    auto;
+  background-repeat: repeat, no-repeat, no-repeat;
 }
 
 h1,
@@ -1614,13 +1621,6 @@ form + .lista {
   outline: var(--borde-foco) solid var(--color-foco);
 }
 /* ---- Diseño v2: componentes ---- */
-
-/* Fondo ambiente solo en las pantallas con vidrio (inicio, entrada, panel y resultados). */
-.aplicacion:has(.vidrio) {
-  background-color: var(--color-fondo);
-  background-image: var(--degradado-ambiente);
-  background-attachment: fixed;
-}
 
 /* Vidrio: superficie sólida por omisión; translúcida solo si el navegador desenfoca el fondo. */
 .vidrio,
