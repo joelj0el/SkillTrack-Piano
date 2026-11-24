@@ -144,4 +144,11 @@ describe("diseño v2: inicio público, panel y menú", () => {
     ).toEqual(["Usuarios", "Perfil"]);
     expect(screen.getByText("Administración", { selector: "dd" })).toBeDefined();
   });
+
+  it("PU-web-35: la entrada tiene Volver al inicio, que lleva a la página pública", async () => {
+    servidor({ "/api/auth/me": { estado: 401, cuerpo: { detail: "Se requiere sesión" } } });
+    abrir("/entrar");
+    const volver = await screen.findByRole("link", { name: "Volver al inicio" });
+    expect(volver.getAttribute("href")).toBe("/");
+  });
 });

@@ -1,5 +1,5 @@
 import { LONGITUD_MINIMA_CLAVE } from "@skilltrack/contracts";
-import { KeyRound, LogIn, LogOut, Mic } from "lucide-react";
+import { ArrowLeft, KeyRound, LogIn, LogOut, Mic } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { ErrorApi, SinConexion, pedir } from "../api.ts";
@@ -38,41 +38,46 @@ export function Entrar() {
   }
 
   return (
-    <section className="entrada entrada-doble">
-      <div className="tarjeta entrada-tarjeta vidrio">
-        <div className="entrada-marca">
-          <LogoTeclas />
-          <p className="entrada-nombre">SkillTrack-Piano</p>
-          <p className="entrada-lema">Aprende · Practica · Progresa</p>
+    <div className="entrada-pagina">
+      <EnlaceBoton to="/" variante="secundario" icono={ArrowLeft} className="volver">
+        Volver al inicio
+      </EnlaceBoton>
+      <section className="entrada entrada-doble">
+        <div className="tarjeta entrada-tarjeta vidrio">
+          <div className="entrada-marca">
+            <LogoTeclas />
+            <p className="entrada-nombre">SkillTrack-Piano</p>
+            <p className="entrada-lema">Aprende · Practica · Progresa</p>
+          </div>
+          <h1>Iniciar sesión</h1>
+          <form onSubmit={(e) => void enviar(e)}>
+            <label>
+              Usuario
+              <input name="usuario" autoComplete="username" required />
+            </label>
+            <label>
+              Contraseña
+              <input name="clave" type="password" autoComplete="current-password" required />
+            </label>
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
+            <Boton type="submit" cargando={enviando} icono={LogIn} className="boton-grande">
+              Iniciar sesión
+            </Boton>
+          </form>
+          <p className="entrada-ayuda suave">
+            ¿Olvidaste tu contraseña? Pídele a tu docente o administrador que la restablezca.
+          </p>
         </div>
-        <h1>Iniciar sesión</h1>
-        <form onSubmit={(e) => void enviar(e)}>
-          <label>
-            Usuario
-            <input name="usuario" autoComplete="username" required />
-          </label>
-          <label>
-            Contraseña
-            <input name="clave" type="password" autoComplete="current-password" required />
-          </label>
-          {error && (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          )}
-          <Boton type="submit" cargando={enviando} icono={LogIn} className="boton-grande">
-            Iniciar sesión
-          </Boton>
-        </form>
-        <p className="entrada-ayuda suave">
-          ¿Olvidaste tu contraseña? Pídele a tu docente o administrador que la restablezca.
-        </p>
-      </div>
-      <div className="entrada-decorado" aria-hidden="true">
-        <p className="entrada-decorado-frase">Tu progreso, nuestra melodía.</p>
-        <TecladoPerspectiva />
-      </div>
-    </section>
+        <div className="entrada-decorado" aria-hidden="true">
+          <p className="entrada-decorado-frase">Tu progreso, nuestra melodía.</p>
+          <TecladoPerspectiva />
+        </div>
+      </section>
+    </div>
   );
 }
 

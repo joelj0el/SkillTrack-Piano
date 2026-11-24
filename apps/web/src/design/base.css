@@ -143,7 +143,7 @@ svg {
   padding: var(--espacio-6) var(--margen-lateral) var(--espacio-12);
 }
 
-.contenedor:has(> .panel, > .publica, > .entrada-doble) {
+.contenedor:has(> .panel, > .publica, > .entrada-pagina) {
   max-width: calc(var(--ancho-amplio) + 2 * var(--margen-lateral));
 }
 
@@ -363,6 +363,10 @@ svg {
 
 .pagina-cabecera p {
   margin: var(--espacio-1) 0 0;
+}
+
+.entrada-pagina > .volver {
+  margin-bottom: var(--espacio-2);
 }
 
 /* Entrada: tarjeta de vidrio y, en el escritorio, el panel decorativo con el teclado. */
