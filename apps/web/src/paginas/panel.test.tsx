@@ -189,4 +189,29 @@ describe("diseño v2: inicio público, panel y menú", () => {
     expect(within(ventana).getAllByRole("article")).toHaveLength(3);
     expect(within(ventana).getByRole("button", { name: "Cerrar" })).toBeDefined();
   });
+
+  it("PU-web-38: el menú lateral se recoge con un botón, deja los íconos con su nombre y recuerda la preferencia", async () => {
+    localStorage.removeItem("skilltrack.menu");
+    const respuestas = {
+      "/api/auth/me": { estado: 200, cuerpo: usuario("admin_inst") },
+    };
+    servidor(respuestas);
+    abrir("/perfil");
+    const boton = await screen.findByRole("button", { name: "Contraer el menú" });
+    expect(boton.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(boton);
+    expect(document.querySelector(".aplicacion")?.classList.contains("menu-recogido")).toBe(true);
+    expect(localStorage.getItem("skilltrack.menu")).toBe("recogido");
+    // Recogido, cada ícono conserva su nombre accesible (la etiqueta flotante).
+    const menu = screen.getByRole("navigation", { name: "Principal" });
+    expect(within(menu).getByRole("link", { name: "Usuarios" })).toBeDefined();
+    cleanup();
+
+    servidor(respuestas);
+    abrir("/perfil");
+    const expandir = await screen.findByRole("button", { name: "Expandir el menú" });
+    expect(expandir.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(expandir);
+    expect(localStorage.getItem("skilltrack.menu")).toBe("abierto");
+  });
 });

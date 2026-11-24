@@ -152,7 +152,7 @@ svg {
 }
 
 /* Menú: en el móvil solo queda la barra inferior; la marca y la persona se ocultan. */
-.lateral > .marca,
+.lateral-cabecera,
 .lateral-persona {
   display: none;
 }
@@ -235,6 +235,7 @@ svg {
     grid-row: 1 / -1;
     position: sticky;
     top: 0;
+    z-index: var(--capa-barra);
     display: flex;
     flex-direction: column;
     gap: var(--espacio-6);
@@ -244,10 +245,98 @@ svg {
     color: var(--color-lateral-texto);
   }
 
-  .con-navegacion .lateral > .marca {
-    display: inline-flex;
+  /* Franja fija del menú a toda la altura (también en capturas de página completa). */
+  .con-navegacion::before {
+    content: "";
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: -1;
+    width: var(--ancho-lateral);
+    background: var(--color-lateral);
+  }
+
+  .lateral-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espacio-2);
+  }
+
+  .con-navegacion .lateral .marca {
     color: var(--color-lateral-texto);
     padding: 0 var(--espacio-2);
+  }
+
+  .lateral .lateral-recoger,
+  .lateral .lateral-recoger:hover {
+    min-width: var(--alto-toque);
+    padding: var(--espacio-2);
+    background: transparent;
+    border-color: var(--color-lateral-suave);
+    color: var(--color-lateral-texto);
+  }
+
+  .lateral .lateral-recoger:focus-visible {
+    outline-color: var(--color-lateral-texto);
+  }
+
+  /* Menú recogido: solo íconos; el nombre aparece en una etiqueta flotante. */
+  .menu-recogido.con-navegacion {
+    grid-template-columns: var(--ancho-lateral-recogido) minmax(0, 1fr);
+  }
+
+  .menu-recogido.con-navegacion::before {
+    width: var(--ancho-lateral-recogido);
+  }
+
+  .menu-recogido .lateral {
+    padding-inline: var(--espacio-2);
+  }
+
+  .menu-recogido .lateral-cabecera {
+    flex-direction: column;
+  }
+
+  .menu-recogido .lateral .marca {
+    padding: 0;
+  }
+
+  .menu-recogido .lateral .marca-texto,
+  .menu-recogido .lateral-datos {
+    display: none;
+  }
+
+  .menu-recogido .navegacion a {
+    justify-content: center;
+    padding: var(--espacio-2);
+  }
+
+  .menu-recogido .navegacion a > span {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + var(--espacio-3));
+    z-index: var(--capa-aviso);
+    padding: var(--espacio-1) var(--espacio-3);
+    border-radius: var(--radio-sm);
+    background: var(--color-lateral);
+    color: var(--color-lateral-texto);
+    box-shadow: var(--sombra-2);
+    font-size: var(--texto-sm);
+    font-weight: var(--peso-medio);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition: opacity var(--duracion-corta) var(--curva);
+  }
+
+  .menu-recogido .navegacion a:is(:hover, :focus-visible) > span {
+    opacity: 1;
+  }
+
+  .menu-recogido .lateral-persona {
+    justify-content: center;
+    padding-inline: 0;
   }
 
   .con-navegacion .barra .marca {

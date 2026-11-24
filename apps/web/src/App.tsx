@@ -8,6 +8,8 @@ import {
   House,
   LogOut,
   Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
   Sun,
   TableProperties,
   UserRound,
@@ -104,9 +106,32 @@ function Marca() {
   return (
     <span className="marca">
       <LogoTeclas />
-      SkillTrack-Piano
+      <span className="marca-texto">SkillTrack-Piano</span>
     </span>
   );
+}
+
+const CLAVE_MENU = "skilltrack.menu";
+
+/** Preferencia del menú lateral (recogido o abierto), recordada en este navegador. */
+function useMenuRecogido(): [boolean, () => void] {
+  const [recogido, setRecogido] = useState(() => {
+    try {
+      return localStorage.getItem(CLAVE_MENU) === "recogido";
+    } catch {
+      return false;
+    }
+  });
+  const alternar = () =>
+    setRecogido((r) => {
+      try {
+        localStorage.setItem(CLAVE_MENU, r ? "abierto" : "recogido");
+      } catch {
+        // Sin almacenamiento disponible: la preferencia dura hasta recargar.
+      }
+      return !r;
+    });
+  return [recogido, alternar];
 }
 
 /** Barra superior: la marca (cuando no hay menú lateral), el cambio de tema y la salida. */
@@ -153,7 +178,7 @@ const iniciales = (nombre: string) =>
  * Menú de cada rol: lateral (azul marino) en el escritorio, con la marca arriba y la persona con
  * su rol abajo; barra inferior de íconos en el móvil. Solo secciones que existen.
  */
-function Navegacion() {
+function Navegacion({ recogido, alternar }: { recogido: boolean; alternar: () => void }) {
   const { estado } = useSesion();
   if (estado.tipo !== "activo" || estado.usuario.clave_temporal) return null;
   const r = roles(estado.usuario);
@@ -161,7 +186,18 @@ function Navegacion() {
   const rol = [...r].map((x) => NOMBRE_ROL[x]).join(" · ");
   return (
     <aside className="lateral">
-      <Marca />
+      <div className="lateral-cabecera">
+        <Marca />
+        <button
+          type="button"
+          className="secundario lateral-recoger"
+          aria-expanded={!recogido}
+          aria-label={recogido ? "Expandir el menú" : "Contraer el menú"}
+          onClick={alternar}
+        >
+          {recogido ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
+        </button>
+      </div>
       <nav className="navegacion" aria-label="Principal">
         {conInicio && <Destino a="/inicio" icono={House} texto="Inicio" />}
         {r.has("estudiante") && <Destino a="/tareas" icono={ClipboardList} texto="Mis tareas" />}
@@ -210,10 +246,12 @@ export function App() {
   const { estado } = useSesion();
   const mostrada = useUbicacionConTransicion();
   const conNavegacion = estado.tipo === "activo" && !estado.usuario.clave_temporal;
+  const [recogido, alternar] = useMenuRecogido();
+  const clases = ["aplicacion", conNavegacion && "con-navegacion", recogido && "menu-recogido"];
   return (
     <ProveedorAvisos>
-      <div className={conNavegacion ? "aplicacion con-navegacion" : "aplicacion"}>
-        <Navegacion />
+      <div className={clases.filter(Boolean).join(" ")}>
+        <Navegacion recogido={recogido} alternar={alternar} />
         <Barra />
         <main className="contenedor">
           <Routes location={mostrada}>
