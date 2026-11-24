@@ -1,14 +1,14 @@
 # n.6 Pruebas — it-4 (generado)
 
-Generado por `pnpm docs:tests it-4` el 2026-11-24 08:12 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
+Generado por `pnpm docs:tests it-4` el 2026-11-24 14:04 UTC a partir de los reportes JUnit de `reports/`. No se edita a mano.
 
 ## Totales por herramienta
 
 | Herramienta | Casos | Aprobados | Fallidos | Omitidos |
 | ----------- | ----- | --------- | -------- | -------- |
-| Playwright  | 66    | 65        | 0        | 1        |
-| Vitest      | 395   | 395       | 0        | 0        |
-| pytest      | 128   | 128       | 0        | 0        |
+| Playwright  | 68    | 66        | 1        | 1        |
+| Vitest      | 398   | 398       | 0        | 0        |
+| pytest      | 149   | 149       | 0        | 0        |
 
 ## Pruebas de aceptación (PA)
 
@@ -81,16 +81,29 @@ Generado por `pnpm docs:tests it-4` el 2026-11-24 08:12 UTC a partir de los repo
 | PA-HU37-04 | pytest              | 1     | aprobada  | test_pa_hu37_04_estado_asignada_en_practica_vencida_y_403_al_docente_ajeno                                                                                   |
 | PA-HU38-01 | Playwright          | 1     | aprobada  | PA-HU38-01: el docente marca Por repetir con observación y plazo nuevo, luego Lograda; el estudiante ve la valoración                                        |
 | PA-HU38-02 | pytest              | 1     | aprobada  | test_pa_hu38_02_solo_el_asignado_valora_con_fecha_y_docente_por_repetir_exige_observacion                                                                    |
+| PA-HU39-01 | pytest              | 1     | aprobada  | test_pa_hu39_01_la_ruta_publica_lista_solo_los_planes_activos_sin_sesion                                                                                     |
+| PA-HU39-02 | pytest              | 1     | aprobada  | test_pa_hu39_02_la_solicitud_de_acceso_se_envia_sin_sesion_y_la_ve_el_superadministrador                                                                     |
+| PA-HU39-03 | pytest              | 1     | aprobada  | test_pa_hu39_03_el_superadministrador_crea_edita_y_desactiva_planes                                                                                          |
+| PA-HU39-04 | pytest              | 1     | aprobada  | test_pa_hu39_04_un_docente_independiente_es_una_institucion_de_un_solo_docente_con_convenio                                                                  |
+| PA-HU39-05 | pytest              | 1     | aprobada  | test_pa_hu39_05_los_limites_se_aplican_al_crear_usuarios_con_un_mensaje_claro                                                                                |
+| PA-HU39-06 | pytest              | 1     | aprobada  | test_pa_hu39_06_sin_suscripcion_activa_o_con_limite_sin_definir_no_hay_limite                                                                                |
+| PA-HU39-07 | pytest              | 1     | aprobada  | test_pa_hu39_07_mi_plan_muestra_el_plan_los_limites_usados_y_el_vencimiento                                                                                  |
+| PA-HU39-08 | pytest              | 10    | aprobada  | test_pa_hu39_08_solo_el_superadministrador_gestiona_planes_convenios_y_solicitudes[get-/api/admin/planes-None]                                               |
+| PA-HU39-09 | pytest              | 1     | aprobada  | test_pa_hu39_09_mi_plan_solo_lo_ve_el_administrador_de_esa_institucion                                                                                       |
+| PA-HU39-10 | pytest              | 1     | aprobada  | test_pa_hu39_10_un_pago_confirmado_dos_veces_activa_la_suscripcion_una_sola_vez                                                                              |
+| PA-HU39-11 | pytest              | 1     | aprobada  | test_pa_hu39_11_sin_adaptador_del_banco_o_sin_precio_no_se_genera_el_qr                                                                                      |
+| PA-HU39-12 | Playwright          | 1     | aprobada  | PA-HU39-12: el superadministrador gestiona planes y la ventana de inicio los lee de la ruta pública                                                          |
+| PA-HU39-13 | Playwright          | 1     | aprobada  | PA-HU39-13: la solicitud de acceso reemplaza al correo y Mi plan muestra el pago por QR en integración                                                       |
 
 ## Pruebas unitarias y de propiedades por módulo
 
 | Módulo        | IDs | Aprobados | Fallidos |
 | ------------- | --- | --------- | -------- |
-| accesibilidad | 8   | 8         | 0        |
+| accesibilidad | 8   | 7         | 1        |
 | align         | 7   | 7         | 0        |
 | alineacion    | 6   | 6         | 0        |
 | analytics     | 3   | 3         | 0        |
-| api           | 11  | 11        | 0        |
+| api           | 12  | 12        | 0        |
 | attempts      | 10  | 10        | 0        |
 | audio         | 25  | 25        | 0        |
 | aumento       | 4   | 4         | 0        |
@@ -102,7 +115,7 @@ Generado por `pnpm docs:tests it-4` el 2026-11-24 08:12 UTC a partir de los repo
 | ci            | 8   | 8         | 0        |
 | clasificador  | 12  | 12        | 0        |
 | classifier    | 2   | 2         | 0        |
-| contracts     | 31  | 31        | 0        |
+| contracts     | 34  | 34        | 0        |
 | core          | 1   | 1         | 0        |
 | dataset       | 5   | 5         | 0        |
 | desfase       | 5   | 5         | 0        |

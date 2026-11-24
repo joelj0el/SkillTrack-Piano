@@ -21,7 +21,8 @@ const NOMBRE_ROL = {
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorApi) {
-    if (e.estado === 409) return "Ese nombre de usuario ya existe.";
+    // 409: usuario repetido o límite del plan; la API dice cuál, con un mensaje claro.
+    if (e.estado === 409) return e.message || "Ese nombre de usuario ya existe.";
     const campos = e.campos();
     if (Object.keys(campos).length) {
       return Object.entries(campos)

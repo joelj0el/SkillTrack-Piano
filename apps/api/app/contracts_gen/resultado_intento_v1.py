@@ -83,7 +83,7 @@ class CodigoIndicador(StrEnum):
     IND_F4 = "IND-F4"
 
 
-class Estado8(StrEnum):
+class Estado9(StrEnum):
     digitacion_correcta = "digitacion-correcta"
     dedo_incorrecto = "dedo-incorrecto"
     no_evaluable = "no-evaluable"
@@ -99,7 +99,7 @@ class EventoResultadoV1(BaseModel):
         extra="forbid",
     )
     idx: conint(ge=0, le=9007199254740991)
-    estado: Estado8
+    estado: Estado9
     motivo: constr(max_length=80) | None
     mano: Mano | None
     dedo: conint(ge=1, le=5) | None

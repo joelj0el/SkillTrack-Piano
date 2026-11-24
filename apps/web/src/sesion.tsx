@@ -70,6 +70,8 @@ export const NOMBRE_ROL: Record<Rol, string> = {
 /** Pantalla inicial de cada rol (PA-HU01-01): el panel de inicio para docentes y estudiantes. */
 export function rutaInicial(usuario: UsuarioActual): string {
   const r = roles(usuario);
+  // El superadministrador sin institución gestiona planes, convenios y solicitudes (ADR-004).
+  if (usuario.superadmin && r.size === 0) return "/admin/planes";
   if (r.has("admin_inst")) return "/usuarios";
   if (r.has("docente")) return "/inicio";
   if (r.has("investigador")) return "/investigacion";

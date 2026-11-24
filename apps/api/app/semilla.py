@@ -25,6 +25,7 @@ from app.modules.identity.models import Usuario
 from app.modules.identity.service import hash_clave
 from app.modules.institutions.models import AsignacionDocente, Institucion, Membresia
 from app.modules.pedagogy.models import Observacion, Tarea
+from app.modules.plans.models import Plan
 
 INSTITUCION = "Instituto de demostración"
 USUARIOS = [
@@ -262,6 +263,72 @@ def sembrar_intentos_demo(db: Session, hoy: date) -> int:
     return creados
 
 
+# Planes de la página de inicio (ADR-004). Sin precios ni límites: el autor todavía no los
+# definió, así que quedan vacíos y la interfaz muestra "Bs —" y "—".
+PLANES_DEMO = [
+    (
+        "Docente",
+        "Para un docente y sus estudiantes",
+        [
+            "1 docente",
+            "Catálogo de ejercicios con partitura y digitación",
+            "Asignación de tareas con tempo y repeticiones",
+            "Análisis de cada intento con resultado nota por nota",
+            "Seguimiento de cada estudiante",
+        ],
+        False,
+    ),
+    (
+        "Institución",
+        "Para escuelas y conservatorios con varios docentes",
+        [
+            "Varios docentes",
+            "Todo lo del plan Docente",
+            "Administración de usuarios por la institución",
+            "Vista «Mi grupo» para cada docente",
+            "Soporte para la puesta en marcha",
+        ],
+        True,
+    ),
+    (
+        "Convenio especial",
+        "Para conservatorios e institutos",
+        [
+            "Condiciones a medida para conservatorios e institutos",
+            "Cantidad de docentes y estudiantes a convenir",
+            "Acompañamiento en la capacitación",
+            "Precio según el convenio",
+        ],
+        False,
+    ),
+]
+
+
+def sembrar_planes(db: Session) -> int:
+    """Crea los planes que falten (por nombre). Devuelve cuántos creó."""
+    creados = 0
+    for orden, (nombre, descripcion, beneficios, destacado) in enumerate(PLANES_DEMO):
+        if db.scalar(select(Plan.id).where(Plan.nombre == nombre)) is not None:
+            continue
+        db.add(
+            Plan(
+                nombre=nombre,
+                descripcion=descripcion,
+                beneficios=beneficios,
+                precio_bs=None,
+                periodo="mensual",
+                limite_docentes=None,
+                limite_estudiantes=None,
+                destacado=destacado,
+                activo=True,
+                orden=orden,
+            )
+        )
+        creados += 1
+    db.commit()
+    return creados
+
+
 def main() -> None:
     if os.environ.get("SEMILLA_DEMO") != "1":
         return
@@ -271,6 +338,7 @@ def main() -> None:
     with sessionmaker(crear_engine())() as db:
         creada = sembrar(db, clave, date.today())
         intentos = sembrar_intentos_demo(db, date.today())
+        sembrar_planes(db)
     print("Demostración creada." if creada else "La demostración ya existía.")
     if intentos:
         print(f"Intentos de demostración agregados: {intentos}.")
