@@ -34,7 +34,14 @@ La docente de Proyecto de Grado recomendó demostrar la **factibilidad económic
 - Pago con tarjeta: **trabajo futuro**.
 - Autorregistro: las cuentas las sigue creando el administrador de cada institución.
 - Facturación electrónica, prorrateos, renovación automática y cobros recurrentes.
-- El adaptador real del banco, hasta tener su documentación técnica (autenticación, generación del QR, consulta del estado y ambiente de pruebas).
+
+## Actualización (2026-11-24): proveedor real implementado
+
+- **Proveedor real implementado:** con `PAGOS_PROVEEDOR=baneco`, un adaptador de la API del Banco Económico (autenticación con token en memoria, generación del QR, consulta del estado con respaldo entre las dos formas de la ruta, anulación y conciliación) queda detrás de la misma interfaz. El simulado sigue siendo el predeterminado. El cifrado AES-256-CBC que pide el banco se hace en local; nunca se usan los servicios de cifrado del banco, que enviarían la llave en la URL.
+- **Una sola fuente de verdad para activar:** la consulta del estado, el aviso del banco y la activación del superadministrador terminan en la misma transición idempotente (pendiente → pagado). El plan se activa solo si el banco informa el QR pagado y un pago con el mismo qrId, el monto esperado y BOB.
+- **Aviso de pago del banco** (`POST /api/qrsimple/notifyPaymentQR`, ruta pública): preparado pero apagado (`BANECO_AVISO_ACTIVO=false`), con lista de IPs permitidas (vacía = rechaza todo) y límite por IP. Nunca activa el plan por sí solo: reconfirma consultando el estado. Es la cuarta ruta pública; no lleva la cabecera anti-CSRF porque la envía el servidor del banco.
+- **Datos mínimos:** del pago se guardan nuestro id, el qrId, monto, moneda, fecha, hora y estado; no se guardan la imagen del QR ni los datos de quien paga. La llave, la contraseña, la cuenta, el token, la imagen y los cuerpos de respuesta del banco nunca van al registro ni a los mensajes de error.
+- **Pendiente con el banco:** ambiente de las credenciales (certificación o producción), variante vigente de la consulta de estado, autenticación e IPs del aviso de pago. La configuración está en `docs/05-despliegue/pago-qr.md`.
 
 ## Consecuencias (positivas / negativas / qué cambia en el perfil o en la Sección II)
 
