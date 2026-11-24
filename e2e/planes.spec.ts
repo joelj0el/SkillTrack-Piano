@@ -41,7 +41,7 @@ test("PA-HU39-12: el superadministrador gestiona planes y la ventana de inicio l
   // La página de inicio (sin sesión) lo muestra en la ventana de planes.
   const anonimo = await browser.newPage({ ignoreHTTPSErrors: true });
   await anonimo.goto("/");
-  await anonimo.getByRole("banner").getByRole("button", { name: "Ver planes" }).click();
+  await anonimo.getByRole("banner").getByRole("button", { name: "Empezar ahora" }).click();
   const ventana = anonimo.getByRole("dialog", { name: "Planes" });
   await expect(ventana.getByRole("heading", { name: nombre })).toBeVisible();
   await expect(ventana.getByRole("article").filter({ hasText: nombre })).toContainText("Bs —");

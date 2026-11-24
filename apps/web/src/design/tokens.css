@@ -52,6 +52,7 @@
   --tamano-icono-grande: 1.5rem;
   --tamano-insignia: 2.75rem;
   --tamano-ilustracion: 7.5rem;
+  --tamano-qr: 12rem;
   --escala-conteo: 3;
 
   /* Formas (ADR-003): 8 detalles, 12 botones y campos, 16 tarjetas; chips totalmente redondos. */

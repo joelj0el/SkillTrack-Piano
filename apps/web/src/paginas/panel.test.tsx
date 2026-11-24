@@ -194,6 +194,12 @@ describe("diseño v2: inicio público, panel y menú", () => {
     }
     // Ningún precio ni límite inventado: la única cifra es el docente del plan Docente.
     expect(planes.map((p) => p.textContent?.match(/\d+/g) ?? [])).toEqual([["1"], [], []]);
+    const elegir = screen.getAllByRole("link", { name: /Elegir el plan/ });
+    expect(elegir.map((a) => a.getAttribute("href"))).toEqual([
+      "/registro?plan=1",
+      "/registro?plan=2",
+      "/registro?plan=3",
+    ]);
     const enlaces = screen.getAllByRole("link", { name: /Solicitar información/ });
     expect(enlaces.map((a) => a.getAttribute("href"))).toEqual([
       "/solicitar-acceso?plan=1",
@@ -202,7 +208,7 @@ describe("diseño v2: inicio público, panel y menú", () => {
     ]);
   });
 
-  it("PU-web-37: Ver planes abre la ventana con su título; ya no hay planes al final de la página", async () => {
+  it("PU-web-37: Empezar ahora (barra) y Ver planes abren la ventana con su título; ya no hay planes al final de la página", async () => {
     HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
       this.open = true;
     };
@@ -216,9 +222,12 @@ describe("diseño v2: inicio público, panel y menú", () => {
     abrir("/");
     await screen.findByRole("heading", { level: 1, name: /Aprende piano/ });
     expect(screen.queryByRole("region", { name: "Planes" })).toBeNull();
-    const botones = screen.getAllByRole("button", { name: "Ver planes" });
-    expect(botones.length).toBe(2);
-    fireEvent.click(botones[0]!);
+    const barra = screen.getByRole("banner");
+    expect(within(barra).getByRole("link", { name: "Iniciar sesión" }).getAttribute("href")).toBe(
+      "/entrar",
+    );
+    expect(screen.getAllByRole("button", { name: "Ver planes" })).toHaveLength(1);
+    fireEvent.click(within(barra).getByRole("button", { name: "Empezar ahora" }));
     const ventana = screen.getByRole("dialog", { name: "Planes" });
     expect(await within(ventana).findAllByRole("article")).toHaveLength(3);
     expect(within(ventana).getByRole("button", { name: "Cerrar" })).toBeDefined();

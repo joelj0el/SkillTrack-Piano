@@ -9,6 +9,7 @@ import {
   FlaskConical,
   GraduationCap,
   House,
+  LogIn,
   LogOut,
   Moon,
   PanelLeftClose,
@@ -27,6 +28,10 @@ import { Usuarios } from "./paginas/admin.tsx";
 import { DetalleEjercicio, Catalogo } from "./paginas/catalogo.tsx";
 import { DetalleEstudiante, MisEstudiantes } from "./paginas/docente.tsx";
 import { CambiarClave, Entrar, Perfil } from "./paginas/entrada.tsx";
+import { PrimerIngreso } from "./paginas/asistente.tsx";
+import { PaginaPrivacidad, PaginaTerminos } from "./paginas/legal.tsx";
+import { PantallaPago } from "./paginas/pago.tsx";
+import { PaginaRegistro } from "./paginas/registro.tsx";
 import { PanelDocente, PanelEstudiante } from "./paginas/panel.tsx";
 import { BotonPlanes, PaginaPlanes } from "./paginas/planes.tsx";
 import { GestionPlanes, MiPlanPagina, Solicitudes } from "./paginas/gestion.tsx";
@@ -37,7 +42,7 @@ import { ModoInvestigacion } from "./paginas/investigacion.tsx";
 import { PaginaMiGrupo, PaginaMiProgreso } from "./paginas/tableros.tsx";
 import { NOMBRE_ROL, roles, rutaInicial, useSesion } from "./sesion.tsx";
 import { aplicarTema, temaGuardado, type Tema } from "./tema.ts";
-import { Boton, Esqueleto, ProveedorAvisos } from "./ui/base.tsx";
+import { Boton, EnlaceBoton, Esqueleto, ProveedorAvisos } from "./ui/base.tsx";
 import { LogoTeclas } from "./ui/ilustraciones.tsx";
 
 const Diseno = lazy(() => import("./paginas/diseno.tsx").then((m) => ({ default: m.Diseno })));
@@ -60,11 +65,28 @@ function Protegida({ rol, children }: { rol?: Rol | "superadmin"; children: Reac
   if (estado.tipo === "anonimo") return <Navigate to="/entrar" state={{ desde: ubicacion }} />;
   // Con clave temporal no se accede a ninguna otra pantalla (PA-HU01-02).
   if (estado.usuario.clave_temporal) return <Navigate to="/cambiar-clave" />;
+  // Cuenta pendiente de pago: solo la pantalla de pago (ADR-005).
+  if (estado.usuario.pago_pendiente) return <Navigate to="/pago" />;
   const permitido =
     !rol || (rol === "superadmin" ? estado.usuario.superadmin : roles(estado.usuario).has(rol));
   if (!permitido) return <Navigate to={rutaInicial(estado.usuario)} />;
   return <>{children}</>;
 }
+
+/** Pantalla de pago: solo para una cuenta con el plan pendiente de pago. */
+function RutaPago() {
+  const { estado } = useSesion();
+  const ubicacion = useLocation();
+  if (estado.tipo === "cargando") return <Esqueleto />;
+  if (estado.tipo === "sin-conexion") return <SinConexion />;
+  if (estado.tipo === "anonimo") return <Navigate to="/entrar" state={{ desde: ubicacion }} />;
+  if (!estado.usuario.pago_pendiente) return <Navigate to={rutaInicial(estado.usuario)} replace />;
+  return <PantallaPago />;
+}
+
+/** Con sesión y la app habilitada (sin clave temporal ni pago pendiente). */
+const habilitada = (estado: ReturnType<typeof useSesion>["estado"]) =>
+  estado.tipo === "activo" && !estado.usuario.clave_temporal && !estado.usuario.pago_pendiente;
 
 /** La app instalada (PWA) abre directamente la entrada; en el navegador, la página pública. */
 function instalada(): boolean {
@@ -141,17 +163,27 @@ function useMenuRecogido(): [boolean, () => void] {
   return [recogido, alternar];
 }
 
-/** Barra superior: la marca (cuando no hay menú lateral), el cambio de tema y la salida. */
+/**
+ * Barra superior: la marca (cuando no hay menú lateral), el cambio de tema y la salida. En la
+ * página de inicio pública, "Iniciar sesión" y "Empezar ahora" (abre los planes).
+ */
 function Barra() {
   const { estado, salir } = useSesion();
   const { pathname } = useLocation();
-  const activo = estado.tipo === "activo" && !estado.usuario.clave_temporal;
+  const activo = habilitada(estado);
   return (
     <header className="barra">
       <div className="barra-fila">
         <Marca />
         <div className="barra-acciones">
-          {estado.tipo === "anonimo" && pathname === "/" && <BotonPlanes />}
+          {estado.tipo === "anonimo" && pathname === "/" && (
+            <>
+              <EnlaceBoton to="/entrar" variante="secundario" icono={LogIn}>
+                <span>Iniciar sesión</span>
+              </EnlaceBoton>
+              <BotonPlanes variante="primario" texto="Empezar ahora" />
+            </>
+          )}
           <BotonTema />
           {activo && (
             <Boton variante="secundario" icono={LogOut} onClick={() => void salir()}>
@@ -187,7 +219,7 @@ const iniciales = (nombre: string) =>
  */
 function Navegacion({ recogido, alternar }: { recogido: boolean; alternar: () => void }) {
   const { estado } = useSesion();
-  if (estado.tipo !== "activo" || estado.usuario.clave_temporal) return null;
+  if (estado.tipo !== "activo" || !habilitada(estado)) return null;
   const r = roles(estado.usuario);
   const conInicio = r.has("estudiante") || r.has("docente");
   const rol = [
@@ -262,7 +294,7 @@ function useUbicacionConTransicion(): Location {
 export function App() {
   const { estado } = useSesion();
   const mostrada = useUbicacionConTransicion();
-  const conNavegacion = estado.tipo === "activo" && !estado.usuario.clave_temporal;
+  const conNavegacion = habilitada(estado);
   const [recogido, alternar] = useMenuRecogido();
   const clases = ["aplicacion", conNavegacion && "con-navegacion", recogido && "menu-recogido"];
   return (
@@ -324,6 +356,10 @@ export function App() {
             <Route path="/entrar" element={<Entrar />} />
             <Route path="/planes" element={<PaginaPlanes />} />
             <Route path="/solicitar-acceso" element={<PaginaSolicitarAcceso />} />
+            <Route path="/registro" element={<PaginaRegistro />} />
+            <Route path="/terminos" element={<PaginaTerminos />} />
+            <Route path="/privacidad" element={<PaginaPrivacidad />} />
+            <Route path="/pago" element={<RutaPago />} />
             <Route
               path="/mi-plan"
               element={
@@ -431,7 +467,9 @@ export function App() {
               path="/usuarios"
               element={
                 <Protegida rol="admin_inst">
-                  <Usuarios />
+                  <PrimerIngreso>
+                    <Usuarios />
+                  </PrimerIngreso>
                 </Protegida>
               }
             />
