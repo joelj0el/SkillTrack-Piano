@@ -44,7 +44,7 @@ h1 {
 h2 {
   font-size: var(--texto-lg);
   font-weight: var(--peso-medio);
-  margin: var(--espacio-8) 0 var(--espacio-3);
+  margin: var(--separacion-secciones) 0 var(--espacio-4);
 }
 
 h3 {
@@ -107,7 +107,7 @@ svg {
   gap: var(--espacio-3);
   max-width: var(--ancho-amplio);
   margin: 0 auto;
-  padding: var(--espacio-2) var(--espacio-4);
+  padding: var(--espacio-2) var(--margen-lateral);
 }
 
 .marca {
@@ -138,13 +138,13 @@ svg {
 }
 
 .contenedor {
-  max-width: var(--ancho-contenido);
+  max-width: calc(var(--ancho-contenido) + 2 * var(--margen-lateral));
   margin: 0 auto;
-  padding: var(--espacio-6) var(--espacio-4) var(--espacio-12);
+  padding: var(--espacio-6) var(--margen-lateral) var(--espacio-12);
 }
 
 .contenedor:has(> .panel, > .publica, > .entrada-doble) {
-  max-width: var(--ancho-amplio);
+  max-width: calc(var(--ancho-amplio) + 2 * var(--margen-lateral));
 }
 
 .con-navegacion .contenedor {
@@ -352,7 +352,7 @@ svg {
   align-items: center;
   justify-content: space-between;
   gap: var(--espacio-3);
-  margin-bottom: var(--espacio-6);
+  margin-bottom: var(--espacio-8);
 }
 
 .pagina-cabecera h1 {
@@ -464,8 +464,8 @@ svg {
 /* Tarjetas y listas. */
 .tarjeta {
   display: block;
-  padding: var(--espacio-4);
-  margin-bottom: var(--espacio-3);
+  padding: var(--relleno-tarjeta);
+  margin-bottom: var(--separacion-tarjetas);
   background: var(--color-superficie);
   border: var(--borde) solid var(--color-borde);
   border-radius: var(--radio-lg);
@@ -1597,7 +1597,7 @@ form + .lista {
 
 /* P-42: resultados en bloques, en el orden del panel. */
 .resultados > section + section {
-  margin-top: var(--espacio-6);
+  margin-top: var(--separacion-tarjetas);
 }
 
 /* Nota por nota: familia de estado con icono y texto; al tocar, el detalle. */
@@ -1647,7 +1647,7 @@ form + .lista {
 }
 
 .resultados > section:not(:first-child) {
-  padding: var(--espacio-4);
+  padding: var(--relleno-tarjeta);
   border-radius: var(--radio-lg);
 }
 
@@ -1657,7 +1657,7 @@ form + .lista {
   display: grid;
   gap: var(--espacio-4);
   min-height: var(--alto-portada);
-  margin-bottom: var(--espacio-6);
+  margin-bottom: var(--separacion-secciones);
   padding: var(--espacio-8) var(--espacio-6) 0;
   overflow: hidden;
   border-radius: var(--radio-lg);
@@ -1785,15 +1785,15 @@ form + .lista {
 .resumen {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--ancho-tarjeta-min), 1fr));
-  gap: var(--espacio-4);
-  margin-bottom: var(--espacio-6);
+  gap: var(--separacion-tarjetas);
+  margin-bottom: var(--separacion-secciones);
 }
 
 .tarjeta-resumen {
   display: grid;
   align-content: start;
   gap: var(--espacio-1);
-  padding: var(--espacio-4) var(--espacio-6) var(--espacio-6);
+  padding: var(--relleno-tarjeta);
 }
 
 .insignia {
@@ -1834,8 +1834,8 @@ form + .lista {
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--espacio-3);
-  margin: var(--espacio-8) 0 var(--espacio-3);
+  gap: var(--espacio-2);
+  margin: var(--separacion-secciones) 0 var(--espacio-4);
 }
 
 .seccion-cabecera h2 {
@@ -1849,7 +1849,7 @@ form + .lista {
 .calificaciones {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--ancho-tarjeta-min), 1fr));
-  gap: var(--espacio-3);
+  gap: var(--separacion-tarjetas);
   padding: 0;
   list-style: none;
 }
@@ -1857,7 +1857,7 @@ form + .lista {
 .calificacion {
   display: grid;
   gap: var(--espacio-1);
-  padding: var(--espacio-4);
+  padding: var(--relleno-tarjeta);
   border-radius: var(--radio-lg);
 }
 
@@ -1889,7 +1889,7 @@ form + .lista {
 /* Próximos ejercicios (y estudiantes en el panel del docente). */
 .proximos {
   display: grid;
-  gap: var(--espacio-3);
+  gap: var(--espacio-4);
   padding: 0;
   list-style: none;
 }
@@ -1898,8 +1898,8 @@ form + .lista {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--espacio-3) var(--espacio-4);
-  padding: var(--espacio-3) var(--espacio-4);
+  gap: var(--espacio-2) var(--espacio-4);
+  padding: var(--espacio-4) var(--relleno-tarjeta);
   border-radius: var(--radio-lg);
 }
 
@@ -1922,7 +1922,7 @@ form + .lista {
 .planes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--ancho-tarjeta-min), 1fr));
-  gap: var(--espacio-4);
+  gap: var(--separacion-tarjetas);
   padding: 0;
   list-style: none;
 }
@@ -1933,7 +1933,7 @@ form + .lista {
   display: grid;
   align-content: start;
   gap: var(--espacio-2);
-  padding: var(--espacio-6);
+  padding: var(--relleno-tarjeta);
 }
 
 .paso h3,
@@ -1943,8 +1943,8 @@ form + .lista {
 
 .paso-numero {
   position: absolute;
-  top: var(--espacio-4);
-  right: var(--espacio-6);
+  top: var(--relleno-tarjeta);
+  right: var(--relleno-tarjeta);
   color: var(--color-texto-suave);
   font-family: var(--fuente-titulo);
   font-size: var(--texto-2xl);
@@ -1954,8 +1954,8 @@ form + .lista {
   display: flex;
   align-items: flex-start;
   gap: var(--espacio-4);
-  margin: var(--espacio-8) 0;
-  padding: var(--espacio-6);
+  margin: var(--separacion-secciones) 0;
+  padding: var(--relleno-tarjeta);
 }
 
 .privacidad h2 {
@@ -1983,8 +1983,8 @@ form + .lista {
   display: grid;
   justify-items: center;
   gap: var(--espacio-4);
-  margin-top: var(--espacio-8);
-  padding: var(--espacio-8) var(--espacio-6);
+  margin-top: var(--separacion-secciones);
+  padding: var(--espacio-8) var(--relleno-tarjeta);
   text-align: center;
 }
 
